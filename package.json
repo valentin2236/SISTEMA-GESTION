@@ -65,7 +65,7 @@
     "publish": {
       "provider": "github",
       "owner": "valentin2236",
-      "repo": "sistema-gestion-pro"
+      "repo": "SISTEMA-GESTION"
     }
   }
 }
