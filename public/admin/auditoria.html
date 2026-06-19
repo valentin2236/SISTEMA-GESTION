@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auditoría — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body class="auditoria-page">
+
+  <main class="aud-wrap">
+
+    <!-- Topbar -->
+    <div class="aud-topbar">
+      <div>
+        <h1 class="aud-title">🔍 Auditoría</h1>
+        <p class="aud-sub">Historial de acciones del sistema</p>
+      </div>
+      <button id="btn-exportar-aud" class="btn btn-outline">📊 Exportar CSV</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Registros totales</div>
+        <div class="kpi-value blue"><span id="kpi-total">–</span></div>
+        <div class="kpi-sub">en el período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Usuarios activos</div>
+        <div class="kpi-value white"><span id="kpi-usuarios">–</span></div>
+        <div class="kpi-sub">distintos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Última acción</div>
+        <div class="kpi-value green" style="font-size:13px"><span id="kpi-ultima">–</span></div>
+        <div class="kpi-sub" id="kpi-ultima-quien">–</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Acciones hoy</div>
+        <div class="kpi-value yellow"><span id="kpi-hoy">–</span></div>
+        <div class="kpi-sub">registros</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="panel">
+      <div class="panel-top">
+        <h2>Filtros</h2>
+        <button id="btn-limpiar-filtros" class="btn btn-outline btn-sm">✕ Limpiar</button>
+      </div>
+      <div class="aud-filtros">
+        <div class="aud-filtro-group">
+          <label class="field-label">Desde</label>
+          <input id="f-desde" type="date" class="field-input" />
+        </div>
+        <div class="aud-filtro-group">
+          <label class="field-label">Hasta</label>
+          <input id="f-hasta" type="date" class="field-input" />
+        </div>
+        <div class="aud-filtro-group">
+          <label class="field-label">Usuario</label>
+          <select id="f-usuario" class="field-input">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="aud-filtro-group">
+          <label class="field-label">Acción</label>
+          <select id="f-accion" class="field-input">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="aud-filtro-group aud-filtro-search">
+          <label class="field-label">Buscar en detalle</label>
+          <input id="f-buscar" type="text" class="field-input" placeholder="Ej: nombre de producto…" />
+        </div>
+        <button id="btn-filtrar" class="btn btn-primary aud-filtro-btn">Filtrar</button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="panel aud-table-panel">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th style="width:150px">Fecha</th>
+              <th style="width:160px">Usuario</th>
+              <th style="width:200px">Acción</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="aud-tbody">
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <span class="empty-icon">⏳</span>
+                  <span>Cargando…</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="aud-footer" class="aud-footer"></div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/auth-guard.js"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="/js/auditoria.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+
+.topbar {
+  height: 70px;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 30px;
+}
+
+.topbar h1 {
+  font-size: 24px;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 20px;
+}
+
+.topbar nav a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.topbar nav a:hover {
+  color: #fff;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+
+.container {
+  padding: 30px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.actions input {
+  flex: 1;
+
+  background: #111827;
+  border: 1px solid #374151;
+  color: white;
+
+  padding: 12px 15px;
+  border-radius: 10px;
+  outline: none;
+}
+
+.actions input:focus {
+  border-color: #2563eb;
+}
+
+.actions button {
+  background: #2563eb;
+  color: white;
+  border: none;
+
+  padding: 12px 18px;
+  border-radius: 10px;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.actions button:hover {
+  background: #1d4ed8;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  background: #111827;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+thead {
+  background: #1f2937;
+}
+
+thead th {
+  padding: 15px;
+  text-align: left;
+  color: #cbd5e1;
+}
+
+tbody td {
+  padding: 15px;
+  border-top: 1px solid #1f2937;
+}
+
+tbody tr:hover {
+  background: #1a2438;
+}
+
+/* =========================
+   BOTONES
+========================= */
+
+.btn-edit,
+.btn-delete,
+.btn-save {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-edit {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #1d4ed8;
+}
+
+.btn-delete {
+  background: #dc2626;
+  color: white;
+  margin-left: 8px;
+}
+
+.btn-delete:hover {
+  background: #b91c1c;
+}
+
+.btn-save {
+  width: 100%;
+  background: #16a34a;
+  color: white;
+  margin-top: 10px;
+}
+
+.btn-save:hover {
+  background: #15803d;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0,0,0,.6);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 500px;
+
+  background: #111827;
+  border: 1px solid #1f2937;
+
+  border-radius: 15px;
+
+  padding: 25px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.modal-header button {
+  background: transparent;
+  border: none;
+  color: white;
+
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #cbd5e1;
+}
+
+.form-group input {
+  width: 100%;
+
+  background: #0f172a;
+  border: 1px solid #374151;
+
+  color: white;
+
+  padding: 12px;
+  border-radius: 10px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+  .topbar {
+    flex-direction: column;
+    height: auto;
+    padding: 20px;
+    gap: 15px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+
+}
+
+/* =========================
+   HISTORIAL
+========================= */
+
+.btn-history {
+  background: #9333ea;
+  color: white;
+  border: none;
+
+  padding: 10px 14px;
+  border-radius: 8px;
+
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.btn-history:hover {
+  background: #7e22ce;
+}
+
+.historial-modal {
+  max-width: 900px;
+}
+
+.historial-info {
+  margin-bottom: 20px;
+}
+
+.historial-info h3 {
+  margin-bottom: 10px;
+}
+
+.historial-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.historial-table th,
+.historial-table td {
+  padding: 12px;
+  border-bottom: 1px solid #1f2937;
+  text-align: left;
+}

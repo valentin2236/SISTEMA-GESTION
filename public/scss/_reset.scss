@@ -1,0 +1,48 @@
+// =============================================
+// RESET & BASE
+// =============================================
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-base;
+  font-size: $text-base;
+  line-height: 1.55;
+  background: var(--bg);
+  color: var(--text);
+  transition: background .25s ease, color .25s ease;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  &:hover { opacity: .8; }
+}
+
+button { font-family: $font-base; cursor: pointer; }
+
+input, select, textarea {
+  font-family: $font-base;
+  font-size: $text-base;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+img   { max-width: 100%; display: block; }
+ul,ol { list-style: none; }
+table { border-collapse: collapse; }

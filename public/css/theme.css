@@ -1,0 +1,106 @@
+/* ===== SISTEMA DE GESTIÓN — TEMA GLOBAL ===== */
+
+/* Tema Claro (por defecto) */
+:root {
+  --bg: #f4f6fa;
+  --card: #ffffff;
+  --panel: #ffffff;
+  --text: #1a202c;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --accent: #00a85a;
+  --accent-text: #ffffff;
+  --header-bg: #ffffff;
+  --header-border: #e2e8f0;
+  --input-bg: #f8fafc;
+  --input-border: #cbd5e1;
+  --btn-secondary-bg: #f1f5f9;
+  --btn-secondary-text: #334155;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-hover: 0 8px 24px rgba(0,0,0,0.13);
+  --danger: #ef4444;
+  --green: #00a85a;
+  --red: #ef4444;
+  --pos-sidebar: #f8fafc;
+  --notif-bg: #ffffff;
+  --notif-border: #e2e8f0;
+  --notif-item-text: #1a202c;
+  --notif-item-sub: #64748b;
+  --toggle-bg: #e2e8f0;
+  --toggle-circle: #64748b;
+}
+
+/* Tema Oscuro */
+html[data-theme="dark"] {
+  --bg: #0b0f14;
+  --card: #111927;
+  --panel: #111927;
+  --text: #e7f0ff;
+  --muted: #99a8c6;
+  --line: #1b2741;
+  --accent: #00ff88;
+  --accent-text: #001a10;
+  --header-bg: #0c121d;
+  --header-border: #1b2741;
+  --input-bg: #0f1726;
+  --input-border: #1b2741;
+  --btn-secondary-bg: #1a263b;
+  --btn-secondary-text: #e7f0ff;
+  --shadow: 0 8px 24px rgba(0,0,0,0.32);
+  --shadow-hover: 0 12px 32px rgba(0,0,0,0.45);
+  --danger: #ff5c5c;
+  --green: #00ff88;
+  --red: #ff4d4d;
+  --pos-sidebar: #0c121d;
+  --notif-bg: #1e293b;
+  --notif-border: #334155;
+  --notif-item-text: #ffffff;
+  --notif-item-sub: #cbd5e1;
+  --toggle-bg: #1b2741;
+  --toggle-circle: #00ff88;
+}
+
+/* ===== Botón Toggle Tema ===== */
+.theme-toggle {
+  background: var(--toggle-bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  cursor: pointer;
+  width: 46px;
+  height: 26px;
+  position: relative;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--toggle-circle);
+  transition: transform 0.3s, background 0.3s;
+}
+
+html[data-theme="dark"] .theme-toggle::after {
+  transform: translateX(20px);
+}
+
+.theme-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-toggle-wrap .theme-icon {
+  font-size: 15px;
+  user-select: none;
+}
+
+/* ===== Transición suave al cambiar tema ===== */
+*, *::before, *::after {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
+}

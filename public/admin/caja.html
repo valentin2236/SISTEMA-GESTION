@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Caja — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body class="caja-page">
+
+  <main class="caja-wrap">
+
+    <!-- ── Barra superior ── -->
+    <div class="caja-topbar">
+      <div class="caja-topbar-left">
+        <h1 class="caja-title">💵 Caja</h1>
+        <div id="caja-badge" class="caja-badge caja-badge--cerrada">Cerrada</div>
+      </div>
+      <div class="caja-topbar-right">
+        <span id="caja-hora" class="caja-hora"></span>
+      </div>
+    </div>
+
+    <!-- ── Estado: caja cerrada ── -->
+    <div id="vista-cerrada" class="caja-vista" style="display:none">
+      <div class="caja-empty-state">
+        <div class="ces-icon">🔒</div>
+        <div class="ces-title">Caja cerrada</div>
+        <div class="ces-sub">Ingresá el monto inicial para comenzar la jornada</div>
+        <div class="ces-form">
+          <div class="field">
+            <label class="field-label">Monto inicial en caja ($)</label>
+            <input
+              id="monto-inicial"
+              class="field-input field-input--highlight"
+              type="number"
+              step="0.01"
+              min="0"
+              value="0"
+              placeholder="0,00"
+            />
+          </div>
+          <button id="btn-abrir" class="btn-abrir-caja">
+            🔓 Abrir caja
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Estado: caja abierta ── -->
+    <div id="vista-abierta" class="caja-vista" style="display:none">
+
+      <!-- Tarjetas resumen -->
+      <div class="caja-cards">
+        <div class="caja-card caja-card--green">
+          <div class="cc-label">Efectivo esperado</div>
+          <div class="cc-value" id="card-esperado">$0,00</div>
+          <div class="cc-sub" id="card-apertura"></div>
+        </div>
+        <div class="caja-card">
+          <div class="cc-label">Ventas efectivo</div>
+          <div class="cc-value" id="card-ventas">$0,00</div>
+          <div class="cc-sub" id="card-tickets">0 tickets</div>
+        </div>
+        <div class="caja-card caja-card--blue">
+          <div class="cc-label">Ingresos manuales</div>
+          <div class="cc-value" id="card-ingresos">$0,00</div>
+        </div>
+        <div class="caja-card caja-card--red">
+          <div class="cc-label">Egresos</div>
+          <div class="cc-value" id="card-egresos">$0,00</div>
+        </div>
+        <div class="caja-card">
+          <div class="cc-label">Monto inicial</div>
+          <div class="cc-value" id="card-inicial">$0,00</div>
+          <div class="cc-sub" id="card-usuario"></div>
+        </div>
+      </div>
+
+      <!-- Grid: movimientos + cierre -->
+      <div class="caja-grid">
+
+        <!-- Panel movimientos -->
+        <div class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">📋 Movimientos</h2>
+            <button id="btn-nuevo-mov" class="btn btn-primary btn-sm">
+              + Nuevo
+            </button>
+          </div>
+
+          <!-- Form movimiento (colapsable) -->
+          <div id="form-movimiento" class="mov-form" style="display:none">
+            <div class="mov-form-grid">
+              <div class="field">
+                <label class="field-label">Tipo</label>
+                <select id="mov-tipo" class="field-input">
+                  <option value="ingreso">📈 Ingreso</option>
+                  <option value="egreso">📉 Egreso</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Concepto</label>
+                <input
+                  id="mov-concepto"
+                  class="field-input"
+                  placeholder="Ej: Retiro para gastos"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Monto ($)</label>
+                <input
+                  id="mov-monto"
+                  class="field-input field-input--highlight"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+            <div class="mov-form-actions">
+              <button id="btn-agregar-mov" class="btn btn-primary">Registrar</button>
+              <button id="btn-cancelar-mov" class="btn btn-outline">Cancelar</button>
+            </div>
+          </div>
+
+          <!-- Tabla movimientos -->
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Hora</th>
+                  <th>Tipo</th>
+                  <th>Concepto</th>
+                  <th class="right">Monto</th>
+                </tr>
+              </thead>
+              <tbody id="mov-tbody">
+                <tr class="empty-row">
+                  <td colspan="4">
+                    <div class="empty-state">
+                      <span class="empty-icon">📋</span>
+                      <span>Sin movimientos aún</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Panel cierre -->
+        <div class="panel cierre-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">🔒 Cerrar caja</h2>
+          </div>
+          <div class="cierre-body">
+            <div class="cierre-resumen" id="cierre-resumen-preview">
+              <!-- se llena dinámicamente -->
+            </div>
+            <div class="field">
+              <label class="field-label">Conteo real de efectivo ($)</label>
+              <input
+                id="conteo"
+                class="field-input field-input--highlight"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Ingresá el efectivo que tenés en caja"
+              />
+              <span class="field-hint">
+                Dejalo vacío si no querés registrar diferencia
+              </span>
+            </div>
+            <div id="diferencia-preview" class="diferencia-preview" style="display:none">
+              <span class="dif-label">Diferencia:</span>
+              <span id="dif-valor" class="dif-valor">$0,00</span>
+            </div>
+            <div class="field">
+              <label class="field-label">Observación (opcional)</label>
+              <input
+                id="obs"
+                class="field-input"
+                placeholder="Ej: Caja con faltante por billete falso"
+              />
+            </div>
+            <button id="btn-cerrar" class="btn-cerrar-caja">
+              🔒 Cerrar caja
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Modal resultado de cierre ── -->
+  <dialog id="dlg-cierre" class="dlg dlg-wide">
+    <div class="dlg-card">
+      <div class="dlg-head">
+        <h2>✅ Caja cerrada</h2>
+        <button id="btn-cerrar-modal" class="dlg-close">✕</button>
+      </div>
+      <div class="cierre-modal-body">
+        <div id="cierre-resumen" class="cierre-resultado"></div>
+        <div class="tbl-wrap" style="max-height:200px">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Hora</th><th>Tipo</th><th>Concepto</th>
+                <th class="right">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="cierre-movs"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="dlg-actions">
+        <button id="btn-imprimir" class="btn btn-primary">🖨️ Imprimir cierre</button>
+        <button id="btn-cerrar-modal2" class="btn btn-outline">Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="../js/auth-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="../js/caja.js"></script>
+</body>
+</html>

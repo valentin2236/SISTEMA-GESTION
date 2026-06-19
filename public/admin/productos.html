@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Productos — Sistema Gestión PRO</title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body class="productos-page">
+    <main class="prod-wrap">
+      <!-- Topbar -->
+      <div class="prod-topbar">
+        <div>
+          <h1 class="prod-title">📦 Productos</h1>
+          <p class="prod-sub">Gestión completa del catálogo</p>
+        </div>
+        <div class="prod-topbar-actions">
+          <button
+            id="btn-importar-pdf"
+            class="btn btn-outline"
+            title="Importar desde PDF"
+          >
+            📄 Importar PDF
+          </button>
+          <button id="btn-importar-foto" class="btn btn-outline">
+            📷 Importar desde foto
+          </button>
+          <button
+            id="btn-importar"
+            class="btn btn-outline"
+            title="Importar desde Excel"
+          >
+            📥 Importar Excel
+          </button>
+          <button
+            id="btn-exportar"
+            class="btn btn-outline"
+            title="Exportar catálogo"
+          >
+            📤 Exportar Excel
+          </button>
+          <button id="btn-nuevo" class="btn btn-primary">
+            + Nuevo producto
+          </button>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <!-- Toolbar -->
+      <div class="prod-toolbar">
+        <div class="search-row">
+          <input
+            id="search"
+            class="search-input"
+            placeholder="Buscar por nombre, SKU o categoría…"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Filtros -->
+        <div class="prod-filtros">
+          <select id="filtro-categoria" class="field-input filtro-select">
+            <option value="">Todas las categorías</option>
+          </select>
+
+          <div class="filtro-precio">
+            <input
+              id="filtro-precio-min"
+              class="field-input filtro-precio-input"
+              type="number"
+              min="0"
+              placeholder="Precio mín."
+            />
+            <span class="filtro-sep">–</span>
+            <input
+              id="filtro-precio-max"
+              class="field-input filtro-precio-input"
+              type="number"
+              min="0"
+              placeholder="Precio máx."
+            />
+          </div>
+
+          <select id="filtro-stock" class="field-input filtro-select">
+            <option value="">Todo el stock</option>
+            <option value="ok">Stock normal</option>
+            <option value="low">Stock bajo (≤5)</option>
+            <option value="out">Sin stock</option>
+          </select>
+
+          <button
+            id="btn-limpiar-filtros"
+            class="btn btn-outline btn-sm"
+            title="Limpiar filtros"
+          >
+            ✕ Limpiar
+          </button>
+        </div>
+
+        <div class="prod-stats">
+          <span id="stat-total" class="prod-stat">– productos</span>
+          <span class="prod-stat-sep">·</span>
+          <span
+            id="stat-stock-bajo"
+            class="prod-stat prod-stat--warn"
+            style="display: none"
+          >
+            – stock bajo
+          </span>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="panel prod-table-panel">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th style="width: 60px">Imagen</th>
+                <th>Nombre</th>
+                <th>SKU / Código</th>
+                <th>Categoría</th>
+                <th class="right">Costo</th>
+                <th class="right">Precio</th>
+                <th class="center">Stock</th>
+                <th style="width: 140px">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-productos">
+              <tr>
+                <td colspan="8">
+                  <div class="empty-state">
+                    <span class="empty-icon">📦</span>
+                    <span>Cargando productos…</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== MODAL: Producto ===== -->
+    <dialog id="dlg-producto" class="dlg dlg-producto">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2 id="dlg-titulo">Nuevo producto</h2>
+          <button id="btn-cerrar-dlg" class="dlg-close">✕</button>
+        </div>
+
+        <div class="dlg-body">
+          <form id="form-producto" autocomplete="off">
+            <input type="hidden" id="prod-id" />
+
+            <div class="form-grid">
+              <!-- Nombre -->
+              <div class="field form-full">
+                <label class="field-label">Nombre *</label>
+                <input
+                  id="prod-nombre"
+                  class="field-input"
+                  required
+                  placeholder="Nombre del producto"
+                />
+              </div>
+
+              <!-- SKU con lector -->
+              <div class="field">
+                <label class="field-label">SKU / Código de barras</label>
+                <div class="sku-row">
+                  <input
+                    id="prod-sku"
+                    class="field-input"
+                    placeholder="Escaneá o escribí el código"
+                    autocomplete="off"
+                  />
+                  <button
+                    type="button"
+                    id="btn-escanear"
+                    class="btn-scan"
+                    title="Activar escáner"
+                  >
+                    📷
+                  </button>
+                </div>
+                <span class="field-hint" id="scan-hint">
+                  Apuntá el escáner al código de barras o presioná 📷
+                </span>
+              </div>
+
+              <!-- Categoría -->
+              <div class="field">
+                <label class="field-label">Categoría</label>
+                <input
+                  id="prod-categoria"
+                  class="field-input"
+                  placeholder="Ej: Lácteos, Bebidas…"
+                />
+              </div>
+
+              <!-- Precio -->
+              <div class="field">
+                <label class="field-label">Precio de venta *</label>
+                <input
+                  id="prod-precio"
+                  class="field-input field-input--highlight"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  required
+                />
+              </div>
+
+              <!-- Costo -->
+              <div class="field">
+                <label class="field-label">Costo</label>
+                <input
+                  id="prod-costo"
+                  class="field-input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                />
+              </div>
+
+              <!-- Stock -->
+              <div class="field">
+                <label class="field-label">Stock inicial</label>
+                <input
+                  id="prod-stock"
+                  class="field-input"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+
+              <!-- Descripción -->
+              <div class="field form-full">
+                <label class="field-label">Descripción</label>
+                <textarea
+                  id="prod-descripcion"
+                  class="field-input field-textarea"
+                  placeholder="Descripción opcional del producto"
+                  rows="2"
+                ></textarea>
+              </div>
+
+              <!-- Imagen -->
+              <div class="field form-full">
+                <label class="field-label">URL de imagen</label>
+                <input
+                  id="prod-imagen"
+                  class="field-input"
+                  placeholder="https://…"
+                />
+                <img
+                  id="prod-preview"
+                  class="prod-img-preview"
+                  src=""
+                  style="display: none"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="dlg-actions">
+          <button id="btn-guardar" class="btn btn-primary">
+            Guardar producto
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline"
+            onclick="document.getElementById('dlg-producto').close()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Importar Excel ===== -->
+    <dialog id="dlg-importar" class="dlg dlg-wide">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>📥 Importar desde Excel</h2>
+          <button
+            onclick="document.getElementById('dlg-importar').close()"
+            class="dlg-close"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="dlg-body">
+          <div class="import-info">
+            <p>
+              El archivo Excel debe tener las siguientes columnas (la primera
+              fila es el encabezado):
+            </p>
+            <div class="import-cols">
+              <code>nombre</code>
+              <code>sku</code>
+              <code>precio</code>
+              <code>costo</code>
+              <code>stock</code>
+              <code>categoria</code>
+              <code>descripcion</code>
+            </div>
+            <p class="import-note">
+              Si el SKU ya existe en el sistema, el producto se
+              <strong>actualizará</strong>. Si no existe, se
+              <strong>creará</strong>.
+            </p>
+          </div>
+
+          <div class="import-drop" id="import-drop">
+            <div class="import-drop-inner">
+              <span class="import-drop-icon">📂</span>
+              <span>Arrastrá el archivo acá o hacé click para seleccionar</span>
+              <span class="import-drop-hint">.xlsx o .csv</span>
+            </div>
+            <input
+              type="file"
+              id="import-file"
+              accept=".xlsx,.csv"
+              style="display: none"
+            />
+          </div>
+
+          <div id="import-preview" style="display: none">
+            <div class="import-preview-header">
+              <span id="import-preview-count"></span>
+              <button id="btn-limpiar-import" class="btn btn-outline btn-sm">
+                ✕ Quitar archivo
+              </button>
+            </div>
+            <div class="tbl-wrap" style="max-height: 200px">
+              <table class="tbl" id="import-preview-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>SKU</th>
+                    <th>Precio</th>
+                    <th>Costo</th>
+                    <th>Stock</th>
+                    <th>Categoría</th>
+                  </tr>
+                </thead>
+                <tbody id="import-preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            id="import-resultado"
+            style="display: none"
+            class="import-resultado"
+          ></div>
+        </div>
+        <div class="dlg-actions">
+          <button id="btn-confirmar-import" class="btn btn-primary" disabled>
+            📥 Importar productos
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="document.getElementById('dlg-importar').close()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Ver imagen ===== -->
+    <dialog id="dlg-imagen" class="dlg-imagen">
+      <img id="dlg-imagen-src" src="" alt="Imagen producto" />
+      <button
+        onclick="document.getElementById('dlg-imagen').close()"
+        class="dlg-imagen-close"
+      >
+        ✕
+      </button>
+    </dialog>
+
+    <dialog id="dlg-foto-import" class="dlg dlg-wide">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>📷 Importar desde foto</h2>
+          <button id="btn-cerrar-foto" class="dlg-close">✕</button>
+        </div>
+
+        <div class="dlg-body">
+          <!-- PASO 1: Subir imagen -->
+          <div id="foto-step-1" class="foto-step">
+            <div class="foto-upload-area" id="foto-drop-area">
+              <input
+                id="foto-file-input"
+                type="file"
+                accept="image/*"
+                style="display: none"
+              />
+              <div class="foto-upload-icon">🧾</div>
+              <p class="foto-upload-title">
+                Subí una foto de la factura o remito
+              </p>
+              <p class="foto-upload-sub">JPG, PNG, WEBP — máx. 5 MB</p>
+              <button class="btn btn-primary" id="btn-foto-elegir">
+                Elegir imagen
+              </button>
+            </div>
+
+            <div id="foto-preview-wrap" style="display: none">
+              <img
+                id="foto-preview-img"
+                alt="Preview"
+                class="foto-preview-img"
+              />
+              <div class="foto-preview-actions">
+                <button class="btn btn-outline btn-sm" id="btn-foto-cambiar">
+                  ↩ Cambiar imagen
+                </button>
+                <button class="btn btn-primary" id="btn-foto-analizar">
+                  <span id="btn-analizar-txt">🔍 Analizar con IA</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 2: Revisión de resultados -->
+          <div id="foto-step-2" style="display: none">
+            <div class="foto-result-header">
+              <div>
+                <p class="foto-result-title">Productos detectados</p>
+                <p class="foto-result-sub" id="foto-result-count"></p>
+              </div>
+              <button class="btn btn-outline btn-sm" id="btn-foto-volver">
+                ↩ Otra imagen
+              </button>
+            </div>
+
+            <div class="foto-table-wrap">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th style="width: 32px">
+                      <input
+                        type="checkbox"
+                        id="foto-check-all"
+                        title="Seleccionar todos"
+                      />
+                    </th>
+                    <th>Nombre</th>
+                    <th style="width: 100px">Precio venta</th>
+                    <th style="width: 90px">Costo</th>
+                    <th style="width: 80px">Stock</th>
+                    <th style="width: 110px">Categoría</th>
+                    <th style="width: 32px"></th>
+                  </tr>
+                </thead>
+                <tbody id="foto-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="foto-import-bar">
+              <span id="foto-selected-count" class="foto-selected-label"
+                >0 seleccionados</span
+              >
+              <button class="btn btn-primary" id="btn-foto-importar">
+                ✅ Importar seleccionados
+              </button>
+            </div>
+          </div>
+
+          <!-- Estado / errores -->
+          <div id="foto-status" class="foto-status" style="display: none"></div>
+        </div>
+        <!-- /dlg-body -->
+      </div>
+      <!-- /dlg-card -->
+    </dialog>
+
+    <!-- ===== MODAL: Importar desde PDF ===== -->
+    <dialog id="dlg-pdf-import" class="dlg dlg-wide">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>📄 Importar desde PDF</h2>
+          <button id="btn-cerrar-pdf" class="dlg-close">✕</button>
+        </div>
+
+        <div class="dlg-body">
+          <!-- PASO 1: Subir PDF -->
+          <div id="pdf-step-1">
+            <div class="foto-upload-area" id="pdf-drop-area">
+              <input
+                id="pdf-file-input"
+                type="file"
+                accept=".pdf"
+                style="display: none"
+              />
+              <div class="foto-upload-icon">📄</div>
+              <p class="foto-upload-title">Subí la factura o remito en PDF</p>
+              <p class="foto-upload-sub">Solo archivos .pdf — máx. 10 MB</p>
+              <button class="btn btn-primary" id="btn-pdf-elegir">
+                Elegir PDF
+              </button>
+            </div>
+
+            <div
+              id="pdf-archivo-seleccionado"
+              style="display: none"
+              class="pdf-archivo-info"
+            >
+              <span class="pdf-archivo-icon">📄</span>
+              <div>
+                <p id="pdf-archivo-nombre" class="pdf-archivo-nombre"></p>
+                <p id="pdf-archivo-size" class="pdf-archivo-size"></p>
+              </div>
+              <button class="btn btn-outline btn-sm" id="btn-pdf-cambiar">
+                ↩ Cambiar
+              </button>
+            </div>
+
+            <div
+              class="pdf-step1-actions"
+              id="pdf-analizar-wrap"
+              style="display: none"
+            >
+              <button class="btn btn-primary" id="btn-pdf-analizar">
+                <span id="btn-pdf-analizar-txt">🔍 Extraer productos</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PASO 2: Resultados -->
+          <div id="pdf-step-2" style="display: none">
+            <div class="foto-result-header">
+              <div>
+                <p class="foto-result-title">Productos detectados</p>
+                <p class="foto-result-sub" id="pdf-result-count"></p>
+              </div>
+              <button class="btn btn-outline btn-sm" id="btn-pdf-volver">
+                ↩ Otro PDF
+              </button>
+            </div>
+
+            <div class="foto-table-wrap">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th style="width: 32px">
+                      <input
+                        type="checkbox"
+                        id="pdf-check-all"
+                        title="Seleccionar todos"
+                      />
+                    </th>
+                    <th>Nombre</th>
+                    <th style="width: 100px">Precio venta</th>
+                    <th style="width: 90px">Costo</th>
+                    <th style="width: 80px">Stock</th>
+                    <th style="width: 110px">Categoría</th>
+                    <th style="width: 32px"></th>
+                  </tr>
+                </thead>
+                <tbody id="pdf-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="foto-import-bar">
+              <span id="pdf-selected-count" class="foto-selected-label"
+                >0 seleccionados</span
+              >
+              <button class="btn btn-primary" id="btn-pdf-importar">
+                ✅ Importar seleccionados
+              </button>
+            </div>
+          </div>
+
+          <!-- Estado -->
+          <div id="pdf-status" class="foto-status" style="display: none"></div>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SheetJS para leer/escribir Excel en el navegador -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    </script>
+    <script src="/js/auth-guard.js"></script>
+    <script src="../js/navbar.js"></script>
+    <script src="/js/productos.js"></script>
+  </body>
+</html>

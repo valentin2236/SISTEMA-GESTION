@@ -1,0 +1,99 @@
+// =============================================
+// FORMS — Inputs, Selects, Labels
+// =============================================
+
+.form-group {
+  margin-bottom: $space-4;
+
+  label {
+    display: block;
+    font-size: $text-xs; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text2); margin-bottom: $space-2;
+  }
+}
+
+// Base compartida
+%input-base {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: $radius-sm;
+  color: var(--text);
+  font-size: $text-base; font-family: $font-base;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+
+  &::placeholder { color: var(--muted); }
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,196,112,.15);
+    background: var(--surface);
+  }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+input[type="search"],
+input[type="tel"] { @extend %input-base; }
+
+select {
+  @extend %input-base;
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+textarea {
+  @extend %input-base;
+  resize: vertical; min-height: 90px; line-height: 1.5;
+}
+
+// Search con ícono integrado
+input#search, input.search {
+  @extend %input-base;
+  padding-left: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 11px center;
+  min-width: 220px;
+}
+
+// Preview imagen (productos)
+.preview-img {
+  margin-top: $space-2;
+  max-width: 120px;
+  border-radius: $radius-sm;
+  border: 1px solid var(--border);
+}
+
+// Fila de filtros
+.filter-row {
+  display: flex; gap: $space-2; align-items: flex-end;
+  flex-wrap: wrap; margin-bottom: $space-4;
+
+  label {
+    display: flex; flex-direction: column; gap: $space-1;
+    font-size: $text-xs; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+    input, select { width: auto; min-width: 140px; }
+  }
+}
+
+// Search wrapper con ícono externo
+.search-wrap {
+  position: relative;
+  .search-icon {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); font-size: 14px; pointer-events: none;
+  }
+  input { padding-left: 32px; }
+}

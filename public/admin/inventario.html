@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Inventario</title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+
+  <body>
+    <header class="hdr">
+      <div>📦 Historial de Inventario</div>
+
+      <nav class="links">
+        <a href="/admin/dashboard.html"> Dashboard </a>
+
+        <a href="/admin/productos.html"> Productos </a>
+
+        <a href="/admin/admin.html"> Ventas </a>
+
+        <a href="#" id="logout"> Salir </a>
+      </nav>
+    </header>
+
+    <main class="wrap">
+      <section class="cards">
+        <div class="card">
+          <span>Total movimientos</span>
+          <h2 id="total-movimientos">0</h2>
+        </div>
+
+        <div class="card">
+          <span>Ventas</span>
+          <h2 id="total-ventas">0</h2>
+        </div>
+
+        <div class="card">
+          <span>Compras</span>
+          <h2 id="total-compras">0</h2>
+        </div>
+      </section>
+
+      <section class="filtros">
+        <input type="text" id="buscar" placeholder="Buscar producto..." />
+
+        <select id="filtroTipo">
+          <option value="">Todos</option>
+
+          <option value="venta">Ventas</option>
+
+          <option value="compra">Compras</option>
+        </select>
+      </section>
+
+      <div class="panel">
+        <div class="panel-top">
+          <h2>Movimientos recientes</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+
+                <th>Producto</th>
+
+                <th>SKU</th>
+
+                <th>Tipo</th>
+
+                <th>Cantidad</th>
+
+                <th>Antes</th>
+
+                <th>Después</th>
+
+                <th>Usuario</th>
+
+                <th>Motivo</th>
+              </tr>
+            </thead>
+
+            <tbody id="tbodyMovimientos"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    
+    <script src="../js/auth-guard.js"></script>
+    <script src="/js/inventario.js"></script>
+    <script src="../js/navbar.js"></script>
+  </body>
+</html>

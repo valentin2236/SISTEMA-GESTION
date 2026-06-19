@@ -1,0 +1,64 @@
+// =============================================
+// VARIABLES — Design Tokens
+// =============================================
+
+// Tipografía
+$font-base: "Inter", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+$font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+// Escala tipográfica
+$text-xs:   11px;
+$text-sm:   12px;
+$text-base: 14px;
+$text-md:   15px;
+$text-lg:   18px;
+$text-xl:   22px;
+$text-2xl:  28px;
+
+// Espaciado
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 20px;
+$space-6: 24px;
+$space-8: 32px;
+
+// Radios
+$radius-sm: 8px;
+$radius:    12px;
+$radius-lg: 16px;
+
+// Sidebar
+$sidebar-w: 230px;
+
+// Transición global
+$transition: all 0.2s ease;
+
+// ── Paleta LIGHT ──────────────────────────
+$light-bg:       #dee3e9;
+$light-surface:  #ffffff;
+$light-surface2: #f8fafc;
+$light-border:   #e5e7eb;
+$light-text:     #111827;
+$light-text2:    #4b5563;
+$light-muted:    #94a3b8;
+
+// ── Paleta DARK ───────────────────────────
+$dark-bg:        #020817;
+$dark-surface:   #0f172a;
+$dark-surface2:  #162033;
+$dark-border:    rgba(255,255,255,.08);
+$dark-text:      #f8fafc;
+$dark-text2:     #cbd5e1;
+$dark-muted:     #94a3b8;
+
+// ── Colores de acento ──────────────────────
+$accent:         #00c470;
+$accent-dark:    #00ff88;
+$accent-fg:      #ffffff;
+
+$danger:         #ef4444;
+$warning:        #f59e0b;
+$info:           #3b82f6;
+$success:        #10b981;

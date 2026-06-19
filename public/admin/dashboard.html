@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Dashboard — Sistema Gestión PRO</title>
+  <script>
+    // Aplicar tema guardado antes del render
+    const t = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  </script>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<script src="../js/auth-guard.js"></script>
+<script src="../js/navbar.js"></script>
+
+<div class="dash-header">
+  <div class="dash-header-left">
+    <h1 class="dash-title">Dashboard</h1>
+    <span class="dash-date" id="dash-date"></span>
+  </div>
+  <div class="dash-header-right">
+    <a href="/pos.html" class="btn-nueva-venta">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva venta
+    </a>
+  </div>
+</div>
+
+<div class="dash-body">
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Ventas hoy</div>
+      <div class="kpi-value green">$<span id="tot-hoy">0</span></div>
+      <div class="kpi-sub" id="sub-hoy">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ventas semana</div>
+      <div class="kpi-value white">$<span id="tot-semana">0</span></div>
+      <div class="kpi-sub" id="sub-semana">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tickets hoy</div>
+      <div class="kpi-value blue"><span id="tickets-hoy">0</span></div>
+      <div class="kpi-sub" id="sub-tickets">Prom. $<span id="ticket-prom">0</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Stock bajo</div>
+      <div class="kpi-value red"><span id="stock-bajo-total">0</span></div>
+      <div class="kpi-sub">Requieren atención</div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="quick-grid">
+    <a href="/pos.html" class="quick-card">
+      <div class="quick-icon">🧾</div>
+      <div class="quick-label">Nueva venta</div>
+    </a>
+    <a href="/admin/productos.html" class="quick-card" id="btnProductos">
+      <div class="quick-icon">📦</div>
+      <div class="quick-label">Productos</div>
+    </a>
+    <a href="/admin/clientes.html" class="quick-card">
+      <div class="quick-icon">👥</div>
+      <div class="quick-label">Clientes</div>
+    </a>
+    <a href="/admin/caja.html" class="quick-card">
+      <div class="quick-icon">💵</div>
+      <div class="quick-label">Caja</div>
+    </a>
+    <a href="/admin/compras.html" class="quick-card" id="btnCompras" style="display:none">
+      <div class="quick-icon">🛒</div>
+      <div class="quick-label">Compras</div>
+    </a>
+    <a href="/admin/proveedores.html" class="quick-card" id="btnProveedores" style="display:none">
+      <div class="quick-icon">🚚</div>
+      <div class="quick-label">Proveedores</div>
+    </a>
+    <a href="/admin/ganancias.html" class="quick-card" id="btnGanancias" style="display:none">
+      <div class="quick-icon">📈</div>
+      <div class="quick-label">Ganancias</div>
+    </a>
+    <a href="/admin/usuarios.html" class="quick-card" id="btnUsuarios" style="display:none">
+      <div class="quick-icon">🔑</div>
+      <div class="quick-label">Usuarios</div>
+    </a>
+    <a href="/config.html" class="quick-card" id="btnConfig" style="display:none">
+      <div class="quick-icon">⚙️</div>
+      <div class="quick-label">Configuración</div>
+    </a>
+  </div>
+
+  <!-- PANELS GRID -->
+  <div class="panels-grid">
+
+    <!-- Gráfico ventas -->
+    <div class="dash-panel panel-wide">
+      <div class="dash-panel-header">
+        <span class="dash-panel-title">Ventas por día (últimos 14)</span>
+        <span class="dash-panel-badge" id="estado-caja">—</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chartVentas"></canvas>
+      </div>
+    </div>
+
+    <!-- Últimas ventas -->
+    <div class="dash-panel">
+      <div class="dash-panel-header">
+        <span class="dash-panel-title">Últimas ventas</span>
+      </div>
+      <table class="dash-tbl">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th class="right">Total</th>
+            <th class="center">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="ultimasVentas"></tbody>
+      </table>
+    </div>
+
+    <!-- Top productos -->
+    <div class="dash-panel">
+      <div class="dash-panel-header">
+        <span class="dash-panel-title">Top productos (30 días)</span>
+      </div>
+      <table class="dash-tbl">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="right">Uds.</th>
+            <th class="right">Ingreso</th>
+          </tr>
+        </thead>
+        <tbody id="top"></tbody>
+      </table>
+    </div>
+
+    <!-- Stock bajo -->
+    <div class="dash-panel">
+      <div class="dash-panel-header">
+        <span class="dash-panel-title">⚠ Stock bajo</span>
+      </div>
+      <table class="dash-tbl">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>SKU</th>
+            <th class="right">Stock</th>
+          </tr>
+        </thead>
+        <tbody id="stockBajo"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('token');
+const rol   = localStorage.getItem('user_rol') || '';
+
+// Fecha
+document.getElementById('dash-date').textContent =
+  new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' });
+
+function money(n) {
+  return (Number(n)||0).toLocaleString('es-AR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+function moneyShort(n) {
+  const v = Number(n)||0;
+  if (v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+  if (v >= 1000)    return '$' + (v/1000).toFixed(0) + 'k';
+  return '$' + v;
+}
+
+// KPIs
+fetch('/api/reportes/kpis', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(k => {
+    document.getElementById('tot-hoy').textContent     = money(k.total_hoy || 0);
+    document.getElementById('tot-semana').textContent  = money(k.total_semana || 0);
+    document.getElementById('tickets-hoy').textContent = k.tickets_hoy || 0;
+    document.getElementById('stock-bajo-total').textContent = k.stock_bajo || 0;
+    document.getElementById('productos-total') && (document.getElementById('productos-total').textContent = k.total_productos || 0);
+    document.getElementById('clientes-total')  && (document.getElementById('clientes-total').textContent  = k.total_clientes  || 0);
+
+    // Ticket promedio
+    const prom = k.tickets_hoy > 0 ? (k.total_hoy / k.tickets_hoy) : 0;
+    document.getElementById('ticket-prom').textContent = money(prom);
+  });
+
+// Estado caja
+fetch('/api/caja/estado', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(c => {
+    const el = document.getElementById('estado-caja');
+    if (c.abierta) {
+      el.textContent = '🟢 Caja abierta';
+      el.style.color = 'var(--accent)';
+    } else {
+      el.textContent = '🔴 Caja cerrada';
+      el.style.color = 'var(--danger)';
+    }
+  });
+
+// Últimas ventas
+fetch('/api/reportes/ultimas-ventas', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(rows => {
+    document.getElementById('ultimasVentas').innerHTML = rows.map(v => `
+      <tr>
+        <td>${v.cliente || 'Sin nombre'}</td>
+        <td class="right">$${money(v.total)}</td>
+        <td class="center"><span class="dash-badge green">OK</span></td>
+      </tr>`).join('') || '<tr><td colspan="3" class="empty-cell">Sin ventas</td></tr>';
+  });
+
+// Gráfico ventas diarias
+fetch('/api/reportes/ventas-diarias?dias=14', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(list => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridColor  = isDark ? '#1e2535' : '#e2e8f0';
+    const tickColor  = isDark ? '#64748b' : '#94a3b8';
+
+    new Chart(document.getElementById('chartVentas'), {
+      type: 'bar',
+      data: {
+        labels: list.map(x => x.dia.slice(5)),
+        datasets: [{
+          data: list.map(x => Number(x.total || 0)),
+          backgroundColor: list.map((_, i, a) =>
+            i === a.length - 1 ? '#00ff88' : 'rgba(0,196,112,.55)'
+          ),
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: { label: ctx => ' $' + money(ctx.raw) }
+        }},
+        scales: {
+          x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor } },
+          y: { ticks: { color: tickColor, font: { size: 11 }, callback: v => moneyShort(v) }, grid: { color: gridColor } }
+        }
+      }
+    });
+  });
+
+// Top productos
+fetch('/api/reportes/top-productos?dias=30&limit=5', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(rows => {
+    document.getElementById('top').innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.nombre}</td>
+        <td class="right">${r.cant_vendida}</td>
+        <td class="right">$${money(r.ingreso)}</td>
+      </tr>`).join('') || '<tr><td colspan="3" class="empty-cell">Sin datos</td></tr>';
+  });
+
+// Stock bajo
+fetch('/api/productos/alertas/stock-bajo', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(rows => {
+    document.getElementById('stockBajo').innerHTML = rows.length
+      ? rows.map(p => `
+        <tr>
+          <td>${p.nombre}</td>
+          <td class="muted-cell">${p.sku || '-'}</td>
+          <td class="right"><span class="dash-badge red">${p.stock}</span></td>
+        </tr>`).join('')
+      : '<tr><td colspan="3" class="empty-cell">Sin alertas 🎉</td></tr>';
+  });
+
+// Mostrar links admin
+// Mostrar cards admin
+if (rol === 'admin') {
+  ['btnUsuarios', 'btnConfig'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'flex';
+  });
+}
+
+// Mostrar cards según features del plan
+fetch('/api/licencia/features', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.ok ? r.json() : null)
+  .then(data => {
+    if (!data?.features) return;
+    const f = data.features;
+    const featureCards = {
+      btnGanancias: 'ganancias',
+      btnCompras: 'compras',
+      btnProveedores: 'proveedores',
+    };
+    Object.entries(featureCards).forEach(([id, feature]) => {
+      if (f.includes(feature) && rol === 'admin') {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+      }
+    });
+  })
+  .catch(() => {});
+</script>
+
+</body>
+</html>

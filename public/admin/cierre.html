@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Cierre de Caja — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body class="cierre-page">
+
+  <main class="cierre-wrap">
+
+    <!-- Topbar -->
+    <div class="cierre-topbar">
+      <div>
+        <h1 class="cierre-title">📅 Cierre de Caja</h1>
+        <p class="cierre-sub">Resumen de ventas por medio de pago</p>
+      </div>
+      <div class="cierre-acciones">
+        <div class="field">
+          <label class="field-label">Fecha</label>
+          <input id="fecha" type="date" class="field-input"/>
+        </div>
+        <button id="btn-ver" class="btn btn-primary">Ver cierre</button>
+        <button id="btn-exportar" class="btn btn-outline">📥 Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="cierre-kpis">
+      <div class="cierre-kpi cierre-kpi--green">
+        <div class="ck-label">Total ventas</div>
+        <div class="ck-val">$<span id="total-ventas">0,00</span></div>
+      </div>
+      <div class="cierre-kpi">
+        <div class="ck-label">Tickets</div>
+        <div class="ck-val" id="total-tickets">0</div>
+      </div>
+      <div class="cierre-kpi cierre-kpi--warn">
+        <div class="ck-label">Descuentos</div>
+        <div class="ck-val">$<span id="total-desc">0,00</span></div>
+      </div>
+      <div class="cierre-kpi cierre-kpi--blue">
+        <div class="ck-label">Promedio por ticket</div>
+        <div class="ck-val">$<span id="promedio-ticket">0,00</span></div>
+      </div>
+    </div>
+
+    <!-- Tabla por medio de pago -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">💳 Desglose por medio de pago</h2>
+        <span id="cierre-fecha-badge" class="cierre-fecha-badge"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Medio de pago</th>
+              <th class="center">Cant. ventas</th>
+              <th class="right">Subtotal</th>
+              <th class="right">Descuentos</th>
+              <th class="right">Total neto</th>
+              <th class="right">% del total</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span class="empty-icon">📅</span>
+                  <span>Seleccioná una fecha y presioná "Ver cierre"</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/auth-guard.js" data-rol="admin"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="/js/cierre.js"></script>
+</body>
+</html>

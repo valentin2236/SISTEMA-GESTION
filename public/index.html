@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inicio — Sistema Gestión PRO</title>
+    <link rel="stylesheet" href="/css/main.css"/>
+  </head>
+  <body>
+    <header class="top">
+      <h1>📊 Panel — Sistema Gestión</h1>
+      <div class="userbox">
+        <span id="user-email">—</span>
+        <button id="btn-logout" class="btn secondary">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="grid">
+        <a class="card" href="/pos.html">
+          <div class="icon">🧾</div>
+          <div class="title">Punto de Venta</div>
+          <div class="desc">Vender, imprimir ticket</div>
+        </a>
+
+        <a class="card" href="/admin/admin.html">
+          <div class="icon">📄</div>
+          <div class="title">Ventas</div>
+          <div class="desc">Listado y filtros</div>
+        </a>
+
+        <a class="card" href="/admin/caja.html">
+          <div class="icon">💵</div>
+          <div class="title">Caja</div>
+          <div class="desc">Apertura / Movimientos</div>
+        </a>
+
+        <a class="card" href="/admin/cierre.html">
+          <div class="icon">🧮</div>
+          <div class="title">Cierre</div>
+          <div class="desc">Arqueo y PDF</div>
+        </a>
+
+        <a class="card" href="/admin/productos.html">
+          <div class="icon">📦</div>
+          <div class="title">Productos</div>
+          <div class="desc">ABM de productos</div>
+        </a>
+
+        <a class="card" href="/admin/clientes.html">
+          <div class="icon">👥</div>
+          <div class="title">Clientes</div>
+          <div class="desc">Listado y altas</div>
+        </a>
+
+        <a class="card" href="admin/usuarios.html">
+          <div class="icon">🔑</div>
+          <div class="title">Usuarios</div>
+          <div class="desc">Roles y accesos</div>
+        </a>
+
+        <a
+          class="card"
+          href="admin/ganancias.html"
+          id="card-ganancias"
+          style="display: none"
+        >
+          <div class="icon">📈</div>
+          <div class="title">Ganancias</div>
+          <div class="desc">Márgenes, costos y rentabilidad</div>
+        </a>
+
+        <a class="card" href="admin/dashboard.html">
+          <div class="icon">📈</div>
+          <div class="title">Reportes</div>
+          <div class="desc">Ventas y medios de pago</div>
+        </a>
+
+        <!-- dentro del grid principal de index -->
+        <a
+          href="/config.html"
+          id="card-config"
+          class="card card-config"
+          style="display: none"
+        >
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" class="i-gear">
+              <path
+                d="M19.14,12.94a7.46,7.46,0,0,0,.05-.94,7.46,7.46,0,0,0-.05-.94l2-1.54a.5.5,0,0,0,.12-.64l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.23,7.23,0,0,0-1.63-.94l-.36-2.51A.5.5,0,0,0,12,2h-4a.5.5,0,0,0-.49.41L7.18,4.92a7.23,7.23,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L.7,8.35a.5.5,0,0,0,.12.64l2,1.54a7.46,7.46,0,0,0-.05.94,7.46,7.46,0,0,0,.05.94l-2,1.54a.5.5,0,0,0-.12.64l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.23,7.23,0,0,0,1.63.94l.36,2.51A.5.5,0,0,0,8,22h4a.5.5,0,0,0,.49-.41l.36-2.51a7.23,7.23,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0-.12-.64ZM10,12a2,2,0,1,1,2,2A2,2,0,0,1,10,12Z"
+              />
+            </svg>
+          </div>
+          <div class="card-title">Configuración</div>
+          <p class="card-desc">
+            Impresora, ticket, datos del comercio y autoprint.
+          </p>
+        </a>
+      </section>
+    </main>
+
+    <script src="/js/index.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const card = document.getElementById("card-config");
+        if (!card) {
+          console.warn("No se encontró #card-config");
+          return;
+        }
+
+        const token = localStorage.getItem("token"); // lo setea tu login
+        const role = localStorage.getItem("user_role") || ""; // 'admin' o 'vendedor' (si lo guardás)
+
+        // === reglas de visibilidad ===
+        const requireAdmin = false; // poné true si querés que sólo admin la vea
+
+        const canShow = !!token && (requireAdmin ? role === "admin" : true);
+
+        if (canShow) {
+          card.style.display = "block"; // mostrar
+        } else {
+          card.style.display = "none"; // ocultar
+        }
+
+        // Debug opcional para verificar qué hay en storage
+        // console.log({token, role});
+      });
+
+      // Mostrar card ganancias solo a admin
+      const cardGanancias = document.getElementById("card-ganancias");
+      if (cardGanancias && localStorage.getItem("user_rol") === "admin") {
+        cardGanancias.style.display = "block";
+      }
+    </script>
+    <script src="../js/navbar.js"></script>
+  </body>
+</html>

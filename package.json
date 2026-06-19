@@ -1,0 +1,71 @@
+{
+  "name": "sistema-gestion-pro",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión Comercial PRO — versión con backend + Electron",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "concurrently --raw -s all --kill-others \"nodemon backend/server.js\" \"sass public/scss/main.scss public/css/main.css --watch --style=expanded\"",
+    "sass": "sass public/scss/main.scss public/css/main.css --style=compressed",
+    "sass:watch": "sass public/scss/main.scss public/css/main.css --watch --style=expanded",
+    "migrate": "node backend/db.js --migrate",
+    "electron": "electron .",
+    "dev:electron": "concurrently -k \"npm:dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "bwip-js": "^4.10.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "electron-updater": "^6.8.9",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12",
+    "nodemon": "^3.1.0",
+    "sass": "^1.100.0",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.sistemagestionpro.app",
+    "productName": "Sistema Gestión PRO",
+    "directories": {
+      "buildResources": "build"
+    },
+    "files": [
+      "backend/**/*",
+      "public/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      "db.sqlite"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "valentin2236",
+      "repo": "sistema-gestion-pro"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+// =============================================
+// UTILITIES
+// =============================================
+
+// Display
+.hidden  { display: none !important; }
+.flex    { display: flex; }
+.grid    { display: grid; }
+.block   { display: block; }
+.inline  { display: inline; }
+
+// Flex helpers
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center  { display: flex; justify-content: center; align-items: center; }
+.flex-end     { display: flex; justify-content: flex-end; align-items: center; }
+.flex-col     { display: flex; flex-direction: column; }
+.flex-wrap    { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.gap-1 { gap: $space-1; } .gap-2 { gap: $space-2; }
+.gap-3 { gap: $space-3; } .gap-4 { gap: $space-4; }
+
+// Spacing
+.mt-1 { margin-top: $space-1; } .mt-2 { margin-top: $space-2; }
+.mt-3 { margin-top: $space-3; } .mt-4 { margin-top: $space-4; }
+.mt-5 { margin-top: $space-5; }
+.mb-1 { margin-bottom: $space-1; } .mb-2 { margin-bottom: $space-2; }
+.mb-3 { margin-bottom: $space-3; } .mb-4 { margin-bottom: $space-4; }
+.mb-5 { margin-bottom: $space-5; }
+
+// Typography
+.text-xs    { font-size: $text-xs; }
+.text-sm    { font-size: $text-sm; }
+.text-base  { font-size: $text-base; }
+.text-lg    { font-size: $text-lg; }
+.text-xl    { font-size: $text-xl; }
+.text-bold  { font-weight: 700; }
+.text-muted   { color: var(--muted); }
+.text-success { color: var(--accent); }
+.text-danger  { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-right   { text-align: right; }
+.text-center  { text-align: center; }
+.uppercase    { text-transform: uppercase; letter-spacing: .05em; }
+
+// Bordes
+.rounded    { border-radius: $radius; }
+.rounded-sm { border-radius: $radius-sm; }
+.rounded-lg { border-radius: $radius-lg; }
+.border     { border: 1px solid var(--border); }
+
+// Misc
+.w-full          { width: 100%; }
+.cursor-pointer  { cursor: pointer; }
+.overflow-hidden { overflow: hidden; }
+.overflow-auto   { overflow: auto; }
+.relative        { position: relative; }
+.sticky-top      { position: sticky; top: 0; z-index: 10; }

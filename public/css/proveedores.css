@@ -1,0 +1,198 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:Arial, Helvetica, sans-serif;
+  background:#0f172a;
+  color:white;
+}
+
+.topbar{
+  background:#111827;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #1e293b;
+}
+
+.topbar h1{
+  font-size:24px;
+}
+
+.topbar nav{
+  display:flex;
+  gap:15px;
+}
+
+.topbar nav a{
+  color:#cbd5e1;
+  text-decoration:none;
+}
+
+.topbar nav a:hover{
+  color:white;
+}
+
+.container{
+  padding:25px;
+}
+
+.actions{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:20px;
+  gap:15px;
+}
+
+.actions input{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#1e293b;
+  color:white;
+}
+
+.actions button{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.table-container{
+  background:#111827;
+  border-radius:15px;
+  overflow:hidden;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+thead{
+  background:#1e293b;
+}
+
+th, td{
+  padding:15px;
+  text-align:left;
+}
+
+tbody tr{
+  border-top:1px solid #1e293b;
+}
+
+tbody tr:hover{
+  background:#172033;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+}
+
+.btn-edit{
+  background:#f59e0b;
+  border:none;
+  color:white;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.btn-delete{
+  background:#ef4444;
+  border:none;
+  color:white;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.hidden{
+  display:none;
+}
+
+.modal-content{
+  width:100%;
+  max-width:500px;
+  background:#111827;
+  border-radius:15px;
+  padding:25px;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.modal-header button{
+  background:none;
+  border:none;
+  color:white;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:15px;
+}
+
+.form-group label{
+  margin-bottom:8px;
+  color:#cbd5e1;
+}
+
+.form-group input,
+.form-group textarea{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#1e293b;
+  color:white;
+}
+
+.form-group textarea{
+  resize:none;
+  min-height:100px;
+}
+
+.btn-save{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.empty{
+  text-align:center;
+  padding:25px;
+  color:#94a3b8;
+}

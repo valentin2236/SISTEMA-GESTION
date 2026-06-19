@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Ganancias — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="ganancias-page">
+
+  <main class="gan-wrap">
+
+    <!-- Topbar -->
+    <div class="gan-topbar">
+      <div>
+        <h1 class="gan-title">📈 Ganancias</h1>
+        <p class="gan-sub">Análisis de rentabilidad por período</p>
+      </div>
+
+      <!-- Filtros de fecha -->
+      <div class="gan-filtros">
+        <div class="gan-filtro-grupo">
+          <div class="field">
+            <label class="field-label">Desde</label>
+            <input id="desde" type="date" class="field-input"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Hasta</label>
+            <input id="hasta" type="date" class="field-input"/>
+          </div>
+        </div>
+        <div class="gan-accesos-rapidos">
+          <button class="btn btn-outline btn-sm" data-dias="7">7 días</button>
+          <button class="btn btn-outline btn-sm" data-dias="30">30 días</button>
+          <button class="btn btn-outline btn-sm" data-dias="90">90 días</button>
+          <button id="btn-aplicar" class="btn btn-primary btn-sm">Aplicar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="gan-kpis">
+      <div class="gan-kpi">
+        <div class="gk-label">Ingresos totales</div>
+        <div class="gk-val" id="k-ingresos">—</div>
+        <div class="gk-sub" id="k-tickets">— tickets</div>
+      </div>
+      <div class="gan-kpi gan-kpi--red">
+        <div class="gk-label">Costos</div>
+        <div class="gk-val" id="k-costos">—</div>
+        <div class="gk-sub">costo de mercadería</div>
+      </div>
+      <div class="gan-kpi gan-kpi--green">
+        <div class="gk-label">Ganancia bruta</div>
+        <div class="gk-val" id="k-ganancia">—</div>
+        <div class="gk-sub" id="k-margen">margen —%</div>
+      </div>
+      <div class="gan-kpi">
+        <div class="gk-label">Descuentos otorgados</div>
+        <div class="gk-val gk-val--warn" id="k-descuentos">—</div>
+        <div class="gk-sub">total descontado</div>
+      </div>
+      <div class="gan-kpi gan-kpi--blue">
+        <div class="gk-label">Total neto</div>
+        <div class="gk-val" id="k-neto">—</div>
+        <div class="gk-sub">después de descuentos</div>
+      </div>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="panel gan-chart-panel">
+      <div class="panel-head">
+        <h2 class="panel-title">📊 Ingresos vs Ganancia diaria</h2>
+        <div class="gan-chart-toggle">
+          <button class="btn btn-outline btn-sm gan-toggle active" data-tipo="bar">Barras</button>
+          <button class="btn btn-outline btn-sm gan-toggle" data-tipo="line">Línea</button>
+        </div>
+      </div>
+      <div class="gan-chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabla detalle -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">📋 Detalle por día</h2>
+        <span id="gan-periodo" class="gan-periodo-badge"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th class="center">Tickets</th>
+              <th class="right">Ingresos</th>
+              <th class="right">Costos</th>
+              <th class="right">Descuentos</th>
+              <th class="right">Ganancia</th>
+              <th class="right">Margen</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ganancias">
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <span class="empty-icon">📈</span>
+                  <span>Cargando datos…</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/js/auth-guard.js" data-rol="admin"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="/js/ganancias.js"></script>
+</body>
+</html>

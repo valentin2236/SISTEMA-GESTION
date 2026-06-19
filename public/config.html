@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Configuración — Sistema Gestión PRO</title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body class="config-page">
+    <main class="page-wrap">
+      <div class="page-header">
+        <div>
+          <h1>⚙️ Configuración</h1>
+          <p class="page-subtitle">Personalizá el sistema según tu negocio</p>
+        </div>
+        <div class="cfg-header-actions">
+          <button id="btnGuardar" class="btn btn-primary">
+            Guardar cambios
+          </button>
+          <button
+            id="btnRestablecer"
+            class="btn btn-outline btn-danger-outline"
+          >
+            Restablecer
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de estado -->
+      <div id="cfg-toast" class="cfg-toast" aria-live="polite"></div>
+
+      <!-- ── TABS ───────────────────────────────────────────── -->
+      <div class="cfg-tabs">
+        <button class="cfg-tab active" data-tab="comercio">🏪 Comercio</button>
+        <button class="cfg-tab" data-tab="impresora">🖨️ Impresora</button>
+        <button class="cfg-tab" data-tab="moneda">💱 Moneda</button>
+        <button class="cfg-tab" data-tab="backup">💾 Backup</button>
+        <button class="cfg-tab" data-tab="licencia">🔐 Licencia</button>
+        <button class="cfg-tab" data-tab="ia">🤖 IA</button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: COMERCIO
+    ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-comercio">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Datos del negocio</span>
+            <span class="panel-sub"
+              >Aparecen en el encabezado de cada ticket</span
+            >
+          </div>
+
+          <div class="cfg-grid">
+            <div class="field">
+              <label class="field-label">Nombre / Fantasía</label>
+              <input
+                id="empresaNombre"
+                class="field-input"
+                placeholder="Mi Tienda"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Dirección</label>
+              <input
+                id="empresaDir"
+                class="field-input"
+                placeholder="Av. Siempre Viva 742"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field-label">CUIT / RUT</label>
+              <input
+                id="empresaCuit"
+                class="field-input"
+                placeholder="30-00000000-0"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Teléfono</label>
+              <input
+                id="empresaTelefono"
+                class="field-input"
+                placeholder="+54 381 000-0000"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field field--full">
+              <label class="field-label">Mensaje pie de ticket</label>
+              <input
+                id="ticketFooter"
+                class="field-input"
+                placeholder="¡Gracias por su compra!"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Logo</span>
+            <span class="panel-sub">Se imprime en la cabecera del ticket</span>
+          </div>
+
+          <div class="cfg-logo-wrap">
+            <div class="cfg-logo-preview-box">
+              <img id="logoPreview" alt="Preview logo" />
+              <span id="logoEmpty" class="cfg-logo-empty">Sin logo</span>
+            </div>
+
+            <div class="cfg-logo-controls">
+              <div class="field">
+                <label class="field-label"
+                  >Subir desde archivo
+                  <span class="field-hint"
+                    >Se guarda embebido (sin internet)</span
+                  >
+                </label>
+                <label class="cfg-file-btn">
+                  <input id="empresaLogoFile" type="file" accept="image/*" />
+                  📎 Elegir imagen
+                </label>
+              </div>
+
+              <div class="cfg-divider-or">— o —</div>
+
+              <div class="field">
+                <label class="field-label">URL pública</label>
+                <input
+                  id="empresaLogo"
+                  class="field-input"
+                  placeholder="https://mitienda.com/logo.png"
+                />
+              </div>
+
+              <p id="logoInfo" class="cfg-logo-info"></p>
+
+              <button
+                id="btnQuitarLogo"
+                class="btn btn-outline btn-sm cfg-logo-remove"
+                style="display: none"
+              >
+                🗑 Quitar logo
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: IMPRESORA
+    ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-impresora" style="display: none">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Impresora de tickets</span>
+            <span class="panel-sub"
+              >Configuración para impresoras térmicas</span
+            >
+          </div>
+
+          <div class="cfg-grid">
+            <div class="field">
+              <label class="field-label">Impresora predeterminada</label>
+              <div class="cfg-printer-row">
+                <select id="printerSelect" class="field-input">
+                  <option value="">(Seleccionar)</option>
+                </select>
+                <button id="btnListPrinters" class="btn btn-outline btn-sm">
+                  🔍 Detectar
+                </button>
+              </div>
+              <p id="printersHint" class="field-hint">
+                Hacé clic en Detectar para ver las impresoras disponibles.
+              </p>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Ancho de ticket</label>
+              <select id="ticketWidth" class="field-input">
+                <option value="58">58 mm (pequeño)</option>
+                <option value="80" selected>80 mm (estándar)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Impresión automática</label>
+              <select id="autoPrint" class="field-input">
+                <option value="on" selected>
+                  Activada — imprime al confirmar venta
+                </option>
+                <option value="off">Desactivada — solo vista previa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cfg-electron-notice panel-sub" style="margin-top: 12px">
+            ℹ️ La detección de impresoras y la impresión automática requieren la
+            <strong>app de escritorio (Electron)</strong>. En el navegador,
+            podés usar la impresión del sistema con Ctrl+P.
+          </div>
+        </div>
+
+        <!-- Preview ticket -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Vista previa del ticket</span>
+            <span class="panel-sub">Así se verá el encabezado impreso</span>
+          </div>
+          <div class="cfg-ticket-preview" id="ticketPreview">
+            <!-- Se genera dinámicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: MONEDA
+    ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-moneda" style="display: none">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Formato de moneda y números</span>
+            <span class="panel-sub"
+              >Afecta cómo se muestran los precios en todo el sistema</span
+            >
+          </div>
+
+          <div class="cfg-grid">
+            <div class="field">
+              <label class="field-label">Símbolo de moneda</label>
+              <input
+                id="monedaSimbolo"
+                class="field-input"
+                placeholder="$"
+                maxlength="5"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Código ISO</label>
+              <input
+                id="monedaCodigo"
+                class="field-input"
+                placeholder="ARS"
+                maxlength="5"
+              />
+              <p class="field-hint">Ej: ARS, USD, CLP, PEN</p>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Separador decimal</label>
+              <select id="monedaDecimal" class="field-input">
+                <option value=",">, (coma) — Ej: 1.234,56</option>
+                <option value=".">. (punto) — Ej: 1,234.56</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Decimales a mostrar</label>
+              <select id="monedaDecimals" class="field-input">
+                <option value="0">Sin decimales — Ej: $1.234</option>
+                <option value="2" selected>2 decimales — Ej: $1.234,56</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Posición del símbolo</label>
+              <select id="monedaPosicion" class="field-input">
+                <option value="before" selected>Antes — $1.234,56</option>
+                <option value="after">Después — 1.234,56 $</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">IVA predeterminado</label>
+              <select id="ivaDefault" class="field-input">
+                <option value="0">Sin IVA (0%)</option>
+                <option value="10.5">10,5%</option>
+                <option value="21" selected>21%</option>
+                <option value="27">27%</option>
+              </select>
+              <p class="field-hint">Se usa al crear nuevos productos</p>
+            </div>
+          </div>
+
+          <!-- Preview vivo -->
+          <div class="cfg-moneda-preview">
+            <span class="cfg-moneda-label">Vista previa:</span>
+            <span id="monedaPreview" class="cfg-moneda-sample">$1.234,56</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: BACKUP
+    ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-backup" style="display: none">
+        <!-- Backup de BD real -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Backup de base de datos</span>
+            <span class="panel-sub">Respaldos completos del archivo SQLite</span>
+          </div>
+          <div class="cfg-backup-actions">
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">💾</div>
+              <div>
+                <p class="cfg-backup-title">Crear backup ahora</p>
+                <p class="field-hint">Genera una copia completa de la base de datos</p>
+              </div>
+              <button id="btnCrearBackup" class="btn btn-primary">Crear backup</button>
+            </div>
+          </div>
+          <div id="backups-lista" style="margin-top:16px">
+            <p class="field-hint">Cargando backups...</p>
+          </div>
+        </div>
+
+        <!-- Config export/import -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Configuración local</span>
+            <span class="panel-sub">Exportar/importar ajustes de impresora, moneda, comercio</span>
+          </div>
+
+          <div class="cfg-backup-actions">
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">📋</div>
+              <div>
+                <p class="cfg-backup-title">Configuración del sistema</p>
+                <p class="field-hint">Exporta impresora, moneda, datos del comercio y logo</p>
+              </div>
+              <button id="btnExportConfig" class="btn btn-outline">Exportar .json</button>
+            </div>
+          </div>
+
+          <div class="cfg-import-wrap" style="margin-top:16px">
+            <label class="cfg-file-btn">
+              <input id="importConfigFile" type="file" accept=".json" />
+              📂 Importar configuración .json
+            </label>
+            <p id="importStatus" class="field-hint"></p>
+          </div>
+
+          <div class="cfg-danger-zone">
+            <p class="cfg-danger-title">⚠️ Zona peligrosa</p>
+            <p class="field-hint" style="margin-bottom: 12px">Estas acciones no se pueden deshacer</p>
+            <button id="btnLimpiarConfig" class="btn btn-outline btn-danger-outline">Borrar solo configuración</button>
+          </div>
+        </div>
+
+        <!-- Exportar CSV -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Exportar datos (CSV)</span>
+            <span class="panel-sub">Descargá reportes en formato CSV para abrir en Excel</span>
+          </div>
+          <div class="cfg-backup-actions" style="flex-direction:column;gap:8px">
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">📊</div>
+              <div><p class="cfg-backup-title">Ventas</p></div>
+              <button class="btn btn-outline btn-sm" onclick="descargarCSV('ventas')">Descargar CSV</button>
+            </div>
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">📦</div>
+              <div><p class="cfg-backup-title">Productos</p></div>
+              <button class="btn btn-outline btn-sm" onclick="descargarCSV('productos')">Descargar CSV</button>
+            </div>
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">👥</div>
+              <div><p class="cfg-backup-title">Clientes</p></div>
+              <button class="btn btn-outline btn-sm" onclick="descargarCSV('clientes')">Descargar CSV</button>
+            </div>
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">🔍</div>
+              <div><p class="cfg-backup-title">Inventario</p></div>
+              <button class="btn btn-outline btn-sm" onclick="descargarCSV('inventario')">Descargar CSV</button>
+            </div>
+            <div class="cfg-backup-item">
+              <div class="cfg-backup-icon">💵</div>
+              <div><p class="cfg-backup-title">Sesiones de caja</p></div>
+              <button class="btn btn-outline btn-sm" onclick="descargarCSV('caja')">Descargar CSV</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: LICENCIA
+    ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-licencia" style="display: none">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Estado de la licencia</span>
+            <span class="panel-sub">Información sobre tu activación</span>
+          </div>
+          <div id="licencia-estado" style="padding:16px">
+            <p class="field-hint">Cargando...</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Activar licencia</span>
+            <span class="panel-sub">Ingresá la clave proporcionada por el proveedor</span>
+          </div>
+          <div class="cfg-grid" style="padding:0 0 16px 0">
+            <div class="field field--full">
+              <label class="field-label">Clave de licencia</label>
+              <div style="display:flex;gap:8px">
+                <input id="licencia-clave" class="field-input" type="text"
+                       placeholder="SGP-xxxxx-xxxxx" autocomplete="off" style="font-family:monospace"/>
+                <button id="btnActivarLicencia" class="btn btn-primary">Activar</button>
+              </div>
+              <p id="licencia-msg" class="field-hint" style="margin-top:8px"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cfg-panel" id="tab-ia" style="display: none">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Inteligencia Artificial</span>
+            <span class="panel-sub"
+              >Para importar productos desde fotos de facturas</span
+            >
+          </div>
+
+          <div class="cfg-grid">
+            <div class="field field--full">
+              <label class="field-label">
+                API Key de Anthropic
+                <a
+                  href="https://console.anthropic.com"
+                  target="_blank"
+                  class="field-hint"
+                  style="margin-left: 8px"
+                >
+                  ¿Cómo obtenerla? →
+                </a>
+              </label>
+              <div class="cfg-apikey-row">
+                <input
+                  id="anthropicApiKey"
+                  class="field-input cfg-apikey-input"
+                  type="password"
+                  placeholder="sk-ant-api03-..."
+                  autocomplete="off"
+                />
+                <button
+                  id="btnToggleKey"
+                  class="btn btn-outline btn-sm"
+                  title="Mostrar/ocultar"
+                >
+                  👁
+                </button>
+                <button id="btnTestKey" class="btn btn-outline btn-sm">
+                  Probar
+                </button>
+              </div>
+              <p id="anthropicKeyStatus" class="field-hint"></p>
+              <p class="field-hint" style="margin-top: 6px">
+                La key se guarda en el servidor, nunca en el navegador. Cada
+                análisis de foto cuesta aproximadamente $0.01 USD.
+              </p>
+            </div>
+          </div>
+
+          <div id="cfg-ia-estado" class="cfg-ia-estado" style="display: none">
+            <!-- se rellena por JS -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/navbar.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/auth-guard.js"></script>
+  </body>
+</html>

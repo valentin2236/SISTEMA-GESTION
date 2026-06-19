@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sistema Gestión PRO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      /* ── Reset & base ─────────────────────────────── */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body.login-page {
+        font-family: 'Inter', system-ui, sans-serif;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      /* ── Layout ───────────────────────────────────── */
+      .login-layout {
+        display: grid;
+        grid-template-columns: 1fr 460px;
+        min-height: 100vh;
+      }
+
+      /* ══════════════════════════════════════════════
+         PANEL IZQUIERDO
+      ══════════════════════════════════════════════ */
+      .login-brand {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 48px 56px;
+        overflow: hidden;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+      }
+
+      /* Blobs animados de fondo */
+      .login-brand::before,
+      .login-brand::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        pointer-events: none;
+        animation: floatBlob 14s ease-in-out infinite;
+      }
+      .login-brand::before {
+        width: 500px; height: 500px;
+        background: rgba(0, 214, 117, .10);
+        top: -180px; left: -180px;
+      }
+      .login-brand::after {
+        width: 400px; height: 400px;
+        background: rgba(0, 140, 255, .09);
+        bottom: -160px; right: -160px;
+        animation-delay: -7s;
+      }
+      @keyframes floatBlob {
+        0%, 100% { transform: translate(0, 0); }
+        50%       { transform: translate(40px, -40px); }
+      }
+
+      /* Contenido sobre los blobs */
+      .brand-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        height: 100%;
+      }
+
+      /* ── Bloque del negocio ── */
+      .brand-negocio {
+        background: rgba(255,255,255,.04);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px 32px;
+        backdrop-filter: blur(12px);
+      }
+      .brand-logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 14px;
+        object-fit: contain;
+        margin-bottom: 16px;
+        display: none; /* se muestra si hay logo */
+      }
+      .brand-logo-placeholder {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 900;
+        color: #000;
+        margin-bottom: 16px;
+      }
+      .brand-negocio-nombre {
+        font-size: 2.4rem;
+        font-weight: 900;
+        line-height: 1.1;
+        color: var(--text);
+        letter-spacing: -0.02em;
+      }
+      .brand-negocio-desc {
+        margin-top: 10px;
+        font-size: 0.95rem;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      /* ── Mensajes rotativos ── */
+      .brand-messages {
+        margin-top: 48px;
+        flex: 1;
+      }
+      .brand-messages-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+      .rotating-message {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1.4;
+        color: var(--accent);
+        min-height: 100px;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+      }
+      .rotating-message.hide {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      /* ── Footer del brand ── */
+      .brand-footer {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+      }
+      .brand-footer-logos {
+        display: flex;
+        gap: 10px;
+      }
+      .brand-footer-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        object-fit: contain;
+        opacity: 0.85;
+        transition: opacity 0.2s, transform 0.2s;
+      }
+      .brand-footer-logo:hover {
+        opacity: 1;
+        transform: translateY(-3px);
+      }
+      .brand-footer-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .brand-footer-text strong {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .brand-footer-text span {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      /* ══════════════════════════════════════════════
+         PANEL DERECHO — FORMULARIO
+      ══════════════════════════════════════════════ */
+      .login-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 48px 44px;
+        background: var(--bg);
+        border-left: 1px solid var(--border);
+      }
+
+      .login-header {
+        margin-bottom: 36px;
+      }
+      .login-header h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.02em;
+      }
+      .login-header p {
+        margin-top: 6px;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+
+      /* ── Formulario ── */
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .lf-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .lf-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: 0.02em;
+      }
+      .lf-input {
+        height: 46px;
+        padding: 0 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.9rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        width: 100%;
+      }
+      .lf-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 214, 117, .12);
+      }
+      .lf-pass-wrap {
+        position: relative;
+      }
+      .lf-pass-wrap .lf-input {
+        padding-right: 46px;
+      }
+      .lf-toggle-pass {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 1rem;
+        padding: 0;
+        line-height: 1;
+      }
+
+      .lf-remember {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .btn-login {
+        height: 48px;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #000;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+        letter-spacing: 0.01em;
+        margin-top: 4px;
+      }
+      .btn-login:hover  { opacity: 0.88; }
+      .btn-login:active { transform: scale(0.99); }
+      .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+      /* ── Mensaje de error/info ── */
+      .login-msg {
+        min-height: 20px;
+        font-size: 0.82rem;
+        margin-top: 4px;
+        color: var(--danger, #ef4444);
+        font-weight: 500;
+      }
+      .login-msg.ok { color: var(--accent); }
+
+      /* ── Sesión activa ── */
+      .session-box {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .session-box span {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .btn-logout {
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .btn-logout:hover { background: var(--surface2); }
+
+      /* ── Footer versión ── */
+      .login-footer {
+        margin-top: 28px;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      /* ══════════════════════════════════════════════
+         RESPONSIVE
+      ══════════════════════════════════════════════ */
+      @media (max-width: 900px) {
+        .login-layout { grid-template-columns: 1fr; }
+        .login-brand  { display: none; }
+        .login-card   { max-width: 480px; width: 100%; margin: auto; min-height: 100vh; }
+      }
+      @media (max-width: 520px) {
+        .login-card { padding: 36px 24px; }
+      }
+    </style>
+  </head>
+
+  <body class="login-page">
+    <div class="login-layout">
+
+      <!-- ══ PANEL IZQUIERDO ══ -->
+      <aside class="login-brand">
+        <div class="brand-inner">
+
+          <!-- Negocio -->
+          <div class="brand-negocio">
+            <img id="brand-logo-img" class="brand-logo" alt="Logo" />
+            <div id="brand-logo-placeholder" class="brand-logo-placeholder">G</div>
+            <div id="brand-nombre" class="brand-negocio-nombre">Sistema de Gestión</div>
+            <p class="brand-negocio-desc">Gestión inteligente para negocios modernos</p>
+          </div>
+
+          <!-- Mensajes rotativos -->
+          <div class="brand-messages">
+            <div class="brand-messages-label">Por qué elegirnos</div>
+            <div id="rotating-message" class="rotating-message"></div>
+          </div>
+
+          <!-- Footer Savatek -->
+          <div class="brand-footer">
+            <div class="brand-footer-logos">
+              <img src="/img/logochiquito.png" alt="Savatek" class="brand-footer-logo"
+                   onerror="this.style.display='none'" />
+              <img src="/img/logo-ValentinArriola.ico" alt="Valentin Arriola" class="brand-footer-logo"
+                   onerror="this.style.display='none'" />
+            </div>
+            <div class="brand-footer-text">
+              <strong>Savatek Solutions</strong>
+              <span>Desarrollado por Valentin Arriola</span>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- ══ PANEL DERECHO ══ -->
+      <main class="login-card">
+
+        <div class="login-header">
+          <h2>Iniciar sesión</h2>
+          <p>Ingresá tus credenciales para continuar</p>
+        </div>
+
+        <form id="frm" class="login-form" autocomplete="on">
+          <div class="lf-field">
+            <label class="lf-label" for="email">Email</label>
+            <input id="email" class="lf-input" type="email" required
+                   placeholder="admin@empresa.com" autocomplete="email" />
+          </div>
+
+          <div class="lf-field">
+            <label class="lf-label" for="pass">Contraseña</label>
+            <div class="lf-pass-wrap">
+              <input id="pass" class="lf-input" type="password" required
+                     placeholder="••••••••" autocomplete="current-password" />
+              <button type="button" id="toggle-pass" class="lf-toggle-pass"
+                      title="Mostrar contraseña">👁</button>
+            </div>
+          </div>
+
+          <label class="lf-remember">
+            <input type="checkbox" id="remember" />
+            Recordar sesión
+          </label>
+
+          <button class="btn-login" type="submit" id="btn-submit">
+            Ingresar
+          </button>
+        </form>
+
+        <div id="msg" class="login-msg"></div>
+
+        <div class="session-box" id="session-box" style="display:none">
+          <span id="who"></span>
+          <button id="btn-logout" class="btn-logout" type="button">
+            Cerrar sesión activa
+          </button>
+        </div>
+
+        <div class="login-footer">Versión 1.0 · Savatek Solutions</div>
+
+      </main>
+    </div>
+
+    <script>
+      // ── Cargar branding del negocio desde config ──
+      (function () {
+        try {
+          const cfg = JSON.parse(localStorage.getItem('cfg') || '{}');
+          const logo      = cfg.empresaLogoData || cfg.empresaLogo || '';
+          const nombre    = cfg.empresaNombre || '';
+          const $logoImg  = document.getElementById('brand-logo-img');
+          const $logoPlc  = document.getElementById('brand-logo-placeholder');
+          const $nombre   = document.getElementById('brand-nombre');
+
+          if (nombre) {
+            $nombre.textContent = nombre;
+            $logoPlc.textContent = nombre.charAt(0).toUpperCase();
+          }
+          if (logo) {
+            $logoImg.src = logo;
+            $logoImg.style.display = 'block';
+            $logoPlc.style.display = 'none';
+          }
+        } catch {}
+      })();
+
+      // ── Mensajes rotativos ──
+      (function () {
+        const mensajes = [
+          "Control total de tu negocio en un solo lugar.",
+          "Vendé más rápido con el POS optimizado.",
+          "Stock siempre actualizado en tiempo real.",
+          "Reportes claros para tomar mejores decisiones.",
+          "Gestioná clientes, proveedores y compras fácilmente.",
+        ];
+        const $el = document.getElementById('rotating-message');
+        let i = 0;
+
+        function mostrar(idx) {
+          $el.classList.add('hide');
+          setTimeout(() => {
+            $el.textContent = mensajes[idx];
+            $el.classList.remove('hide');
+          }, 400);
+        }
+
+        mostrar(0);
+        setInterval(() => {
+          i = (i + 1) % mensajes.length;
+          mostrar(i);
+        }, 4000);
+      })();
+
+      // ── Toggle password ──
+      document.getElementById('toggle-pass')?.addEventListener('click', () => {
+        const inp = document.getElementById('pass');
+        const btn = document.getElementById('toggle-pass');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+      });
+    </script>
+
+    <script src="/js/login.js"></script>
+  </body>
+</html>

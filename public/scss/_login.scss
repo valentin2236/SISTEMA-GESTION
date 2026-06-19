@@ -1,0 +1,503 @@
+// ============================================================
+// LOGIN — body.login-page
+// ============================================================
+
+body.login-page {
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+
+  // ─────────────────────────────────────────
+  // Layout
+  // ─────────────────────────────────────────
+
+  .login-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+  }
+
+  // ─────────────────────────────────────────
+  // Panel izquierdo
+  // ─────────────────────────────────────────
+
+  .login-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-5;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+  }
+
+  .brand-content {
+  max-width: 550px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: $text-sm;
+    font-weight: 600;
+  }
+
+  .brand-content h1 {
+    margin: $space-4 0 $space-3;
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .brand-content p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .brand-features {
+    margin-top: $space-5;
+    padding-left: 20px;
+
+    li {
+      margin-bottom: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Panel Login
+  // ─────────────────────────────────────────
+
+  .login-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: $space-5;
+    background: var(--bg);
+  }
+
+  .login-header {
+    margin-bottom: $space-4;
+
+    h2 {
+      margin: 0;
+      font-size: $text-xl;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: $text-sm;
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Formulario
+  // ─────────────────────────────────────────
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field label {
+    font-size: $text-sm;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .field input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border-radius: $radius;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    transition: .15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Password
+  // ─────────────────────────────────────────
+
+  .password-wrap {
+    position: relative;
+
+    input {
+      padding-right: 50px;
+    }
+  }
+
+  .toggle-pass {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  // ─────────────────────────────────────────
+  // Recordar sesión
+  // ─────────────────────────────────────────
+
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: $text-sm;
+
+    input {
+      width: auto;
+      height: auto;
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Botón Login
+  // ─────────────────────────────────────────
+
+  .btn-login {
+    height: 48px;
+    border: none;
+    border-radius: $radius;
+    cursor: pointer;
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
+    transition: .15s;
+
+    &:hover {
+      opacity: .9;
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Mensajes
+  // ─────────────────────────────────────────
+
+  .login-msg {
+    margin-top: $space-3;
+    min-height: 24px;
+    font-size: $text-sm;
+    color: var(--muted);
+  }
+
+  // ─────────────────────────────────────────
+  // Sesión activa
+  // ─────────────────────────────────────────
+
+  .session-box {
+    margin-top: $space-4;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: $space-4;
+    border-top: 1px solid var(--border);
+
+    span {
+      color: var(--muted);
+      font-size: $text-sm;
+    }
+  }
+
+  .btn-logout {
+    height: 42px;
+    border-radius: $radius;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: .15s;
+
+    &:hover {
+      background: var(--surface2);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Footer
+  // ─────────────────────────────────────────
+
+  .login-footer {
+    margin-top: $space-5;
+    color: var(--muted);
+    font-size: $text-sm;
+  }
+
+  // ─────────────────────────────────────────
+  // Responsive
+  // ─────────────────────────────────────────
+
+        // =========================================
+        // PANEL IZQUIERDO MODERNO
+        // =========================================
+
+        .login-brand {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+
+        padding: 70px;
+
+        overflow: hidden;
+
+        background:
+            radial-gradient(circle at top left,
+            rgba(0,255,136,.15),
+            transparent 40%),
+            radial-gradient(circle at bottom right,
+            rgba(0,150,255,.12),
+            transparent 45%),
+            var(--surface);
+
+        border-right: 1px solid var(--border);
+        }
+
+        .login-brand::before,
+        .login-brand::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        animation: floatBlob 12s ease-in-out infinite;
+        }
+
+        .login-brand::before {
+        width: 350px;
+        height: 350px;
+        background: rgba(0,255,136,.12);
+        top: -120px;
+        left: -120px;
+        }
+
+        .login-brand::after {
+        width: 300px;
+        height: 300px;
+        background: rgba(0,150,255,.12);
+        bottom: -120px;
+        right: -120px;
+        }
+
+        @keyframes floatBlob {
+        0%,100% {
+            transform: translate(0,0);
+        }
+
+        50% {
+            transform: translate(30px,-30px);
+        }
+        }
+
+        .brand-content {
+        position: relative;
+        z-index: 2;
+
+        max-width: 700px;
+        width: 100%;
+
+        display: flex;
+        flex-direction: column;
+        min-height: 80vh;
+        }
+
+        .brand-company {
+        width: 100%;
+
+        padding: 28px;
+
+        border-radius: 24px;
+
+        background: rgba(255,255,255,.04);
+
+        backdrop-filter: blur(10px);
+
+        border: 1px solid var(--border);
+        }
+
+        .company-logo {
+        width: 120px;
+        height: auto;
+
+        object-fit: contain;
+
+        margin-bottom: 20px;
+        }
+
+        .brand-company h1 {
+        margin: 0;
+
+        font-size: 3rem;
+        font-weight: 900;
+
+        line-height: 1.1;
+        }
+
+        .company-desc {
+        margin-top: 12px;
+
+        color: var(--muted);
+
+        font-size: 1rem;
+        }
+
+        .brand-message {
+        margin-top: 50px;
+        width: 100%;
+
+        background: transparent;
+        border: none;
+        padding: 0;
+        }
+
+        .message-label {
+        display: block;
+
+        margin-bottom: 12px;
+
+        color: var(--muted);
+
+        font-size: .85rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: .08em;
+        }
+
+        .rotating-message {
+        font-size: 2rem;
+        font-weight: 800;
+
+        line-height: 1.4;
+
+        color: #00e676;
+
+        min-height: 120px;
+
+        transition:
+            opacity .4s ease,
+            transform .4s ease;
+        }
+
+        .rotating-message.hide {
+        opacity: 0;
+        transform: translateY(20px);
+        }
+
+        .brand-powered {
+        margin-top: auto;
+
+        display: flex;
+        flex-direction: column;
+
+        gap: 8px;
+
+        color: var(--muted);
+        }
+
+        .brand-powered strong {
+        color: var(--text);
+        }
+        .powered-logos {
+          margin-top: 20px;
+
+              display: flex;
+              align-items: center;
+          gap: 18px;
+        }
+
+            .powered-logo {
+            width: 65px;
+            height: 65px;
+            border-radius: 20px;
+
+            object-fit: contain;
+
+            opacity: .9;
+
+            transition:
+                transform .25s ease,
+                opacity .25s ease;
+            }
+
+            .powered-logo:hover {
+            opacity: 1;
+            transform: translateY(-4px) scale(1.05);
+            }
+
+        .login-card {
+        position: relative;
+
+        background:
+            linear-gradient(
+            135deg,
+            var(--bg),
+            var(--surface)
+            );
+
+        border-left: 1px solid var(--border);
+        }
+
+        // =========================================
+        // RESPONSIVE
+        // =========================================
+
+        @media (max-width: 900px) {
+
+        .login-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .login-brand {
+            display: none;
+        }
+
+        .login-card {
+            max-width: 500px;
+            width: 100%;
+            margin: auto;
+        }
+        }
+
+        @media (max-width: 576px) {
+
+        .login-card {
+            padding: $space-4;
+        }
+
+        .brand-company h1 {
+            font-size: 2rem;
+        }
+        }
+}

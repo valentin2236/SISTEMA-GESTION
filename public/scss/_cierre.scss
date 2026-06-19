@@ -1,0 +1,273 @@
+// ============================================================
+// CIERRE DE CAJA — Encapsulado bajo body.cierre-page
+// ============================================================
+
+body.cierre-page {
+
+  .cierre-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  // ── Topbar ───────────────────────────────────────────────
+  .cierre-topbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .cierre-title { font-size: 22px; font-weight: 800; color: var(--text); margin: 0; }
+  .cierre-sub   { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+
+  .cierre-acciones {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  // ── KPIs ──────────────────────────────────────────────────
+  .cierre-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+
+    @media (max-width: 700px) { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .cierre-kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &--green {
+      border-color: rgba(0, 196, 112, 0.35);
+      background: rgba(0, 196, 112, 0.05);
+      .ck-val { color: var(--accent); }
+    }
+
+    &--warn {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.05);
+      .ck-val { color: #f59e0b; }
+    }
+
+    &--blue {
+      border-color: rgba(96, 165, 250, 0.35);
+      background: rgba(96, 165, 250, 0.05);
+      .ck-val { color: #60a5fa; }
+    }
+  }
+
+  .ck-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .ck-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  // ── Panel ────────────────────────────────────────────────
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .cierre-fecha-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 10px;
+  }
+
+  // ── Tabla ────────────────────────────────────────────────
+  .tbl-wrap {
+    overflow-x: auto;
+
+    &::-webkit-scrollbar { height: 3px; }
+    &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  }
+
+  .tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+      padding: 9px 16px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+
+    .right  { text-align: right; }
+    .center { text-align: center; }
+  }
+
+  .cierre-medio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  .cierre-medio-icon { font-size: 18px; }
+
+  .cierre-desc  { color: #f59e0b; }
+  .cierre-total { font-weight: 700; color: var(--accent); }
+
+  // ── Barra de porcentaje ───────────────────────────────────
+  .cierre-pct-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 80px;
+  }
+
+  .cierre-pct-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .cierre-pct-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .cierre-pct-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  // ── Fields y botones ──────────────────────────────────────
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .field-input {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: 0.15s;
+
+    &:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 196, 112, 0.1);
+    }
+  }
+
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+    white-space: nowrap;
+    align-self: flex-end;
+
+    &:hover { background: var(--surface); border-color: var(--accent); }
+    &-outline { background: transparent; }
+
+    &-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+      &:hover { filter: brightness(1.07); }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 0;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .empty-icon { font-size: 28px; opacity: 0.4; }
+}

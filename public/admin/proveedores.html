@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Proveedores — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body class="proveedores-page">
+
+  <main class="prov-wrap">
+
+    <!-- Topbar -->
+    <div class="prov-topbar">
+      <div>
+        <h1 class="prov-title">🚚 Proveedores</h1>
+        <p class="prov-sub">Gestión de proveedores del negocio</p>
+      </div>
+      <button id="btn-nuevo" class="btn btn-primary">+ Nuevo proveedor</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="prov-toolbar">
+      <input
+        id="search"
+        class="search-input"
+        placeholder="Buscar por nombre, teléfono o email…"
+        autocomplete="off"
+      />
+      <span id="stat-total" class="prov-stat">– proveedores</span>
+    </div>
+
+    <!-- Tabla -->
+    <div class="panel prov-table-panel">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Email</th>
+              <th>Dirección</th>
+              <th style="width:100px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-proveedores">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span class="empty-icon">🚚</span>
+                  <span>Cargando proveedores…</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===== MODAL: Proveedor ===== -->
+  <dialog id="dlg-proveedor" class="dlg">
+    <div class="dlg-card">
+      <div class="dlg-head">
+        <h2 id="dlg-titulo">Nuevo proveedor</h2>
+        <button id="btn-cerrar-dlg" class="dlg-close">✕</button>
+      </div>
+      <div class="dlg-body">
+        <form id="form-proveedor" autocomplete="off">
+          <input type="hidden" id="prov-id"/>
+          <div class="form-grid">
+
+            <div class="field form-full">
+              <label class="field-label">Nombre *</label>
+              <input id="prov-nombre" class="field-input" required
+                     placeholder="Nombre del proveedor"/>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Teléfono</label>
+              <input id="prov-telefono" class="field-input"
+                     placeholder="Ej: 381 555-1234"/>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Email</label>
+              <input id="prov-email" class="field-input" type="email"
+                     placeholder="contacto@proveedor.com"/>
+            </div>
+
+            <div class="field form-full">
+              <label class="field-label">Dirección</label>
+              <textarea id="prov-direccion" class="field-input field-textarea"
+                        placeholder="Calle, número, ciudad" rows="2"></textarea>
+            </div>
+
+          </div>
+        </form>
+      </div>
+      <div class="dlg-actions">
+        <button id="btn-guardar" class="btn btn-primary">Guardar proveedor</button>
+        <button class="btn btn-outline"
+                onclick="document.getElementById('dlg-proveedor').close()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/auth-guard.js" data-rol="admin"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="/js/proveedores.js"></script>
+</body>
+</html>

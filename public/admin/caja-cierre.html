@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cierre de caja (Imprimir)</title>
+  <link rel="stylesheet" href="../css/main.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>Cierre de caja</h1>
+    <div class="muted" id="info"></div>
+
+    <div class="toolbar">
+      <button class="btn" onclick="window.print()">Imprimir / PDF</button>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="resumen"></div>
+      <div class="card" id="totales"></div>
+    </div>
+
+    <h3>Movimientos</h3>
+    <table>
+      <thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th class="right">Monto</th></tr></thead>
+      <tbody id="movs"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const qs = new URLSearchParams(location.search);
+    const sesion = qs.get('sesion');
+    const token = localStorage.getItem('token');
+
+    function money(n){ return (Number(n)||0).toLocaleString('es-AR',{minimumFractionDigits:2}); }
+
+    async function main(){
+      if(!sesion){ document.body.innerHTML='<p>Falta ?sesion</p>'; return; }
+      const res = await fetch('/api/caja/cierre/'+encodeURIComponent(sesion), {
+        headers: { 'Authorization': 'Bearer '+(token||'') }
+      });
+      const data = await res.json();
+      if(!res.ok || !data?.sesion){ document.body.innerHTML='<p>No se pudo cargar el cierre.</p>'; return; }
+
+      const s = data.sesion, movs = data.movimientos||[];
+      document.getElementById('info').textContent =
+        `Sesión #${s.id} — Apertura: ${new Date(s.fecha_apertura).toLocaleString()} — Cierre: ${new Date(s.fecha_cierre).toLocaleString()}`;
+
+      document.getElementById('resumen').innerHTML = `
+        <div><b>Usuario apertura:</b> ${s.usuario_apertura}</div>
+        <div><b>Monto inicial:</b> $ ${money(s.monto_inicial)}</div>
+        <div><b>Ventas efectivo:</b> $ ${money(s.total_ventas_efectivo||0)}</div>
+        <div><b>Ingresos:</b> $ ${money(s.total_mov_ingresos||0)}</div>
+        <div><b>Egresos:</b> $ ${money(s.total_mov_egresos||0)}</div>
+      `;
+      document.getElementById('totales').innerHTML = `
+        <div class="tot">Efectivo esperado: $ ${money(s.efectivo_esperado||0)}</div>
+        <div class="tot">Conteo: $ ${money(s.conteo_efectivo||0)}</div>
+        <div class="tot">Diferencia: $ ${money(s.diferencia||0)}</div>
+      `;
+
+      document.getElementById('movs').innerHTML = movs.map(m=>`
+        <tr>
+          <td>${new Date(m.fecha).toLocaleString()}</td>
+          <td>${m.tipo}</td>
+          <td>${m.concepto||''}</td>
+          <td class="right">$ ${money(m.monto)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4">Sin movimientos</td></tr>';
+    }
+
+    main();
+  </script>
+  <script src="../js/navbar.js"></script>
+</body>
+</html>

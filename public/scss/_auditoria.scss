@@ -1,0 +1,109 @@
+// Agregá al final de _components.scss o en un nuevo _auditoria.scss
+
+body.auditoria-page {
+  .aud-wrap {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  // Topbar
+  .aud-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .aud-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .aud-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  // Filtros
+  .aud-filtros {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .aud-filtro-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 130px;
+  }
+  .aud-filtro-search { min-width: 200px; flex: 1; }
+  .aud-filtro-btn    { align-self: flex-end; height: 36px; }
+
+  // Tabla
+  .aud-table-panel { padding: 0; overflow: hidden; }
+  .aud-footer {
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  // Celdas
+  .aud-fecha   { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .aud-detalle { font-size: 12px; color: var(--text2); max-width: 320px; }
+  .aud-usuario {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .aud-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  // Tags de acción
+  .aud-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .aud-tag--create { background: rgba(0,216,117,.15); color: #00a86b; }
+  .aud-tag--edit   { background: rgba(99,102,241,.15); color: #6366f1; }
+  .aud-tag--delete { background: rgba(239,68,68,.15);  color: #ef4444; }
+  .aud-tag--import { background: rgba(245,158,11,.15); color: #d97706; }
+  .aud-tag--warn   { background: rgba(245,158,11,.15); color: #d97706; }
+  .aud-tag--info   { background: rgba(100,116,139,.15);color: var(--text2); }
+
+  [data-theme="dark"] {
+    .aud-tag--create { background: rgba(0,216,117,.2);  color: #00d875; }
+    .aud-tag--edit   { background: rgba(99,102,241,.2); color: #818cf8; }
+    .aud-tag--delete { background: rgba(239,68,68,.2);  color: #f87171; }
+    .aud-tag--import { background: rgba(245,158,11,.2); color: #fbbf24; }
+    .aud-tag--warn   { background: rgba(245,158,11,.2); color: #fbbf24; }
+  }
+
+  @media (max-width: 768px) {
+    .aud-wrap    { padding: 16px; }
+    .aud-filtros { flex-direction: column; }
+    .aud-filtro-group { min-width: 100%; }
+  }
+}

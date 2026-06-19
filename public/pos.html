@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POS — Sistema Gestión PRO</title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body class="pos-page">
+    <!-- ===== LAYOUT PRINCIPAL ===== -->
+    <div class="venta-info">
+      <button id="toggle-sidebar-pos" class="pos-menu-btn">☰</button>
+
+      <div class="info-card">
+        <span class="label">Cliente</span>
+        <span id="cliente-top">Consumidor Final</span>
+      </div>
+      <div class="info-card">
+        <span class="label">Items</span>
+        <span id="items-top">0</span>
+      </div>
+      <div class="info-card">
+        <span class="label">Método</span>
+        <span id="metodo-top">💵 Efectivo</span>
+      </div>
+      <div class="info-card">
+        <span class="label">Ventas hoy</span>
+        <span id="ventas-hoy-top">–</span>
+      </div>
+      <div class="info-card">
+        <span class="label">Hora</span>
+        <span id="hora-top"></span>
+      </div>
+
+      <!-- Botón historial -->
+      <button
+        id="btn-historial"
+        class="btn btn-outline"
+        style="margin-left: auto"
+      >
+        ▼ Historial
+      </button>
+
+      <button id="btn-abrir-devolucion" class="pos-menu-btn" title="Devolución">
+        ↩️
+      </button>
+    </div>
+
+    <!-- Panel historial colapsable (va justo después de .venta-info) -->
+    <div id="historial-panel" class="historial-panel">
+      <div id="historial-lista" class="historial-lista">
+        <div class="historial-empty">Cargando...</div>
+      </div>
+    </div>
+    <main class="pos-wrap">
+      <!-- COLUMNA IZQUIERDA: Carrito -->
+      <section class="pos-left">
+        <!-- Carrito -->
+        <div class="panel carrito-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">🛒 Carrito</h2>
+
+            <button id="btn-vaciar-carrito" class="btn btn-outline">
+              Vaciar
+            </button>
+          </div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th class="col-precio">Precio</th>
+                  <th class="col-cant">Cantidad</th>
+                  <th class="col-sub right">Subtotal</th>
+                  <th class="col-del"></th>
+                </tr>
+              </thead>
+              <tbody id="carrito-tbody">
+                <tr class="empty-row">
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <span class="empty-icon">🛍️</span>
+                      <span>Buscá un producto para empezar</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Panel de Pagos -->
+        <div class="panel pagos-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">💳 Pago</h2>
+          </div>
+
+          <div class="pagos-body">
+            <!-- Inputs de pago -->
+            <div class="paygrid">
+              <div class="field">
+                <label class="field-label">Medio de pago</label>
+                <select id="medio-pago" class="field-input">
+                  <option value="efectivo" id="metodo-top">💵 Efectivo</option>
+                  <option value="tarjeta" id="motodo-top">💳 Tarjeta</option>
+                  <option value="transferencia" id="metodo-top">
+                    📲 Transferencia
+                  </option>
+                  <option value="cuenta_corriente" id="metodo-top">
+                    📒 Cuenta Corriente
+                  </option>
+                </select>
+              </div>
+
+              <div class="field" id="lbl-interes">
+                <label class="field-label">Interés %</label>
+                <input
+                  id="interes-pct"
+                  class="field-input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+
+              <div class="field">
+                <label class="field-label">Descuento</label>
+                <div class="input-group">
+                  <select id="desc-tipo" class="field-input select-mini">
+                    <option value="monto">$</option>
+                    <option value="porcentaje">%</option>
+                  </select>
+                  <input
+                    id="desc-valor"
+                    class="field-input"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div class="field" id="lbl-monto">
+                <label class="field-label">Efectivo entregado</label>
+                <input
+                  id="monto-pago"
+                  class="field-input field-input--highlight"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+
+            <!-- Cash rápido -->
+            <div class="cashbar">
+              <span class="cashbar-label">Rápido:</span>
+              <button class="btn btn-cash qcash" data-cash="5000">
+                $5.000
+              </button>
+              <button class="btn btn-cash qcash" data-cash="10000">
+                $10.000
+              </button>
+              <button class="btn btn-cash qcash" data-cash="20000">
+                $20.000
+              </button>
+              <button class="btn btn-cash qcash-exacto">Exacto</button>
+            </div>
+          </div>
+
+          <!-- Barra inferior: totales + botón finalizar -->
+          <div class="bottom-bar">
+            <div class="mini-totals">
+              <div class="mini-item">
+                <span class="mini-label">Subtotal</span>
+                <span class="mini-val">$<span id="t-subtotal">0,00</span></span>
+              </div>
+              <div class="mini-sep">·</div>
+              <div class="mini-item">
+                <span class="mini-label">Descuento</span>
+                <span class="mini-val"><span id="t-desc">0</span></span>
+              </div>
+              <div class="mini-sep">·</div>
+              <div class="mini-item">
+                <span class="mini-label">Cambio</span>
+                <span class="mini-val cambio"
+                  >$<span id="t-cambio">0,00</span></span
+                >
+              </div>
+            </div>
+
+            <div class="total-y-btn">
+              <div class="total-box efectivo">
+                <div class="total-label">TOTAL</div>
+                <div class="total-value">
+                  $<span id="t-total-grande">0,00</span>
+                </div>
+              </div>
+              <button id="btn-finalizar" class="btn btn-finalizar">
+                <span>Finalizar venta</span>
+                <kbd>F9</kbd>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMNA DERECHA: Productos + Clientes -->
+      <aside class="pos-right">
+        <!-- Buscar Productos -->
+        <div class="panel sidebar-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">📦 Productos</h2>
+          </div>
+          <div class="search-row">
+            <input
+              id="buscar"
+              class="search-input"
+              placeholder="Nombre, SKU o código de barras…"
+              autocomplete="off"
+            />
+            <button id="btn-buscar" class="btn btn-search">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
+          </div>
+          <!-- Botón precio libre — nuevo -->
+          <button id="btn-precio-libre" class="btn-precio-libre">
+            💰 Agregar por precio
+          </button>
+          <div id="resultados" class="results-list"></div>
+        </div>
+
+        <!-- Clientes -->
+        <div class="panel sidebar-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">👤 Cliente</h2>
+          </div>
+          <div class="search-row">
+            <input
+              id="buscar-cliente"
+              class="search-input"
+              placeholder="Nombre, email o DNI…"
+              autocomplete="off"
+            />
+            <button id="btn-buscar-cliente" class="btn btn-search">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
+            <button id="btn-nuevo-cliente" class="btn" title="Nuevo cliente">
+              +
+            </button>
+          </div>
+          <div id="clientes-result" class="results-list"></div>
+          <div id="cliente-seleccionado" class="cliente-sel">
+            Consumidor Final
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- ===== MODAL: Nuevo Cliente ===== -->
+    <dialog id="dlg-cliente" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>Nuevo cliente</h2>
+          <button id="btn-cerrar-cliente" class="dlg-close" aria-label="Cerrar">
+            ✕
+          </button>
+        </div>
+        <div class="form">
+          <div class="form-grid">
+            <label class="field">
+              <span class="field-label">Nombre *</span>
+              <input
+                id="cl-nombre"
+                class="field-input"
+                required
+                placeholder="Nombre completo"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">DNI</span>
+              <input id="cl-dni" class="field-input" placeholder="12345678" />
+            </label>
+            <label class="field">
+              <span class="field-label">Email</span>
+              <input
+                id="cl-email"
+                class="field-input"
+                type="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Teléfono</span>
+              <input
+                id="cl-telefono"
+                class="field-input"
+                placeholder="Teléfono"
+              />
+            </label>
+            <label class="field form-full">
+              <span class="field-label">Dirección</span>
+              <input
+                id="cl-direccion"
+                class="field-input"
+                placeholder="Calle, número, ciudad"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="dlg-actions">
+          <button id="btn-guardar-cliente" class="btn btn-primary">
+            Guardar cliente
+          </button>
+          <button
+            id="btn-cerrar-cliente2"
+            class="btn btn-outline"
+            onclick="document.getElementById('dlg-cliente').close()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="dlg-precio-libre" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>💰 Precio libre</h2>
+          <button id="btn-cerrar-precio-libre" class="dlg-close">✕</button>
+        </div>
+        <div class="form">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <label class="field">
+              <span class="field-label">Descripción</span>
+              <input
+                id="pl-descripcion"
+                class="field-input"
+                placeholder="Ej: Queso brie 250g"
+                autocomplete="off"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Precio $</span>
+              <input
+                id="pl-precio"
+                class="field-input field-input--highlight"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Cantidad</span>
+              <input
+                id="pl-cantidad"
+                class="field-input"
+                type="number"
+                min="1"
+                value="1"
+                placeholder="1"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="dlg-actions">
+          <button id="btn-agregar-precio-libre" class="btn btn-primary">
+            Agregar al carrito
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="document.getElementById('dlg-precio-libre').close()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Devolución ===== -->
+    <dialog id="dlg-devolucion" class="dlg dlg-wide">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>↩️ Devolución</h2>
+          <button id="btn-cerrar-devolucion" class="dlg-close">✕</button>
+        </div>
+
+        <!-- Paso 1: buscar venta -->
+        <div id="dev-paso1" class="dev-paso">
+          <div class="form" style="padding-bottom: 0">
+            <div class="field">
+              <span class="field-label">Número de venta</span>
+              <div style="display: flex; gap: 8px">
+                <input
+                  id="dev-venta-id"
+                  class="field-input"
+                  type="number"
+                  min="1"
+                  placeholder="Ej: 142"
+                  style="flex: 1"
+                />
+                <button id="btn-buscar-venta-dev" class="btn btn-primary">
+                  Buscar
+                </button>
+              </div>
+            </div>
+          </div>
+          <div id="dev-venta-info" class="dev-venta-info"></div>
+        </div>
+
+        <!-- Paso 2: seleccionar ítems -->
+        <div id="dev-paso2" class="dev-paso" style="display: none">
+          <div class="dev-resumen" id="dev-resumen"></div>
+
+          <div class="form">
+            <div class="field">
+              <span class="field-label">Motivo (opcional)</span>
+              <input
+                id="dev-motivo"
+                class="field-input"
+                placeholder="Ej: Producto defectuoso"
+              />
+            </div>
+          </div>
+
+          <div class="dev-items-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Devolver</th>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                  <th>Cant. vendida</th>
+                  <th>Cant. a devolver</th>
+                  <th>Restock</th>
+                </tr>
+              </thead>
+              <tbody id="dev-items-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="dev-footer">
+            <div class="dev-total">
+              <span>Total a reintegrar:</span>
+              <strong id="dev-total-monto">$0,00</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="dlg-actions">
+          <button
+            id="btn-confirmar-devolucion"
+            class="btn btn-primary"
+            style="display: none"
+          >
+            ↩️ Confirmar devolución
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="document.getElementById('dlg-devolucion').close()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="js/auth-guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/pos.js"></script>
+
+    <!-- Parche para cerrar con btn-cerrar-cliente2 -->
+    <script>
+      document
+        .getElementById("btn-cerrar-cliente")
+        ?.addEventListener("click", () => {
+          document.getElementById("dlg-cliente")?.close();
+        });
+    </script>
+  </body>
+</html>

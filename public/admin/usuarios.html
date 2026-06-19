@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Usuarios — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body class="usuarios-page">
+
+  <main class="usr-wrap">
+
+    <div class="usr-topbar">
+      <div>
+        <h1 class="usr-title">🔑 Usuarios</h1>
+        <p class="usr-sub">Gestión de accesos al sistema</p>
+      </div>
+      <button id="btn-nuevo" class="btn btn-primary">+ Nuevo usuario</button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th class="center">Estado</th>
+              <th style="width:130px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-usuarios">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span class="empty-icon">🔑</span>
+                  <span>Cargando usuarios…</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Dialog usuario -->
+  <dialog id="dlg-usuario" class="dlg">
+    <div class="dlg-card">
+      <div class="dlg-head">
+        <h2 id="dlg-titulo">Nuevo usuario</h2>
+        <button id="btn-cerrar-dlg" class="dlg-close">✕</button>
+      </div>
+      <div class="dlg-body">
+        <form id="form-usuario" autocomplete="off">
+          <input type="hidden" id="usr-id"/>
+          <div class="form-grid">
+
+            <div class="field">
+              <label class="field-label">Nombre *</label>
+              <input id="usr-nombre" class="field-input" required
+                     placeholder="Nombre completo"/>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Email *</label>
+              <input id="usr-email" class="field-input" type="email" required
+                     placeholder="correo@ejemplo.com"/>
+            </div>
+
+            <div class="field">
+              <label class="field-label">
+                Contraseña
+                <span id="pass-hint" class="field-hint-inline">(requerida para nuevo usuario)</span>
+              </label>
+              <input id="usr-password" class="field-input" type="password"
+                     placeholder="Mínimo 6 caracteres"/>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Rol</label>
+              <select id="usr-rol" class="field-input">
+                <option value="vendedor">👤 Vendedor</option>
+                <option value="admin">🔑 Admin</option>
+              </select>
+            </div>
+
+          </div>
+        </form>
+      </div>
+      <div class="dlg-actions">
+        <button id="btn-guardar" class="btn btn-primary">Guardar usuario</button>
+        <button class="btn btn-outline"
+                onclick="document.getElementById('dlg-usuario').close()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../js/auth-guard.js" data-rol="admin"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="/js/usuarios.js"></script>
+</body>
+</html>

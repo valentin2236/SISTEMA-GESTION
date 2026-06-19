@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ticket</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @page {
+        size: auto;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        font:
+          12px/1.35 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+      }
+      .ticket {
+        width: 72mm;
+        padding: 4mm;
+      }
+      .header {
+        text-align: center;
+      }
+      .header img {
+        max-width: 58mm;
+        max-height: 28mm;
+        display: block;
+        margin: 0 auto 6px;
+      }
+      .muted {
+        color: #333;
+      }
+      hr {
+        border: none;
+        border-top: 1px dashed #000;
+        margin: 6px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 2px 0;
+      }
+      .right {
+        text-align: right;
+      }
+      .total {
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .line {
+        display: flex;
+        justify-content: space-between;
+        padding: 1px 0;
+      }
+      .line.total {
+        font-weight: bold;
+        font-size: 14px;
+        margin-top: 2px;
+      }
+      .line.recargo {
+        color: #555;
+      }
+      .line.descuento {
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="ticket">
+      <div class="header">
+        <img id="logo" style="display: none" alt="logo" />
+        <div id="emp-nombre" style="font-weight: bold"></div>
+        <div id="emp-dir" class="muted"></div>
+        <div id="emp-tel" class="muted"></div>
+        <div id="emp-cuit" class="muted"></div>
+      </div>
+      <hr />
+      <div id="venta-info" class="muted"></div>
+      <div id="cliente-info" class="muted"></div>
+      <hr />
+      <table id="items"></table>
+      <hr />
+      <div id="totales"></div>
+      <hr />
+      <div id="footer" class="muted" style="text-align: center"></div>
+    </div>
+
+    <script>
+      (async function () {
+        const qs = new URLSearchParams(location.search);
+        const id = qs.get("id");
+        const auto = qs.get("auto") === "1";
+        const tok = qs.get("tok") || "";
+        const cfgQ = qs.get("cfg");
+
+        // ── Config ──────────────────────────────────────────
+        let cfg = {};
+        try {
+          cfg = cfgQ
+            ? JSON.parse(atob(cfgQ))
+            : JSON.parse(localStorage.getItem("cfg") || "{}");
+        } catch {
+          cfg = {};
+        }
+
+        // Ancho de ticket
+        const w = cfg.ticketWidth === "58" ? "48mm" : "72mm";
+        document.querySelector(".ticket").style.width = w;
+
+        // Logo
+        const $logo = document.getElementById("logo");
+        const logoSrc = cfg.empresaLogoData || cfg.empresaLogo || "";
+        if (logoSrc) {
+          $logo.src = logoSrc;
+          $logo.style.display = "block";
+        }
+
+        // Datos del negocio
+        document.getElementById("emp-nombre").textContent =
+          cfg.empresaNombre || "";
+        document.getElementById("emp-dir").textContent = cfg.empresaDir || "";
+        document.getElementById("emp-tel").textContent =
+          cfg.empresaTelefono || "";
+        document.getElementById("emp-cuit").textContent = cfg.empresaCuit
+          ? "CUIT: " + cfg.empresaCuit
+          : "";
+        document.getElementById("footer").textContent =
+          cfg.ticketFooter || "¡Gracias por su compra!";
+
+        // ── Helpers ──────────────────────────────────────────
+        function money(n) {
+          return (Number(n) || 0).toLocaleString("es-AR", {
+            minimumFractionDigits: 2,
+          });
+        }
+
+        function line(label, value, className = "") {
+          return `<div class="line ${className}">
+            <span>${label}</span><span>${value}</span>
+          </div>`;
+        }
+
+        // ── Sin ID ───────────────────────────────────────────
+        let res;
+        try {
+          // Intentar con token si existe
+          if (tok) {
+            res = await fetch(`/api/ventas/${id}`, {
+              headers: { Authorization: "Bearer " + tok },
+            });
+          }
+          // Si no hay token o falló con 401, usar endpoint público
+          if (!tok || res?.status === 401) {
+            res = await fetch(`/api/ventas/public/${id}`);
+          }
+        } catch {
+          document.getElementById("venta-info").textContent = "Sin conexión";
+          return;
+        }
+
+        if (!res.ok) {
+          document.getElementById("venta-info").textContent =
+            `Error ${res.status} al cargar venta`;
+          return;
+        }
+
+        const venta = await res.json();
+
+        // ── Info de la venta ──────────────────────────────────
+        const fecha = new Date(venta.fecha).toLocaleString("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("venta-info").textContent =
+          `Nº ${venta.id} · ${fecha}${venta.usuario ? " · " + venta.usuario : ""}`;
+
+        // Cliente (si tiene)
+        const $cli = document.getElementById("cliente-info");
+        if (
+          venta.cliente_nombre &&
+          venta.cliente_nombre !== "Consumidor Final"
+        ) {
+          $cli.textContent = "Cliente: " + venta.cliente_nombre;
+        }
+
+        // ── Items ─────────────────────────────────────────────
+        const $items = document.getElementById("items");
+        $items.innerHTML = (venta.items || [])
+          .map((it) => {
+            const nombre = it.nombre || it.descripcion_libre || "—";
+            const subtotal = money(
+              Number(it.precio_unitario) * Number(it.cantidad),
+            );
+            return `
+            <tr>
+              <td>${nombre} x${it.cantidad}</td>
+              <td class="right">$ ${subtotal}</td>
+            </tr>`;
+          })
+          .join("");
+
+        // ── Totales ───────────────────────────────────────────
+        const subtotal = Number(venta.subtotal || venta.total || 0);
+        const descTipo = venta.descuento_tipo || "monto";
+        const descValor = Number(venta.descuento_valor || 0);
+        const recargoMonto = Number(venta.recargo_monto || 0);
+        const total = Number(venta.total || 0);
+        const pagado = Number(venta.pagado || 0);
+        const cambio = Number(venta.cambio || 0);
+        const medioPago = venta.medio_pago || "";
+
+        // Calcula monto de descuento para mostrar siempre en $
+        const descMonto =
+          descTipo === "porcentaje" ? (subtotal * descValor) / 100 : descValor;
+
+        const medioLabels = {
+          efectivo: "Efectivo",
+          tarjeta: "Tarjeta",
+          transferencia: "Transferencia",
+          cuenta_corriente: "Cuenta Corriente",
+        };
+
+        let html = "";
+
+        // Subtotal solo si hay descuento o recargo (si no, sería redundante con total)
+        if (descMonto > 0 || recargoMonto > 0) {
+          html += line("Subtotal", `$ ${money(subtotal)}`);
+        }
+
+        // Descuento
+        if (descMonto > 0) {
+          const descLabel =
+            descTipo === "porcentaje"
+              ? `Descuento (${descValor}%)`
+              : "Descuento";
+          html += line(descLabel, `- $ ${money(descMonto)}`, "descuento");
+        }
+
+        // Recargo tarjeta
+        if (recargoMonto > 0) {
+          const pct = venta.recargo_porcentaje
+            ? ` (${venta.recargo_porcentaje}%)`
+            : "";
+          html += line(
+            `Recargo tarjeta${pct}`,
+            `+ $ ${money(recargoMonto)}`,
+            "recargo",
+          );
+        }
+
+        // Total
+        html += line("TOTAL", `$ ${money(total)}`, "total");
+
+        // Medio de pago
+        if (medioPago) {
+          html += line("Medio de pago", medioLabels[medioPago] || medioPago);
+        }
+
+        // Entregado / Cambio (solo efectivo)
+        if (medioPago === "efectivo" && pagado > 0) {
+          html += line("Entregado", `$ ${money(pagado)}`);
+          html += line("Cambio", `$ ${money(cambio)}`);
+        }
+
+        document.getElementById("totales").innerHTML = html;
+
+        // ── Imprimir automático ───────────────────────────────
+        if (auto) {
+          setTimeout(() => {
+            window.print();
+            setTimeout(() => window.close(), 300);
+          }, 200);
+        }
+      })();
+    </script>
+  </body>
+</html>

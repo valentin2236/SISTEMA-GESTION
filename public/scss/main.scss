@@ -1,0 +1,37 @@
+// =============================================
+// THEME.SCSS — Punto de entrada SASS
+// Compilar con: sass scss/theme.scss css/main.css --style=compressed
+// =============================================
+
+// 1. Variables (primero, siempre)
+@use 'variables' as *;
+
+// 2. Reset & base
+@import 'reset';
+
+// 3. Tema: CSS custom properties light/dark
+@import 'theme';
+
+//paginas
+@import 'dashboard';
+@import 'pos';
+@import 'caja';
+@import 'productos';
+@import "proveedores";
+@import "compras";
+@import "ganancias";
+@import "cierre";
+@import"historialcaja";
+@import "usuarios";
+@import "login";
+@import "config";
+@import "admin";
+@import "auditoria";
+// 4. Componentes
+@import 'navbar';
+@import 'components';
+@import 'forms';
+@import 'tables';
+
+// 5. Utilidades (al final para mayor especificidad)
+@import 'utilities';

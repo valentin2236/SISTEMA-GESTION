@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ventas — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body class="ventas-page">
+
+  <main class="ven-wrap">
+
+    <!-- Topbar -->
+    <div class="ven-topbar">
+      <div>
+        <h1 class="ven-title">📄 Ventas</h1>
+        <p class="ven-sub">Historial y filtros de ventas</p>
+      </div>
+      <div class="ven-topbar-actions">
+        <div class="notif-box">
+          <button id="btnNotif" class="notif-btn" title="Notificaciones">
+            🔔
+            <span id="notifCount">0</span>
+          </button>
+          <div id="notifDropdown" class="notif-dropdown"></div>
+        </div>
+        <button id="btnExcel" class="btn btn-outline">📊 Exportar Excel</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Ventas</div>
+        <div class="kpi-value blue"><span id="cantVentas">0</span></div>
+        <div class="kpi-sub">en el período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Facturación</div>
+        <div class="kpi-value green">$<span id="totalVentas">0</span></div>
+        <div class="kpi-sub">total neto</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ticket Promedio</div>
+        <div class="kpi-value white">$<span id="ticketPromedio">0</span></div>
+        <div class="kpi-sub">por venta</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Descuentos</div>
+        <div class="kpi-value yellow">$<span id="totalDescuentos">0</span></div>
+        <div class="kpi-sub">total aplicado</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="panel">
+      <div class="panel-top">
+        <h2>Filtros</h2>
+      </div>
+      <div class="ven-filtros">
+        <div class="ven-filtro-group">
+          <label class="field-label">Desde</label>
+          <input id="f-desde" type="date" class="field-input" />
+        </div>
+        <div class="ven-filtro-group">
+          <label class="field-label">Hasta</label>
+          <input id="f-hasta" type="date" class="field-input" />
+        </div>
+        <div class="ven-filtro-group">
+          <label class="field-label">Medio de pago</label>
+          <select id="f-medio" class="field-input">
+            <option value="">Todos</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="cuenta_corriente">Cuenta Corriente</option>
+          </select>
+        </div>
+        <button id="btn-filtrar" class="btn btn-primary ven-filtro-btn">Filtrar</button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="panel ven-table-panel">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:60px">#</th>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Medio</th>
+              <th class="right">Subtotal</th>
+              <th class="right">Descuento</th>
+              <th class="right">Recargo</th>
+              <th class="right">Total</th>
+              <th style="width:70px"></th>
+            </tr>
+          </thead>
+          <tbody id="ventas-tbody">
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <span class="empty-icon">📄</span>
+                  <span>Cargando ventas…</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="/js/notificaciones.js"></script>
+  <script src="/js/admin.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,699 @@
+// ============================================================
+// PRODUCTOS — Encapsulado bajo body.productos-page
+// ============================================================
+
+body.productos-page {
+
+  .prod-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  // ── Topbar ───────────────────────────────────────────────
+  .prod-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .prod-title { font-size: 22px; font-weight: 800; color: var(--text); margin: 0; }
+  .prod-sub   { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+
+  .prod-topbar-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  // ── Toolbar ──────────────────────────────────────────────
+  .prod-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .search-row { flex: 1; min-width: 200px; }
+
+  .search-input {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 196, 112, 0.1);
+    }
+  }
+
+  .prod-stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .prod-stat-sep { color: var(--border); }
+
+  .prod-stat--warn {
+    color: #f59e0b;
+    font-weight: 600;
+  }
+
+  // ── Panel tabla ───────────────────────────────────────────
+  .prod-table-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .tbl-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar { width: 3px; height: 3px; }
+    &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  }
+
+  .tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+      padding: 9px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+
+    .right  { text-align: right; }
+    .center { text-align: center; }
+  }
+
+  // ── Celdas producto ───────────────────────────────────────
+  .prod-img {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: 0.15s;
+
+    &:hover { transform: scale(1.05); }
+  }
+
+  .prod-img-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    opacity: 0.5;
+  }
+
+  .prod-nombre { font-weight: 600; color: var(--text); }
+
+  .prod-desc-preview {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .prod-sku-val {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+  }
+
+  .prod-barcode {
+    display: block;
+    height: 28px;
+    margin-top: 4px;
+    cursor: pointer;
+    opacity: 0.8;
+
+    &:hover { opacity: 1; }
+  }
+
+  .prod-precio { font-weight: 700; color: var(--accent); }
+
+  .stock-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+
+    &.stock-ok  { background: rgba(0,196,112,.12); color: var(--accent); }
+    &.stock-low { background: rgba(245,158,11,.12); color: #f59e0b; }
+    &.stock-out { background: rgba(239,68,68,.1);  color: var(--danger); }
+  }
+
+  .acciones-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .btn-accion {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.12s;
+
+    &:hover { background: var(--surface); border-color: var(--accent); }
+
+    &.btn-del:hover {
+      background: rgba(239,68,68,.1);
+      border-color: var(--danger);
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .empty-icon { font-size: 32px; opacity: 0.4; }
+
+  // ── Botones generales ─────────────────────────────────────
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+    white-space: nowrap;
+
+    &:hover { background: var(--surface); border-color: var(--accent); }
+
+    &-sm { padding: 5px 10px; font-size: 11px; }
+
+    &-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+
+      &:hover { filter: brightness(1.07); }
+    }
+
+    &-outline { background: transparent; }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // ── Dialog producto ───────────────────────────────────────
+  .dlg {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    padding: 0;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+
+    &::backdrop {
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(3px);
+    }
+  }
+
+  .dlg-producto { width: min(560px, 95vw); }
+  .dlg-wide     { width: min(680px, 95vw); }
+
+  .dlg-card { display: flex; flex-direction: column; }
+
+  .dlg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+
+    h2 { margin: 0; font-size: 16px; font-weight: 700; }
+  }
+
+  .dlg-close {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.15s;
+
+    &:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+  }
+
+  .dlg-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    max-height: 65vh;
+
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  }
+
+  .dlg-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  // ── Form producto ─────────────────────────────────────────
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    @media (max-width: 480px) { grid-template-columns: 1fr; }
+  }
+
+  .form-full { grid-column: 1 / -1; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .field-input {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,196,112,.1);
+    }
+
+    &--highlight {
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+  }
+
+  .field-textarea {
+    resize: vertical;
+    min-height: 56px;
+    font-family: inherit;
+  }
+
+  .field-hint {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+  }
+
+  .prod-img-preview {
+    margin-top: 8px;
+    max-height: 80px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    object-fit: contain;
+  }
+
+  // ── SKU row con escáner ───────────────────────────────────
+  .sku-row {
+    display: flex;
+    gap: 6px;
+
+    .field-input { flex: 1; }
+  }
+
+  .btn-scan {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: 0.15s;
+
+    &:hover { border-color: var(--accent); background: rgba(0,196,112,.08); }
+  }
+
+  // ── Dialog imagen ─────────────────────────────────────────
+  .dlg-imagen {
+    background: rgba(0,0,0,.85);
+    border: none;
+    border-radius: 12px;
+    padding: 10px;
+    max-width: 90vw;
+    max-height: 90vh;
+
+    &::backdrop { background: rgba(0,0,0,.7); }
+
+    img {
+      max-width: 80vw;
+      max-height: 80vh;
+      object-fit: contain;
+      display: block;
+    }
+  }
+
+  .dlg-imagen-close {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(0,0,0,.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  // ── Importar ──────────────────────────────────────────────
+  .import-info {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--text);
+
+    p { margin: 0 0 8px; }
+  }
+
+  .import-cols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+
+    code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+  }
+
+  .import-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 0 !important;
+  }
+
+  .import-drop {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.15s;
+    margin-bottom: 12px;
+
+    &:hover, &.dragging {
+      border-color: var(--accent);
+      background: rgba(0,196,112,.04);
+    }
+  }
+
+  .import-drop-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  .import-drop-icon { font-size: 32px; opacity: 0.5; }
+
+  .import-drop-hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .import-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .import-resultado {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .import-ok  { color: var(--accent); font-weight: 600; }
+  .import-dup { color: #60a5fa; }
+  .import-err {
+    color: var(--danger);
+
+    ul {
+      margin: 4px 0 0 16px;
+      padding: 0;
+      font-size: 11px;
+    }
+  }
+
+  // ── Filtros ───────────────────────────────────────────────
+.prod-filtros {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 2;
+}
+
+.filtro-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 140px;
+  outline: none;
+  transition: 0.15s;
+
+  &:focus { border-color: var(--accent); }
+}
+
+.filtro-precio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filtro-precio-input {
+  width: 100px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  box-sizing: border-box;
+  transition: 0.15s;
+
+  &:focus { border-color: var(--accent); }
+}
+
+.filtro-sep {
+  color: var(--muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+// ============================================================
+// IMPORTAR DESDE FOTO — pegá este bloque DENTRO de
+// body.productos-page { ... } en main.scss
+// ============================================================
+
+  // ── Upload area ─────────────────────────────────────────
+  .foto-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 40px 24px;
+    text-align: center;
+    background: var(--surface2);
+    transition: border-color 0.15s, background 0.15s;
+    cursor: default;
+
+    &.foto-drag-over {
+      border-color: var(--accent);
+      background: rgba(0, 196, 112, .06);
+    }
+  }
+
+  .foto-upload-icon  { font-size: 40px; margin-bottom: 10px; }
+  .foto-upload-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+  .foto-upload-sub   { font-size: 12px; color: var(--muted); margin: 0 0 16px; }
+
+  // ── Preview imagen ───────────────────────────────────────
+  .foto-preview-img {
+    display: block;
+    max-width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    margin: 0 auto 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .foto-preview-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  // ── Resultados ───────────────────────────────────────────
+  .foto-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .foto-result-title { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 2px; }
+  .foto-result-sub   { font-size: 12px; color: var(--muted); margin: 0; }
+
+  .foto-table-wrap {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    .field-input--sm {
+      padding: 4px 8px;
+      font-size: 12px;
+      height: 30px;
+    }
+  }
+
+  // ── Barra de importar ─────────────────────────────────────
+  .foto-import-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .foto-selected-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  // ── Status / toast ─────────────────────────────────────────
+  .foto-status {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+
+    &--ok    { background: rgba(0,196,112,.1);  color: #00c470; }
+    &--warn  { background: rgba(255,180,0,.1);  color: #e6a800; }
+    &--error { background: rgba(224,82,96,.1);  color: #e05260; }
+  }
+}

@@ -1,0 +1,9 @@
+node_modules
+.env
+/data/
+*.sqlite
+logs/
+backups/
+license.key
+dist/
+build/
