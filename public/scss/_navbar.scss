@@ -23,8 +23,8 @@
 
     // Logo imagen (cuando el negocio subió logo)
     .brand-logo-wrap {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 8px;
       overflow: hidden;
       flex-shrink: 0;
@@ -88,12 +88,14 @@
       font-size: 18px;
       flex-shrink: 0;
  
-      // Logo: mismas dimensiones que el emoji, imagen contenida
       &--logo {
+        width: 30px;
+        height: 30px;
         background: var(--surface2);
         border: 1px solid var(--border);
         overflow: hidden;
-        padding: 3px;           // respiro para que no toque los bordes
+        padding: 2px;
+        flex-shrink: 0;
       }
  
       // Solo inicial: igual que el avatar de usuario

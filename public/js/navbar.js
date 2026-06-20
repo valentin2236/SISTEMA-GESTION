@@ -124,6 +124,8 @@
                 style="justify-content:flex-start;gap:8px">
           🚪 Cerrar sesión
         </button>
+        <div id="sidebar-version" style="text-align:center;font-size:11px;color:var(--muted);padding:4px 0;opacity:.6">v1.0.0</div>
+        <div id="sidebar-plan" style="text-align:center;font-size:10px;padding:2px 0 6px;opacity:.7"></div>
       </div>`;
 
     const nav = sidebar.querySelector("#sidebar-nav");
@@ -393,6 +395,25 @@
       sidebar.classList.remove("open");
       overlay.style.display = "none";
     });
+
+    // ---- VERSIÓN + PLAN ----
+    if (window.electronAPI?.getAppVersion) {
+      window.electronAPI.getAppVersion().then(v => {
+        const el = document.getElementById('sidebar-version');
+        if (el) el.textContent = 'v' + v;
+      }).catch(() => {});
+    }
+    if (token) {
+      fetch('/api/licencia/features', { headers: { Authorization: 'Bearer ' + token } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          const el = document.getElementById('sidebar-plan');
+          if (!el || !data) return;
+          const labels = { trial: '🔓 Trial', basico: '📦 Básico', pro: '⭐ Pro', enterprise: '🏢 Enterprise' };
+          const colors = { trial: '#f59e0b', basico: '#60a5fa', pro: '#a78bfa', enterprise: '#34d399' };
+          el.innerHTML = `<span style="background:${colors[data.plan] || '#666'};color:#000;padding:2px 8px;border-radius:10px;font-weight:700;font-size:10px">${labels[data.plan] || data.plan}</span>`;
+        }).catch(() => {});
+    }
 
     // ---- CARGAR FEATURES DEL PLAN ----
     if (token && !sessionStorage.getItem("plan_features")) {

@@ -1,9 +1,10 @@
 {
   "name": "sistema-gestion-pro",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Sistema de Gestión Comercial PRO — versión con backend + Electron",
+  "author": "Valentin Arriola <valentinarriola04@gmail.com>",
   "type": "module",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "start": "node backend/server.js",
     "dev": "concurrently --raw -s all --kill-others \"nodemon backend/server.js\" \"sass public/scss/main.scss public/css/main.css --watch --style=expanded\"",
@@ -46,9 +47,6 @@
       "public/**/*",
       "electron/**/*",
       "package.json"
-    ],
-    "extraResources": [
-      "db.sqlite"
     ],
     "win": {
       "target": [

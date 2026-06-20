@@ -1,16 +1,12 @@
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { registrarAuditoria } from '../utils/auditoria.js';
 import logger from '../utils/logger.js';
+import { DB_PATH } from '../db.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const DB_PATH = path.join(__dirname, '..', 'data.sqlite');
-const BACKUP_DIR = path.join(__dirname, '..', '..', 'backups');
+const BACKUP_DIR = path.join(path.dirname(DB_PATH), 'backups');
 
 const router = Router();
 

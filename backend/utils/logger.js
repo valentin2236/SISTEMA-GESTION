@@ -1,10 +1,22 @@
 import winston from 'winston';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const logsDir = path.join(__dirname, '..', '..', 'logs');
+
+function getLogsDir() {
+  if (process.versions.electron && process.type !== undefined) {
+    const userDataPath = process.env.APPDATA || path.join(process.env.HOME || '', '.config');
+    const dir = path.join(userDataPath, 'sistema-gestion-pro', 'logs');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+  return path.join(__dirname, '..', '..', 'logs');
+}
+
+const logsDir = getLogsDir();
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

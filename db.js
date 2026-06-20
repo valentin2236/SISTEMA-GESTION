@@ -6,23 +6,12 @@ import path from "path";
 import { fileURLToPath } from "url";
  
 sqlite3.verbose();
-
+ 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-function getDBPath() {
-  // En Electron empaquetado, guardar la BD en la carpeta de datos del usuario
-  // (el ASAR es de solo lectura, no se puede escribir ahí)
-  if (process.versions.electron && process.type !== undefined) {
-    const userDataPath = process.env.APPDATA || path.join(process.env.HOME || '', '.config');
-    const appDir = path.join(userDataPath, 'sistema-gestion-pro');
-    if (!fs.existsSync(appDir)) fs.mkdirSync(appDir, { recursive: true });
-    return path.join(appDir, 'data.sqlite');
-  }
-  return path.join(__dirname, "data.sqlite");
-}
-
-export const DB_PATH = getDBPath();
+ 
+const DB_PATH = path.join(__dirname, "data.sqlite");
+ 
 export const db = new sqlite3.Database(DB_PATH);
  
 // ==============================

@@ -52,18 +52,6 @@ CREATE INDEX IF NOT EXISTS idx_productos_nombre ON productos(nombre);
 CREATE INDEX IF NOT EXISTS idx_productos_categoria ON productos(categoria);
 CREATE INDEX IF NOT EXISTS idx_productos_sku ON productos(sku);
 
--- Demodata (solo si la tabla productos está vacía)
-INSERT INTO productos (nombre, descripcion, categoria, precio, stock, sku)
-SELECT 'Mouse Gamer XYZ','Mouse con RGB y 6 botones','Periféricos',15999.99,20,'MOU-XYZ-001'
-WHERE NOT EXISTS (SELECT 1 FROM productos);
-
-INSERT INTO productos (nombre, descripcion, categoria, precio, stock, sku)
-SELECT 'Teclado Mecánico ABC','Switches azules y retroiluminación','Periféricos',32999.50,15,'TEK-ABC-002'
-WHERE NOT EXISTS (SELECT 1 FROM productos WHERE sku='TEK-ABC-002');
-
-INSERT INTO productos (nombre, descripcion, categoria, precio, stock, sku)
-SELECT 'SSD 480GB','SATA III alta velocidad','Almacenamiento',24999.00,10,'SSD-480-003'
-WHERE NOT EXISTS (SELECT 1 FROM productos WHERE sku='SSD-480-003');
 
 -- ========================
 -- Caja: sesiones y movimientos
