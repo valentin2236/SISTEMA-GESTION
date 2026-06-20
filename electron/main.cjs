@@ -15,6 +15,13 @@ async function setupAutoUpdater() {
     autoUpdater = mod.autoUpdater;
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.setFeedURL({
+      provider: 'github',
+      owner: 'valentin2236',
+      repo: 'SISTEMA-GESTION',
+      private: true,
+      token: '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',
+    });
     autoUpdater.on('update-available', (info) => {
       dialog.showMessageBox(win, {
         type: 'info', title: 'Actualización disponible',
