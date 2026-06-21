@@ -9,7 +9,10 @@ async function startServer() {
 }
 
 async function setupAutoUpdater() {
-  if (!app.isPackaged) return;
+  if (!app.isPackaged) {
+    console.log('[updater] No empaquetado, saltando');
+    return;
+  }
   try {
     const mod = await import('electron-updater');
     autoUpdater = mod.autoUpdater;
@@ -22,23 +25,43 @@ async function setupAutoUpdater() {
       private: true,
       token: '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',
     });
+    autoUpdater.on('checking-for-update', () => {
+      console.log('[updater] Buscando actualizaciones...');
+    });
     autoUpdater.on('update-available', (info) => {
+      console.log('[updater] Update disponible:', info.version);
       dialog.showMessageBox(win, {
         type: 'info', title: 'Actualización disponible',
-        message: `Nueva versión disponible (v${info.version}). ¿Descargar?`,
+        message: 'Nueva versión disponible (v' + info.version + '). ¿Descargar?',
         buttons: ['Descargar', 'Más tarde'], defaultId: 0,
-      }).then(({ response }) => { if (response === 0) autoUpdater.downloadUpdate(); });
+      }).then(function(result) { if (result.response === 0) autoUpdater.downloadUpdate(); });
+    });
+    autoUpdater.on('update-not-available', () => {
+      console.log('[updater] No hay actualizaciones');
     });
     autoUpdater.on('update-downloaded', () => {
       dialog.showMessageBox(win, {
         type: 'info', title: 'Actualización lista',
         message: 'Se instalará al reiniciar. ¿Reiniciar ahora?',
         buttons: ['Reiniciar', 'Más tarde'], defaultId: 0,
-      }).then(({ response }) => { if (response === 0) autoUpdater.quitAndInstall(); });
+      }).then(function(result) { if (result.response === 0) autoUpdater.quitAndInstall(); });
     });
-    autoUpdater.on('error', (err) => console.error('Updater error:', err));
+    autoUpdater.on('error', (err) => {
+      console.error('[updater] Error:', err.message);
+      dialog.showMessageBox(win, {
+        type: 'error', title: 'Error de actualización',
+        message: 'No se pudo verificar actualizaciones: ' + err.message,
+      });
+    });
+    console.log('[updater] Iniciando checkForUpdates...');
     autoUpdater.checkForUpdates();
-  } catch {}
+  } catch (e) {
+    console.error('[updater] Excepción:', e.message);
+    dialog.showMessageBox(win, {
+      type: 'error', title: 'Error updater',
+      message: 'Error al iniciar el actualizador: ' + e.message,
+    });
+  }
 }
 
 function createWindow() {
