@@ -137,12 +137,21 @@
         font-weight: 800;
         line-height: 1.4;
         color: var(--accent);
-        min-height: 100px;
-        transition: opacity 0.4s ease, transform 0.4s ease;
+        height: 120px;
+        overflow: hidden;
       }
-      .rotating-message.hide {
-        opacity: 0;
-        transform: translateY(16px);
+      .typewriter-cursor {
+        display: inline-block;
+        width: 3px;
+        height: 1.2em;
+        background: var(--accent);
+        margin-left: 2px;
+        vertical-align: text-bottom;
+        animation: cursorBlink 0.7s infinite;
+      }
+      @keyframes cursorBlink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
       }
 
       /* ── Footer del brand ── */
@@ -459,7 +468,7 @@
         } catch {}
       })();
 
-      // ── Mensajes rotativos ──
+      // ── Typewriter ──
       (function () {
         const mensajes = [
           "Control total de tu negocio en un solo lugar.",
@@ -469,21 +478,35 @@
           "Gestioná clientes, proveedores y compras fácilmente.",
         ];
         const $el = document.getElementById('rotating-message');
-        let i = 0;
+        let msgIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let timeout;
 
-        function mostrar(idx) {
-          $el.classList.add('hide');
-          setTimeout(() => {
-            $el.textContent = mensajes[idx];
-            $el.classList.remove('hide');
-          }, 400);
+        function tick() {
+          const current = mensajes[msgIndex];
+          if (!isDeleting) {
+            charIndex++;
+            $el.innerHTML = current.slice(0, charIndex) + '<span class="typewriter-cursor"></span>';
+            if (charIndex === current.length) {
+              isDeleting = false;
+              timeout = setTimeout(() => { isDeleting = true; tick(); }, 2000);
+              return;
+            }
+            timeout = setTimeout(tick, 45);
+          } else {
+            charIndex--;
+            $el.innerHTML = current.slice(0, charIndex) + '<span class="typewriter-cursor"></span>';
+            if (charIndex === 0) {
+              isDeleting = false;
+              msgIndex = (msgIndex + 1) % mensajes.length;
+              timeout = setTimeout(tick, 400);
+              return;
+            }
+            timeout = setTimeout(tick, 25);
+          }
         }
-
-        mostrar(0);
-        setInterval(() => {
-          i = (i + 1) % mensajes.length;
-          mostrar(i);
-        }, 4000);
+        tick();
       })();
 
       // ── Toggle password ──
