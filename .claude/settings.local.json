@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -lh \"C:/BuildTemp/release/dist/\"*\"1.2.0\"*exe 2>&1)",
+      "Read(//c/BuildTemp/release/dist/**)"
+    ]
+  }
+}

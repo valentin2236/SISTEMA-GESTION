@@ -151,8 +151,6 @@ const PLAN_FEATURES = {
     'compras',
     'proveedores',
     'exportar',
-    'auditoria',
-    'ia',
   ],
   enterprise: [
     'pos',

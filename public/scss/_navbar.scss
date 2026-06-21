@@ -36,12 +36,14 @@
     }
 
     .brand-logo-img {
-      width: 100%;
-      height: 100%;
+      width: 26px;
+      height: 26px;
+      max-width: 26px;
+      max-height: 26px;
       object-fit: contain;
+      display: block;
     }
 
-    // Inicial del negocio (cuando hay nombre pero no logo)
     .brand-dot--inicial {
       font-size: 15px;
       font-weight: 800;
@@ -107,8 +109,10 @@
     }
  
     .brand-logo-img {
-      width: 100%;
-      height: 100%;
+      width: 26px;
+      height: 26px;
+      max-width: 26px;
+      max-height: 26px;
       object-fit: contain;
       display: block;
     }

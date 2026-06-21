@@ -50,7 +50,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
     },
   });
-  win.loadURL('http://localhost:3000/admin/dashboard.html');
+  win.loadURL('http://localhost:3000/admin/login.html');
 
   [
     ['F1', "document.getElementById('buscar')?.focus();document.getElementById('buscar')?.select();"],
@@ -89,6 +89,17 @@ function createWindow() {
       }},
     ]},
   ]));
+  win.on('close', () => {
+    if (win) {
+      win.webContents.executeJavaScript(`
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_email');
+        localStorage.removeItem('user_nombre');
+        localStorage.removeItem('user_rol');
+        sessionStorage.clear();
+      `).catch(() => {});
+    }
+  });
   win.on('closed', () => { win = null; });
 }
 
