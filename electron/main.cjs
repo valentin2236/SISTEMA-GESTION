@@ -9,35 +9,30 @@ async function startServer() {
 }
 
 async function setupAutoUpdater() {
-  if (!app.isPackaged) {
-    console.log('[updater] No empaquetado, saltando');
-    return;
-  }
   try {
     const mod = await import('electron-updater');
-    autoUpdater = mod.autoUpdater;
-    autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.setFeedURL({
+    autoUpdater = new mod.NsisUpdater({
       provider: 'github',
       owner: 'valentin2236',
       repo: 'SISTEMA-GESTION',
       private: true,
       token: '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',
     });
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.on('checking-for-update', () => {
       console.log('[updater] Buscando actualizaciones...');
     });
     autoUpdater.on('update-available', (info) => {
-      console.log('[updater] Update disponible:', info.version);
-      dialog.showMessageBox(win, {
+      var resp = dialog.showMessageBoxSync({
         type: 'info', title: 'Actualización disponible',
         message: 'Nueva versión disponible (v' + info.version + '). ¿Descargar?',
         buttons: ['Descargar', 'Más tarde'], defaultId: 0,
-      }).then(function(result) { if (result.response === 0) autoUpdater.downloadUpdate(); });
+      });
+      if (resp === 0) autoUpdater.downloadUpdate();
     });
     autoUpdater.on('update-not-available', () => {
-      console.log('[updater] No hay actualizaciones');
+      console.log('[updater] Ya tenés la última versión');
     });
     autoUpdater.on('update-downloaded', () => {
       dialog.showMessageBox(win, {
@@ -48,18 +43,17 @@ async function setupAutoUpdater() {
     });
     autoUpdater.on('error', (err) => {
       console.error('[updater] Error:', err.message);
-      dialog.showMessageBox(win, {
+      dialog.showMessageBoxSync({
         type: 'error', title: 'Error de actualización',
-        message: 'No se pudo verificar actualizaciones: ' + err.message,
+        message: 'No se pudo verificar actualizaciones:\n' + err.message,
       });
     });
-    console.log('[updater] Iniciando checkForUpdates...');
     autoUpdater.checkForUpdates();
   } catch (e) {
     console.error('[updater] Excepción:', e.message);
-    dialog.showMessageBox(win, {
+    dialog.showMessageBoxSync({
       type: 'error', title: 'Error updater',
-      message: 'Error al iniciar el actualizador: ' + e.message,
+      message: 'Error al iniciar el actualizador:\n' + e.message + '\n\nKeys: ' + Object.keys(e).join(', '),
     });
   }
 }
@@ -148,6 +142,7 @@ app.whenReady().then(async () => {
 
   await startServer();
   createWindow();
+
   setupAutoUpdater();
 });
 app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
