@@ -1,6 +1,6 @@
 {
   "name": "sistema-gestion-pro",
-  "version": "1.9.0",
+  "version": "2.0.0",
   "description": "Sistema de Gestión Comercial PRO — versión con backend + Electron",
   "author": "Valentin Arriola <valentinarriola04@gmail.com>",
   "type": "module",
@@ -52,7 +52,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/logo-sistemaGestion.png"
     },
     "nsis": {
       "oneClick": false,

@@ -61,7 +61,7 @@ async function setupAutoUpdater() {
 function createWindow() {
   win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 1024, minHeight: 700,
-    icon: path.join(__dirname, '..', 'public', 'img', 'Logo-ValentinArriola.ico'),
+    icon: path.join(__dirname, '..', 'public', 'img', 'logo-sistemaGestion.png'),
     webPreferences: {
       contextIsolation: true, nodeIntegration: false,
       preload: path.join(__dirname, 'preload.cjs'),
