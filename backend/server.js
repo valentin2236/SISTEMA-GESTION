@@ -197,6 +197,15 @@ process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled Rejection', { error: String(reason) });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Servidor corriendo en http://localhost:${PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    logger.warn(`Puerto ${PORT} ocupado — otro servidor ya está corriendo. Usando el existente.`);
+  } else {
+    logger.error('Error del servidor', { error: err.message });
+    process.exit(1);
+  }
 });
