@@ -67,7 +67,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
     },
   });
-  win.loadURL('http://localhost:3000/admin/login.html');
+  win.loadURL('http://localhost:3847/admin/login.html');
 
   [
     ['F1', "document.getElementById('buscar')?.focus();document.getElementById('buscar')?.select();"],
@@ -90,9 +90,9 @@ function createWindow() {
       { type: 'separator' }, { role: 'togglefullscreen', label: 'Pantalla completa' },
     ]},
     { label: 'Ir', submenu: [
-      { label: 'Inicio', click: () => win && win.loadURL('http://localhost:3000/admin/dashboard.html') },
-      { label: 'POS', click: () => win && win.loadURL('http://localhost:3000/pos.html') },
-      { label: 'Config', click: () => win && win.loadURL('http://localhost:3000/config.html') },
+      { label: 'Inicio', click: () => win && win.loadURL('http://localhost:3847/admin/dashboard.html') },
+      { label: 'POS', click: () => win && win.loadURL('http://localhost:3847/pos.html') },
+      { label: 'Config', click: () => win && win.loadURL('http://localhost:3847/config.html') },
     ]},
     { label: 'Ayuda', submenu: [
       { label: 'Acerca de', click: () => dialog.showMessageBox(win, {
@@ -130,7 +130,7 @@ app.whenReady().then(async () => {
       contextIsolation: true, nodeIntegration: false, preload: path.join(__dirname, 'preload.cjs'),
     }});
     try {
-      await pw.loadURL(url.startsWith('http') ? url : 'http://localhost:3000' + url);
+      await pw.loadURL(url.startsWith('http') ? url : 'http://localhost:3847' + url);
       await new Promise(r => pw.webContents.isLoading() ? pw.webContents.once('did-finish-load', r) : r());
       await pw.webContents.print({ silent, deviceName: deviceName || undefined, printBackground: true,
         color: false, landscape, margins: margins === 'none' ? { marginType: 'none' } : undefined, copies: 1 });
