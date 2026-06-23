@@ -51,7 +51,7 @@ const PORT = process.env.PORT || 3847;
 app.use(helmetMiddleware);
 app.use(globalLimiter);
 
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000')
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3847,http://127.0.0.1:3847,http://localhost:3000,http://127.0.0.1:3000')
   .split(',')
   .map(s => s.trim());
 
