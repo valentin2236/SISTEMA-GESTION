@@ -76,23 +76,20 @@ function renderClientes(clientes) {
     tr.innerHTML = `
       <td>${cliente.id}</td>
       <td>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#000;
-            display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">
-            ${cliente.nombre.charAt(0).toUpperCase()}
-          </div>
+        <div class="cli-nombre-cell">
+          <div class="cli-avatar">${cliente.nombre.charAt(0).toUpperCase()}</div>
           <strong>${cliente.nombre}</strong>
         </div>
       </td>
-      <td class="copy-cell" style="cursor:pointer" title="Click para copiar">${cliente.email || "-"}</td>
-      <td class="copy-cell" style="cursor:pointer" title="Click para copiar">${cliente.telefono || "-"}</td>
-      <td class="copy-cell" style="cursor:pointer" title="Click para copiar">${cliente.dni || "-"}</td>
+      <td class="copy-cell" title="Click para copiar">${cliente.email || "-"}</td>
+      <td class="copy-cell" title="Click para copiar">${cliente.telefono || "-"}</td>
+      <td class="copy-cell" title="Click para copiar">${cliente.dni || "-"}</td>
       <td>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="cli-actions-row">
           <button class="btn btn-outline btn-sm" data-action="editar" data-id="${cliente.id}" title="Editar cliente">✏️ Editar</button>
           <button class="btn btn-outline btn-sm" data-action="historial" data-id="${cliente.id}" title="Ver historial de compras">📋</button>
           <button class="btn btn-outline btn-sm" data-action="cuenta" data-id="${cliente.id}" data-nombre="${cliente.nombre}" title="Ver cuenta corriente">💳</button>
-          <button class="btn btn-outline btn-sm" data-action="eliminar" data-id="${cliente.id}" title="Eliminar cliente" style="color:var(--danger)">🗑️</button>
+          <button class="btn btn-outline btn-sm btn-del" data-action="eliminar" data-id="${cliente.id}" title="Eliminar cliente">🗑️</button>
         </div>
       </td>`;
 
@@ -339,18 +336,15 @@ async function verHistorial(id) {
     }
 
     historialContent.innerHTML = `
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-        <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#000;
-          display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0">
-          ${data.cliente.nombre.charAt(0).toUpperCase()}
-        </div>
+      <div class="cli-modal-header">
+        <div class="cli-modal-avatar">${data.cliente.nombre.charAt(0).toUpperCase()}</div>
         <div>
-          <h3 style="font-size:16px;font-weight:700">${data.cliente.nombre}</h3>
-          <p style="font-size:13px;color:var(--muted)">Historial de compras</p>
+          <div class="cli-modal-name">${data.cliente.nombre}</div>
+          <div class="cli-modal-sub">Historial de compras</div>
         </div>
       </div>
 
-      <div class="kpi-grid" style="margin-bottom:16px">
+      <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">Total compras</div>
           <div class="kpi-value blue">${data.total_compras}</div>
@@ -362,7 +356,7 @@ async function verHistorial(id) {
       </div>
 
       ${data.compras.length ? `
-      <div class="tbl-wrap" style="max-height:300px">
+      <div class="tbl-wrap">
         <table class="tbl">
           <thead>
             <tr>
@@ -423,25 +417,22 @@ async function verCuentaCorriente(id, clienteNombre = "") {
     const saldoLabel = data.saldo > 0 ? "Debe" : "Al día";
 
     cuentaContent.innerHTML = `
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-        <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#000;
-          display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0">
-          ${clienteNombre.charAt(0).toUpperCase()}
-        </div>
+      <div class="cli-modal-header">
+        <div class="cli-modal-avatar">${clienteNombre.charAt(0).toUpperCase()}</div>
         <div style="flex:1">
-          <h3 style="font-size:16px;font-weight:700">${clienteNombre}</h3>
-          <span style="font-size:13px;color:var(--muted)">Cuenta Corriente</span>
+          <div class="cli-modal-name">${clienteNombre}</div>
+          <div class="cli-modal-sub">Cuenta Corriente</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:12px;color:var(--muted)">Saldo</div>
-          <div style="font-size:22px;font-weight:800;color:${saldoColor}">
+        <div class="cli-saldo-box">
+          <div class="cli-saldo-label">Saldo</div>
+          <div class="cli-saldo-value" style="color:${saldoColor}">
             $${Number(Math.abs(data.saldo)).toLocaleString("es-AR")}
           </div>
-          <span style="font-size:11px;color:${saldoColor};font-weight:600">${saldoLabel}</span>
+          <span class="cli-saldo-status" style="color:${saldoColor}">${saldoLabel}</span>
         </div>
       </div>
 
-      <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div class="cli-cuenta-actions">
         <button class="btn btn-primary btn-sm" id="btn-reg-pago" style="flex:1">
           💵 Registrar pago
         </button>
@@ -451,7 +442,7 @@ async function verCuentaCorriente(id, clienteNombre = "") {
       </div>
 
       ${data.movimientos.length ? `
-      <div class="tbl-wrap" style="max-height:300px">
+      <div class="tbl-wrap">
         <table class="tbl">
           <thead>
             <tr>
@@ -471,7 +462,7 @@ async function verCuentaCorriente(id, clienteNombre = "") {
               </tr>`).join("")}
           </tbody>
         </table>
-      </div>` : '<div class="empty-state" style="padding:20px"><span class="empty-icon">💳</span><span>Sin movimientos</span></div>'}`;
+      </div>` : '<div class="empty-state"><span class="empty-icon">💳</span><span>Sin movimientos</span></div>'}`;
 
     // Event listeners para botones
     document.getElementById("btn-reg-pago")?.addEventListener("click", () => registrarMovimiento(id, "pago", clienteNombre));
