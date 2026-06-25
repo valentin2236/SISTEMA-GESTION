@@ -1,6 +1,6 @@
 {
   "name": "sistema-gestion-pro",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Sistema de Gestión Comercial PRO — versión con backend + Electron",
   "author": "Valentin Arriola <valentinarriola04@gmail.com>",
   "type": "module",

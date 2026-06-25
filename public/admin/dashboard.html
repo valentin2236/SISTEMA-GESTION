@@ -185,7 +185,7 @@ function moneyShort(n) {
 
 // KPIs
 fetch('/api/reportes/kpis', { headers: { Authorization: 'Bearer ' + token } })
-  .then(r => r.json())
+  .then(r => { if (!r.ok) return {}; return r.json(); })
   .then(k => {
     document.getElementById('tot-hoy').textContent     = money(k.total_hoy || 0);
     document.getElementById('tot-semana').textContent  = money(k.total_semana || 0);
@@ -197,11 +197,11 @@ fetch('/api/reportes/kpis', { headers: { Authorization: 'Bearer ' + token } })
     // Ticket promedio
     const prom = k.tickets_hoy > 0 ? (k.total_hoy / k.tickets_hoy) : 0;
     document.getElementById('ticket-prom').textContent = money(prom);
-  });
+  }).catch(() => {});
 
 // Estado caja
 fetch('/api/caja/estado', { headers: { Authorization: 'Bearer ' + token } })
-  .then(r => r.json())
+  .then(r => { if (!r.ok) return { abierta: false }; return r.json(); })
   .then(c => {
     const el = document.getElementById('estado-caja');
     if (c.abierta) {
@@ -211,24 +211,26 @@ fetch('/api/caja/estado', { headers: { Authorization: 'Bearer ' + token } })
       el.textContent = '🔴 Caja cerrada';
       el.style.color = 'var(--danger)';
     }
-  });
+  }).catch(() => {});
 
 // Últimas ventas
 fetch('/api/reportes/ultimas-ventas', { headers: { Authorization: 'Bearer ' + token } })
-  .then(r => r.json())
+  .then(r => { if (!r.ok) return []; return r.json(); })
   .then(rows => {
+    if (!Array.isArray(rows)) rows = [];
     document.getElementById('ultimasVentas').innerHTML = rows.map(v => `
       <tr>
         <td>${v.cliente || 'Sin nombre'}</td>
         <td class="right">$${money(v.total)}</td>
         <td class="center"><span class="dash-badge green">OK</span></td>
       </tr>`).join('') || '<tr><td colspan="3" class="empty-cell">Sin ventas</td></tr>';
-  });
+  }).catch(() => {});
 
 // Gráfico ventas diarias
 fetch('/api/reportes/ventas-diarias?dias=14', { headers: { Authorization: 'Bearer ' + token } })
-  .then(r => r.json())
+  .then(r => { if (!r.ok) return []; return r.json(); })
   .then(list => {
+    if (!Array.isArray(list) || !list.length) return;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const gridColor  = isDark ? '#1e2535' : '#e2e8f0';
     const tickColor  = isDark ? '#64748b' : '#94a3b8';
@@ -258,24 +260,26 @@ fetch('/api/reportes/ventas-diarias?dias=14', { headers: { Authorization: 'Beare
         }
       }
     });
-  });
+  }).catch(() => {});
 
 // Top productos
 fetch('/api/reportes/top-productos?dias=30&limit=5', { headers: { Authorization: 'Bearer ' + token } })
-  .then(r => r.json())
+  .then(r => { if (!r.ok) return []; return r.json(); })
   .then(rows => {
+    if (!Array.isArray(rows)) rows = [];
     document.getElementById('top').innerHTML = rows.map(r => `
       <tr>
         <td>${r.nombre}</td>
         <td class="right">${r.cant_vendida}</td>
         <td class="right">$${money(r.ingreso)}</td>
       </tr>`).join('') || '<tr><td colspan="3" class="empty-cell">Sin datos</td></tr>';
-  });
+  }).catch(() => {});
 
 // Stock bajo
 fetch('/api/productos/alertas/stock-bajo', { headers: { Authorization: 'Bearer ' + token } })
-  .then(r => r.json())
+  .then(r => { if (!r.ok) return []; return r.json(); })
   .then(rows => {
+    if (!Array.isArray(rows)) rows = [];
     document.getElementById('stockBajo').innerHTML = rows.length
       ? rows.map(p => `
         <tr>
@@ -284,7 +288,7 @@ fetch('/api/productos/alertas/stock-bajo', { headers: { Authorization: 'Bearer '
           <td class="right"><span class="dash-badge red">${p.stock}</span></td>
         </tr>`).join('')
       : '<tr><td colspan="3" class="empty-cell">Sin alertas 🎉</td></tr>';
-  });
+  }).catch(() => {});
 
 // Mostrar links admin
 // Mostrar cards admin

@@ -6,10 +6,10 @@
 // Uso:
 //   node tools/generar-licencia.js basico 365 "Negocio de Juan"
 //   node tools/generar-licencia.js pro 730 "Ferretería López"
-//   node tools/generar-licencia.js enterprise 9999 "Cadena MegaStore"
+//   node tools/generar-licencia.js ultra 9999 "Cadena MegaStore"
 //
 // Argumentos:
-//   1. Plan: basico | pro | enterprise
+//   1. Plan: basico | pro | ultra
 //   2. Días de validez: número (365 = 1 año, 9999 = ~27 años "perpetua")
 //   3. Nombre del cliente (opcional, solo para tu referencia)
 
@@ -43,8 +43,8 @@ const plan = args[0] || 'basico';
 const dias = parseInt(args[1]) || 365;
 const cliente = args[2] || '(sin nombre)';
 
-if (!['basico', 'pro', 'enterprise'].includes(plan)) {
-  console.error('Plan inválido. Usá: basico | pro | enterprise');
+if (!['basico', 'pro', 'ultra'].includes(plan)) {
+  console.error('Plan inválido. Usá: basico | pro | ultra');
   process.exit(1);
 }
 

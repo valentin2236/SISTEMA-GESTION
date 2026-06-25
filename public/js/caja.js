@@ -222,10 +222,10 @@ $btnAbrir?.addEventListener("click", async () => {
 
   const confirm = await Swal.fire({
     title: "¿Abrir caja?",
-    html: `Monto inicial: <b>$${money(monto)}</b>`,
+    html: `Se iniciará una nueva sesión de caja.<br><br>Monto inicial: <b style="font-size:18px">$${money(monto)}</b>`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonText: "Abrir",
+    confirmButtonText: "✅ Abrir caja",
     cancelButtonText: "Cancelar",
     confirmButtonColor: "#00d875",
   });
@@ -341,11 +341,11 @@ $btnCerrar?.addEventListener("click", async () => {
        <span style="opacity:.7">Sin conteo registrado</span>`;
 
   const confirm = await Swal.fire({
-    title: "¿Cerrar caja?",
-    html,
+    title: "¿Cerrar la caja?",
+    html: `<div style="text-align:left">${html}</div><br><small style="opacity:.6">Esta acción finalizará la sesión actual</small>`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Cerrar caja",
+    confirmButtonText: "🔒 Cerrar caja",
     cancelButtonText: "Cancelar",
     confirmButtonColor: "#ef4444",
   });

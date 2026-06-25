@@ -569,7 +569,7 @@ async function cargarLicencia() {
     const lic = await res.json();
 
     if (lic.activa) {
-      const planLabels = { basico: 'Básico', pro: 'Profesional', enterprise: 'Enterprise' };
+      const planLabels = { basico: 'Básico', pro: 'Profesional', ultra: 'Ultra' };
       $licEstado.innerHTML = `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(0,214,117,.08);border:1px solid rgba(0,214,117,.25);border-radius:10px">
           <span style="font-size:28px">✅</span>

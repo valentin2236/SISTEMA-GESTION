@@ -104,6 +104,14 @@
     sidebar.innerHTML = `
       ${buildBrand()}
       <nav class="sidebar-nav" id="sidebar-nav"></nav>
+      <div class="sidebar-alerts" id="sidebar-alerts" style="display:none;padding:8px 12px">
+        <button id="btn-sidebar-alerts" class="btn btn-ghost btn-sm w-full"
+                style="justify-content:flex-start;gap:8px;color:var(--danger);font-weight:600;position:relative">
+          🔔 <span id="alerts-label">Alertas</span>
+          <span id="alerts-badge" style="margin-left:auto;background:var(--danger);color:#fff;
+            border-radius:99px;padding:1px 7px;font-size:10px;font-weight:700"></span>
+        </button>
+      </div>
       <div class="sidebar-footer">
         <div class="sidebar-user">
           <div class="user-avatar">${getInitial(nombre)}</div>
@@ -409,8 +417,8 @@
         .then(data => {
           const el = document.getElementById('sidebar-plan');
           if (!el || !data) return;
-          const labels = { trial: '🔓 Trial', basico: '📦 Básico', pro: '⭐ Pro', enterprise: '🏢 Enterprise' };
-          const colors = { trial: '#f59e0b', basico: '#60a5fa', pro: '#a78bfa', enterprise: '#34d399' };
+          const labels = { trial: '🔓 Trial', basico: '📦 Básico', pro: '⭐ Pro', ultra: '🚀 Ultra' };
+          const colors = { trial: '#f59e0b', basico: '#60a5fa', pro: '#a78bfa', ultra: '#34d399' };
           el.innerHTML = `<span style="background:${colors[data.plan] || '#666'};color:#000;padding:2px 8px;border-radius:10px;font-weight:700;font-size:10px">${labels[data.plan] || data.plan}</span>`;
         }).catch(() => {});
     }
@@ -454,20 +462,99 @@
         .catch(() => {});
     }
 
-    // ---- NOTIFICACIONES ----
+    // ---- NOTIFICACIONES SYSTEM-WIDE ----
     if (token) {
       fetch("/api/productos/alertas/stock-bajo", {
         headers: { Authorization: "Bearer " + token },
       })
         .then((r) => (r.ok ? r.json() : []))
         .then((data) => {
+          if (!Array.isArray(data) || !data.length) return;
+
+          // Badge en link de Productos
           const productosLink = document.querySelector('.sidebar-link[href="/admin/productos.html"]');
-          if (productosLink && data.length > 0) {
+          if (productosLink) {
             productosLink.innerHTML += `
               <span style="margin-left:auto;background:var(--danger);color:#fff;
                 border-radius:99px;padding:1px 7px;font-size:10px;font-weight:700">
                 ${data.length}
               </span>`;
+          }
+
+          // Panel de alertas en sidebar
+          const alertsContainer = document.getElementById("sidebar-alerts");
+          const alertsBadge = document.getElementById("alerts-badge");
+          const alertsLabel = document.getElementById("alerts-label");
+          if (alertsContainer) {
+            alertsContainer.style.display = "block";
+            if (alertsBadge) alertsBadge.textContent = data.length;
+            if (alertsLabel) alertsLabel.textContent = `Stock bajo (${data.length})`;
+          }
+
+          // Click en alertas → mostrar detalle
+          document.getElementById("btn-sidebar-alerts")?.addEventListener("click", () => {
+            const listHtml = data.slice(0, 10).map(p =>
+              `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+                <span>${p.nombre}</span>
+                <span style="color:var(--danger);font-weight:700">${p.stock} uds</span>
+              </div>`
+            ).join("");
+            if (typeof Swal !== "undefined") {
+              Swal.fire({
+                title: "⚠️ Stock bajo",
+                html: `<div style="text-align:left;max-height:300px;overflow:auto">${listHtml}${data.length > 10 ? `<div style="padding:8px 0;opacity:.6">...y ${data.length - 10} más</div>` : ""}</div>`,
+                confirmButtonText: "Ir a Productos",
+                showCancelButton: true,
+                cancelButtonText: "Cerrar",
+                confirmButtonColor: "#ff5c5c",
+              }).then(result => {
+                if (result.isConfirmed) location.href = "/admin/productos.html";
+              });
+            } else {
+              location.href = "/admin/productos.html";
+            }
+          });
+
+          // Toast de alerta (solo una vez por sesión)
+          const alertKey = "stock_alert_shown_" + new Date().toISOString().slice(0, 10);
+          if (!sessionStorage.getItem(alertKey)) {
+            sessionStorage.setItem(alertKey, "1");
+            if (!document.getElementById("toast-keyframes")) {
+              const style = document.createElement("style");
+              style.id = "toast-keyframes";
+              style.textContent = "@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}";
+              document.head.appendChild(style);
+            }
+            const toast = document.createElement("div");
+            toast.id = "stock-toast";
+            toast.style.cssText = `
+              position:fixed; bottom:20px; right:20px; z-index:9999;
+              background:linear-gradient(135deg, #1a1a2e, #16213e);
+              border:1px solid var(--danger); border-radius:12px;
+              padding:14px 20px; max-width:340px; box-shadow:0 8px 32px rgba(0,0,0,.4);
+              animation: slideInRight .3s ease; cursor:pointer;
+              display:flex; align-items:center; gap:12px;
+            `;
+            const criticalCount = data.filter(p => p.stock <= 0).length;
+            const lowCount = data.length - criticalCount;
+            let msg = `${data.length} producto${data.length > 1 ? "s" : ""} con stock bajo`;
+            if (criticalCount > 0) msg += ` (${criticalCount} sin stock)`;
+            toast.innerHTML = `
+              <span style="font-size:24px">⚠️</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:var(--danger)">Alerta de Stock</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">${msg}</div>
+              </div>
+              <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;margin-left:auto">✕</button>
+            `;
+            toast.addEventListener("click", (e) => {
+              if (e.target.tagName !== "BUTTON") {
+                document.getElementById("btn-sidebar-alerts")?.click();
+                toast.remove();
+              }
+            });
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 8000);
           }
         })
         .catch(() => {});

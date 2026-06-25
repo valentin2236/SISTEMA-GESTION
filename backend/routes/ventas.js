@@ -146,17 +146,17 @@ function calcTotals(
   const montoPago =
     pago?.monto == null ? total : Math.max(0, Number(pago.monto));
 
-  const cambio = medio === "efectivo" ? Math.max(0, montoPago - total) : 0;
+  const cambio = medio === "efectivo" ? Math.max(0, Math.round((montoPago - total) * 100) / 100) : 0;
 
   const pagado = montoPago;
 
   return {
-    subtotal,
+    subtotal: Math.round(subtotal * 100) / 100,
     descuento_tipo: tipoDesc,
     descuento_valor: valDesc,
     recargo_porcentaje: interesPct,
-    recargo_monto: recargoMonto,
-    total,
+    recargo_monto: Math.round(recargoMonto * 100) / 100,
+    total: Math.round(total * 100) / 100,
     medio_pago: medio,
     pagado,
     cambio,

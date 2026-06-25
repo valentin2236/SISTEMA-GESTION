@@ -4,7 +4,7 @@ if (!token) location.href = "/admin/login.html";
 
 const rol = localStorage.getItem("user_rol");
 if (rol !== "admin") {
-  Swal.fire({ icon: "error", title: "Acceso denegado" })
+  Swal.fire({ icon: "error", title: "Acceso restringido", text: "Necesitás permisos de administrador para acceder a esta sección" })
     .then(() => location.href = "/admin/dashboard.html");
 }
 

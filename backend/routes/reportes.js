@@ -11,17 +11,17 @@ router.get('/kpis', requireAuth, requireRole('admin','vendedor'), (req, res) => 
   const sql = `
 WITH
 hoy AS (
-  SELECT IFNULL(SUM(total),0) total, COUNT(*) tickets
+  SELECT ROUND(IFNULL(SUM(total),0), 2) total, COUNT(*) tickets
   FROM ventas
   WHERE DATE(fecha)=DATE('now')
 ),
 sem AS (
-  SELECT IFNULL(SUM(total),0) total, COUNT(*) tickets
+  SELECT ROUND(IFNULL(SUM(total),0), 2) total, COUNT(*) tickets
   FROM ventas
   WHERE DATE(fecha)>=DATE('now','-6 days')
 ),
 mes AS (
-  SELECT IFNULL(SUM(total),0) total, COUNT(*) tickets
+  SELECT ROUND(IFNULL(SUM(total),0), 2) total, COUNT(*) tickets
   FROM ventas
   WHERE strftime('%Y-%m',fecha)=strftime('%Y-%m','now')
 )

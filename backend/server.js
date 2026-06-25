@@ -159,12 +159,12 @@ app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/licencia', licenciaRoutes);
+app.use('/api/reportes', reportesRoutes);
 
 // Restringidas por plan
 app.use('/api/inventario', requireFeature('inventario'), inventarioRoutes);
 app.use('/api/proveedores', requireFeature('proveedores'), proveedoresRoutes);
 app.use('/api/compras', requireFeature('compras'), comprasRoutes);
-app.use('/api/reportes', requireFeature('reportes'), reportesRoutes);
 app.use('/api/auditoria', requireFeature('auditoria'), auditoriaRouter);
 app.use('/api/backup', requireFeature('backup'), backupRoutes);
 app.use('/api/exportar', requireFeature('exportar'), exportarRoutes);

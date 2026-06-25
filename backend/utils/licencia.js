@@ -152,7 +152,7 @@ const PLAN_FEATURES = {
     'proveedores',
     'exportar',
   ],
-  enterprise: [
+  ultra: [
     'pos',
     'productos',
     'caja',

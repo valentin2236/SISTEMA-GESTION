@@ -379,20 +379,34 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
   function renderCliente() {
     if (!$clienteSel) return;
+    const top = document.getElementById("cliente-top");
     if (!state.cliente) {
-      $clienteSel.innerHTML = `<div class="cliente-empty">Sin cliente seleccionado</div>`;
+      $clienteSel.innerHTML = `<div class="cliente-empty" style="text-align:center;padding:12px;opacity:.5;font-size:13px">Sin cliente seleccionado<br><small>Se registrará como Consumidor Final</small></div>`;
+      if (top) top.textContent = "Consumidor Final";
       return;
     }
     $clienteSel.innerHTML = `
-      <div class="cliente-card-pos">
-        <div class="cliente-avatar-pos">${state.cliente.nombre.charAt(0).toUpperCase()}</div>
-        <div>
-          <strong>${state.cliente.nombre}</strong>
-          <div style="font-size:11px;opacity:.7">ID #${state.cliente.id}</div>
+      <div class="cliente-card-pos" style="display:flex;align-items:center;gap:10px;padding:8px 12px;
+        background:rgba(0,216,117,.08);border:1px solid rgba(0,216,117,.25);border-radius:10px">
+        <div class="cliente-avatar-pos" style="width:36px;height:36px;border-radius:50%;background:var(--accent);
+          color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">
+          ${state.cliente.nombre.charAt(0).toUpperCase()}
         </div>
+        <div style="flex:1;min-width:0">
+          <strong style="font-size:14px">${state.cliente.nombre}</strong>
+          <div style="font-size:11px;opacity:.7">Cliente #${state.cliente.id}</div>
+        </div>
+        <button class="btn btn-outline btn-sm" id="btn-quitar-cliente"
+          style="font-size:11px;padding:4px 10px;color:var(--danger);border-color:var(--danger)"
+          title="Quitar cliente">✕</button>
       </div>`;
-    const top = document.getElementById("cliente-top");
     if (top) top.textContent = state.cliente.nombre;
+
+    document.getElementById("btn-quitar-cliente")?.addEventListener("click", () => {
+      state.cliente = null;
+      renderCliente();
+      renderPreview();
+    });
   }
 
   $btnNuevoCli?.addEventListener("click", () => {
@@ -468,11 +482,11 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
             (p) => `
           <div class="card">
             <div class="name">${p.nombre}</div>
-            <div class="sku">SKU: ${p.sku || ""}</div>
+            <div class="sku">SKU: ${p.sku || ""} ${p.stock != null ? `<span style="margin-left:8px;font-size:11px;${p.stock <= 5 ? 'color:var(--danger);font-weight:700' : 'opacity:.6'}">Stock: ${p.stock}</span>` : ""}</div>
             <div class="row">
               <div class="price">$ ${money(p.precio)}</div>
-              <button class="btn" data-add="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}">
-                Agregar
+              <button class="btn" data-add="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" ${p.stock <= 0 ? 'disabled style="opacity:.4"' : ""}>
+                ${p.stock <= 0 ? "Sin stock" : "Agregar"}
               </button>
             </div>
           </div>`,
@@ -516,7 +530,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     );
   });
 
-  function agregarProducto(id, nombre, precio) {
+  async function agregarProducto(id, nombre, precio) {
     const idx = state.carrito.findIndex((i) => i.id === id);
     if (idx >= 0) {
       state.carrito[idx].cantidad += 1;
@@ -532,6 +546,21 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     renderCarrito();
     refreshTotals();
     renderPreview();
+
+    // Verificar stock disponible
+    if (id > 0) {
+      const r = await api(`/api/productos/${id}`, {}, { expectJSON: true });
+      if (r.ok && r.data) {
+        const cantEnCarrito = state.carrito.find(i => i.id === id)?.cantidad || 0;
+        const stockDisp = r.data.stock - cantEnCarrito;
+        if (r.data.stock <= 5) {
+          showStatus(`⚠️ Stock bajo: "${nombre}" tiene ${r.data.stock} uds en total (${stockDisp} después de esta venta)`, "error");
+        }
+        if (stockDisp < 0) {
+          showStatus(`🚫 Sin stock suficiente: "${nombre}" solo tiene ${r.data.stock} uds disponibles`, "error");
+        }
+      }
+    }
   }
 
   /* ===================== CARRITO ===================== */
@@ -818,10 +847,13 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
   /* ===================== VACIAR ===================== */
   $btnVaciar?.addEventListener("click", () => {
     Swal.fire({
-      title: "¿Vaciar carrito?",
-      icon: "question",
+      title: "¿Vaciar el carrito?",
+      text: `Se eliminarán ${state.carrito.length} producto${state.carrito.length !== 1 ? "s" : ""} del carrito`,
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí",
+      confirmButtonText: "Sí, vaciar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#ef4444",
     }).then((r) => {
       if (!r.isConfirmed) return;
       state.carrito = [];
@@ -878,14 +910,16 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     const detalleProductos = state.carrito
       .map((p) => `• ${p.nombre} x${p.cantidad}`)
       .join("<br>");
+    const medioLabels = { efectivo: "💵 Efectivo", tarjeta: "💳 Tarjeta", transferencia: "🏦 Transferencia", cuenta_corriente: "📒 Cuenta Corriente" };
     const confirm = await Swal.fire({
       title: "¿Confirmar venta?",
-      html: `${state.cliente ? `<b>Cliente:</b> ${state.cliente.nombre}<br><br>` : ""}
-             <b>Productos:</b><br>${detalleProductos}<br><br>
-             <b>Total:</b> $ ${$tTotalGrande?.textContent}`,
+      html: `${state.cliente ? `<b>Cliente:</b> ${state.cliente.nombre}<br>` : ""}
+             <b>Medio de pago:</b> ${medioLabels[state.medioPago] || state.medioPago}<br><br>
+             <div style="text-align:left;max-height:150px;overflow:auto;font-size:13px">${detalleProductos}</div><br>
+             <div style="font-size:20px;font-weight:800">Total: $ ${$tTotalGrande?.textContent}</div>`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Confirmar",
+      confirmButtonText: "✅ Confirmar venta",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#00d875",
       cancelButtonColor: "#555",
@@ -949,7 +983,27 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     incrementarContador();
     renderHistorial();
 
-    // Ticket
+    // Flash visual de éxito antes de resetear
+    const posWrap = document.querySelector(".pos-wrap");
+    if (posWrap) {
+      posWrap.style.transition = "box-shadow .3s ease";
+      posWrap.style.boxShadow = "inset 0 0 80px rgba(0,216,117,.15)";
+      setTimeout(() => { posWrap.style.boxShadow = "none"; }, 1200);
+    }
+
+    // Resetear estado inmediatamente (la venta ya se guardó en DB)
+    state.carrito = [];
+    state.cliente = null;
+    state.montoPago = 0;
+    if ($montoPago) $montoPago.value = "";
+    renderCarrito();
+    renderCliente();
+    refreshTotals();
+    renderPreview();
+    const topCliente = document.getElementById("cliente-top");
+    if (topCliente) topCliente.textContent = "Consumidor Final";
+
+    // Ticket (si falla la impresión, la venta ya está finalizada)
     const tok = localStorage.getItem("token") || "";
     const cfg = localStorage.getItem("cfg") || "{}";
     const ticketUrl = `/ticket.html?id=${r.data.id}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${encodeURIComponent(btoa(cfg))}`;
@@ -963,7 +1017,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
           margins: "none",
           landscape: false,
         });
-        await Swal.fire({
+        Swal.fire({
           icon: "success",
           title: "Venta exitosa",
           text: "Ticket enviado",
@@ -972,7 +1026,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
         });
       } else {
         window.open(ticketUrl, "_blank");
-        await Swal.fire({
+        Swal.fire({
           icon: "success",
           title: "Venta exitosa",
           text: "Ticket abierto para imprimir",
@@ -982,26 +1036,18 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       }
     } catch (e) {
       console.error("Print error:", e);
-      await Swal.fire({
+      Swal.fire({
         icon: "warning",
         title: "Venta registrada",
         text: "No se pudo imprimir el ticket",
         timer: 2200,
         showConfirmButton: false,
       });
-    } finally {
-      state.carrito = [];
-      state.cliente = null;
-      state.montoPago = 0;
-      if ($montoPago) $montoPago.value = "";
-      renderCarrito();
-      renderCliente();
-      refreshTotals();
-      renderPreview();
-      if ($buscar) {
-        $buscar.value = "";
-        $buscar.focus();
-      }
+    }
+
+    if ($buscar) {
+      $buscar.value = "";
+      $buscar.focus();
     }
   });
 
