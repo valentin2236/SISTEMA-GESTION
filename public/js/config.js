@@ -642,6 +642,11 @@ async function cargarBackups() {
     const res = await fetch('/api/backup', {
       headers: { Authorization: 'Bearer ' + token },
     });
+    if (res.status === 403) {
+      $backupsLista.innerHTML = '<p class="field-hint">Los backups de base de datos requieren un plan Básico o superior. Activá una licencia en la pestaña "Licencia".</p>';
+      if ($btnCrearBackup) $btnCrearBackup.disabled = true;
+      return;
+    }
     if (!res.ok) { $backupsLista.innerHTML = '<p class="field-hint">Error cargando backups</p>'; return; }
     const backups = await res.json();
     if (!backups.length) {

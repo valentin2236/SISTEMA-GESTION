@@ -25,7 +25,7 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /api/licencia/activar — activar licencia
 router.post('/activar', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    const { clave } = req.body;
+    const clave = (req.body?.clave || '').trim();
     if (!clave) {
       return res.status(400).json({ error: 'CLAVE_REQUERIDA' });
     }
@@ -33,16 +33,24 @@ router.post('/activar', requireAuth, requireRole('admin'), async (req, res) => {
     const result = validateLicenseKey(clave);
 
     if (!result.valid) {
-      registrarAuditoria(req.user.email, 'LICENCIA_FALLIDA', result.error);
+      try { registrarAuditoria(req.user.email, 'LICENCIA_FALLIDA', result.error); } catch {}
       return res.status(400).json({
         error: 'LICENCIA_INVALIDA',
         message: result.error,
       });
     }
 
-    saveLicenseToFile(clave);
+    try {
+      saveLicenseToFile(clave);
+    } catch (writeErr) {
+      logger.error('Error guardando archivo de licencia', { error: writeErr.message });
+      return res.status(500).json({
+        error: 'LICENCIA_ERROR',
+        message: 'No se pudo guardar la licencia en disco. Verificá permisos de escritura.',
+      });
+    }
 
-    registrarAuditoria(req.user.email, 'LICENCIA_ACTIVADA', `Plan: ${result.plan}, Expira: ${result.expiry}`);
+    try { registrarAuditoria(req.user.email, 'LICENCIA_ACTIVADA', `Plan: ${result.plan}, Expira: ${result.expiry}`); } catch {}
     logger.info('Licencia activada', { plan: result.plan, user: req.user.email });
 
     res.json({
@@ -52,8 +60,8 @@ router.post('/activar', requireAuth, requireRole('admin'), async (req, res) => {
       diasRestantes: result.diasRestantes,
     });
   } catch (e) {
-    logger.error('Error activando licencia', { error: e.message });
-    res.status(500).json({ error: 'LICENCIA_ERROR' });
+    logger.error('Error activando licencia', { error: e.message, stack: e.stack });
+    res.status(500).json({ error: 'LICENCIA_ERROR', message: e.message });
   }
 });
 

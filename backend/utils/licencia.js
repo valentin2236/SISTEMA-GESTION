@@ -8,7 +8,17 @@ import logger from './logger.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const LICENSE_FILE = path.join(__dirname, '..', '..', 'license.key');
+function getLicensePath() {
+  if (process.versions.electron && process.type !== undefined) {
+    const userDataPath = process.env.APPDATA || path.join(process.env.HOME || '', '.config');
+    const appDir = path.join(userDataPath, 'sistema-gestion-pro');
+    if (!fs.existsSync(appDir)) fs.mkdirSync(appDir, { recursive: true });
+    return path.join(appDir, 'license.key');
+  }
+  return path.join(__dirname, '..', '..', 'license.key');
+}
+
+const LICENSE_FILE = getLicensePath();
 const SECRET = 'SGP-2024-LICENCIA-SECRETA';
 
 export function generateMachineId() {
