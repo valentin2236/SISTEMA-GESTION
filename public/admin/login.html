@@ -439,7 +439,7 @@
           </button>
         </div>
 
-        <div class="login-footer">Versión 1.0 · Savatek Solutions</div>
+        <div class="login-footer" id="login-version">Savatek Solutions</div>
 
       </main>
     </div>
@@ -517,6 +517,12 @@
       });
     </script>
 
+    <script>
+      fetch('/health').then(r=>r.json()).then(d=>{
+        const el=document.getElementById('login-version');
+        if(el) el.textContent='v'+d.version+' · Savatek Solutions';
+      }).catch(()=>{});
+    </script>
     <script src="/js/login.js"></script>
   </body>
 </html>

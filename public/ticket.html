@@ -133,11 +133,23 @@
         document.getElementById("footer").textContent =
           cfg.ticketFooter || "¡Gracias por su compra!";
 
-        // ── Helpers ──────────────────────────────────────────
+        // ── Moneda desde config ─────────────────────────────
+        const monSim = cfg.monedaSimbolo || '$';
+        const monDec = cfg.monedaDecimal || ',';
+        const monDecimals = parseInt(cfg.monedaDecimals ?? '2');
+        const monPos = cfg.monedaPosicion || 'before';
+
         function money(n) {
-          return (Number(n) || 0).toLocaleString("es-AR", {
-            minimumFractionDigits: 2,
-          });
+          const num = Number(n) || 0;
+          const miles = monDec === ',' ? '.' : ',';
+          const parts = num.toFixed(monDecimals).split('.');
+          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, miles);
+          return monDecimals > 0 ? parts[0] + monDec + parts[1] : parts[0];
+        }
+
+        function moneyFmt(n) {
+          const val = money(n);
+          return monPos === 'after' ? val + ' ' + monSim : monSim + val;
         }
 
         function line(label, value, className = "") {
@@ -197,13 +209,10 @@
         $items.innerHTML = (venta.items || [])
           .map((it) => {
             const nombre = it.nombre || it.descripcion_libre || "—";
-            const subtotal = money(
-              Number(it.precio_unitario) * Number(it.cantidad),
-            );
             return `
             <tr>
               <td>${nombre} x${it.cantidad}</td>
-              <td class="right">$ ${subtotal}</td>
+              <td class="right">${moneyFmt(Number(it.precio_unitario) * Number(it.cantidad))}</td>
             </tr>`;
           })
           .join("");
@@ -233,7 +242,7 @@
 
         // Subtotal solo si hay descuento o recargo (si no, sería redundante con total)
         if (descMonto > 0 || recargoMonto > 0) {
-          html += line("Subtotal", `$ ${money(subtotal)}`);
+          html += line("Subtotal", `${moneyFmt(subtotal)}`);
         }
 
         // Descuento
@@ -242,7 +251,7 @@
             descTipo === "porcentaje"
               ? `Descuento (${descValor}%)`
               : "Descuento";
-          html += line(descLabel, `- $ ${money(descMonto)}`, "descuento");
+          html += line(descLabel, `- ${moneyFmt(descMonto)}`, "descuento");
         }
 
         // Recargo tarjeta
@@ -252,13 +261,13 @@
             : "";
           html += line(
             `Recargo tarjeta${pct}`,
-            `+ $ ${money(recargoMonto)}`,
+            `+ ${moneyFmt(recargoMonto)}`,
             "recargo",
           );
         }
 
         // Total
-        html += line("TOTAL", `$ ${money(total)}`, "total");
+        html += line("TOTAL", `${moneyFmt(total)}`, "total");
 
         // Medio de pago
         if (medioPago) {
@@ -267,8 +276,8 @@
 
         // Entregado / Cambio (solo efectivo)
         if (medioPago === "efectivo" && pagado > 0) {
-          html += line("Entregado", `$ ${money(pagado)}`);
-          html += line("Cambio", `$ ${money(cambio)}`);
+          html += line("Entregado", `${moneyFmt(pagado)}`);
+          html += line("Cambio", `${moneyFmt(cambio)}`);
         }
 
         document.getElementById("totales").innerHTML = html;

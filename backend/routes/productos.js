@@ -3,7 +3,7 @@ import { Router } from "express";
 import { db } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { registrarAuditoria } from "../utils/auditoria.js";
-import { getAnthropicKey } from "./config.js";
+import { getAnthropicKey, getGeminiKey, getIAProvider } from "./config.js";
 
 const router = Router();
 
@@ -607,28 +607,7 @@ router.get(
 
 // POST /api/productos/analizar-foto
 
-router.post(
-  "/analizar-foto",
-  requireAuth,
-  requireRole("admin", "vendedor"),
-  async (req, res) => {
-    try {
-      const { imagen, mimeType } = req.body;
-      if (!imagen || !mimeType) {
-        return res.status(400).json({ error: "Faltan imagen o mimeType" });
-      }
-
-      // Buscar key en DB primero, luego .env como fallback
-      const apiKey = await getAnthropicKey();
-      if (!apiKey) {
-        return res.status(402).json({
-          error: "SIN_API_KEY",
-          mensaje:
-            "Configurá tu API key de Anthropic en Configuración → IA para usar esta función.",
-        });
-      }
-
-      const prompt = `Analizá esta imagen de una factura o remito de proveedor.
+const ANALIZAR_PROMPT = `Analizá esta imagen de una factura o remito de proveedor.
 Extraé TODOS los productos/artículos que aparecen listados.
 Para cada producto devolvé un objeto JSON con estos campos:
 - nombre: string (nombre del producto tal como aparece, limpio y capitalizado)
@@ -643,32 +622,106 @@ REGLAS:
 - Ignorá cualquier anotación manuscrita.
 - Devolvé SOLO un array JSON válido, sin texto adicional, sin markdown, sin backticks.`;
 
-      const response = await apiFetch("/api/productos/analizar-foto", {
-        method: "POST",
-        body: JSON.stringify({ imagen: fotoBase64, mimeType: fotoMimeType }),
-      });
+async function analizarConAnthropic(imagen, mimeType) {
+  const apiKey = await getAnthropicKey();
+  if (!apiKey) throw new Error("SIN_API_KEY");
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        if (err.error === "SIN_API_KEY") {
-          throw new Error(
-            "No hay API key configurada. Andá a Configuración → IA y cargá tu key de Anthropic.",
-          );
-        }
-        if (err.error === "SIN_PRODUCTOS") {
-          throw new Error(
-            "No se detectaron productos. Probá con una foto más nítida.",
-          );
-        }
-        throw new Error(err.details || err.error || `Error ${response.status}`);
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 4096,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: mimeType, data: imagen } },
+          { type: "text", text: ANALIZAR_PROMPT },
+        ],
+      }],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Anthropic HTTP ${response.status}`);
+  }
+
+  const result = await response.json();
+  const text = result.content?.[0]?.text || "";
+  return JSON.parse(text);
+}
+
+async function analizarConGemini(imagen, mimeType) {
+  const apiKey = await getGeminiKey();
+  if (!apiKey) throw new Error("SIN_API_KEY");
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inlineData: { mimeType, data: imagen } },
+            { text: ANALIZAR_PROMPT },
+          ],
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Gemini HTTP ${response.status}`);
+  }
+
+  const result = await response.json();
+  const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  return JSON.parse(cleaned);
+}
+
+router.post(
+  "/analizar-foto",
+  requireAuth,
+  requireRole("admin", "vendedor"),
+  async (req, res) => {
+    try {
+      const { imagen, mimeType } = req.body;
+      if (!imagen || !mimeType) {
+        return res.status(400).json({ error: "Faltan imagen o mimeType" });
       }
 
-      const data = await response.json();
-      const productos = data.productos;
+      const provider = await getIAProvider();
+      let productos;
+
+      if (provider === "gemini") {
+        productos = await analizarConGemini(imagen, mimeType);
+      } else {
+        productos = await analizarConAnthropic(imagen, mimeType);
+      }
+
+      if (!productos || !productos.length) {
+        return res.status(422).json({ error: "SIN_PRODUCTOS" });
+      }
+
       res.json({ productos });
     } catch (e) {
       console.error("[analizar-foto]", e);
-      res.status(500).json({ error: "DB_ERROR", details: e.message });
+      if (e.message === "SIN_API_KEY") {
+        return res.status(402).json({
+          error: "SIN_API_KEY",
+          mensaje: "Configurá tu API key en Configuración → IA para usar esta función.",
+        });
+      }
+      res.status(500).json({ error: "AI_ERROR", details: e.message });
     }
   },
 );

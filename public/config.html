@@ -430,52 +430,61 @@
         <div class="panel">
           <div class="panel-head">
             <span class="panel-title">Inteligencia Artificial</span>
-            <span class="panel-sub"
-              >Para importar productos desde fotos de facturas</span
-            >
+            <span class="panel-sub">Para importar productos desde fotos de facturas</span>
           </div>
 
           <div class="cfg-grid">
             <div class="field field--full">
+              <label class="field-label">Proveedor de IA</label>
+              <select id="iaProvider" class="field-input">
+                <option value="gemini">Google Gemini — gratuito</option>
+                <option value="anthropic">Anthropic (Claude) — pago</option>
+              </select>
+              <p class="field-hint">
+                Gemini ofrece un plan gratuito con hasta 1500 solicitudes por día.
+                Claude es de pago (~$0.01 USD por análisis) pero puede dar mejores resultados.
+              </p>
+            </div>
+
+            <!-- Anthropic section -->
+            <div id="ia-section-anthropic" class="field field--full" style="display:none">
               <label class="field-label">
                 API Key de Anthropic
-                <a
-                  href="https://console.anthropic.com"
-                  target="_blank"
-                  class="field-hint"
-                  style="margin-left: 8px"
-                >
+                <a href="https://console.anthropic.com" target="_blank" class="field-hint" style="margin-left:8px">
                   ¿Cómo obtenerla? →
                 </a>
               </label>
               <div class="cfg-apikey-row">
-                <input
-                  id="anthropicApiKey"
-                  class="field-input cfg-apikey-input"
-                  type="password"
-                  placeholder="sk-ant-api03-..."
-                  autocomplete="off"
-                />
-                <button
-                  id="btnToggleKey"
-                  class="btn btn-outline btn-sm"
-                  title="Mostrar/ocultar"
-                >
-                  👁
-                </button>
-                <button id="btnTestKey" class="btn btn-outline btn-sm">
-                  Probar
-                </button>
+                <input id="anthropicApiKey" class="field-input cfg-apikey-input" type="password"
+                       placeholder="sk-ant-api03-..." autocomplete="off"/>
+                <button id="btnToggleKey" class="btn btn-outline btn-sm" title="Mostrar/ocultar">👁</button>
+                <button id="btnTestKey" class="btn btn-outline btn-sm">Probar</button>
               </div>
               <p id="anthropicKeyStatus" class="field-hint"></p>
-              <p class="field-hint" style="margin-top: 6px">
-                La key se guarda en el servidor, nunca en el navegador. Cada
-                análisis de foto cuesta aproximadamente $0.01 USD.
+            </div>
+
+            <!-- Gemini section -->
+            <div id="ia-section-gemini" class="field field--full">
+              <label class="field-label">
+                API Key de Google Gemini
+                <a href="https://aistudio.google.com/apikey" target="_blank" class="field-hint" style="margin-left:8px">
+                  Obtener key gratis →
+                </a>
+              </label>
+              <div class="cfg-apikey-row">
+                <input id="geminiApiKey" class="field-input cfg-apikey-input" type="password"
+                       placeholder="AIzaSy..." autocomplete="off"/>
+                <button id="btnToggleGeminiKey" class="btn btn-outline btn-sm" title="Mostrar/ocultar">👁</button>
+                <button id="btnTestGeminiKey" class="btn btn-outline btn-sm">Probar</button>
+              </div>
+              <p id="geminiKeyStatus" class="field-hint"></p>
+              <p class="field-hint" style="margin-top:6px">
+                La key se guarda en el servidor, nunca en el navegador. El plan gratuito permite hasta 1500 análisis por día.
               </p>
             </div>
           </div>
 
-          <div id="cfg-ia-estado" class="cfg-ia-estado" style="display: none">
+          <div id="cfg-ia-estado" class="cfg-ia-estado" style="display:none">
             <!-- se rellena por JS -->
           </div>
         </div>

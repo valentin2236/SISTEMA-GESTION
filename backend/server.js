@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
@@ -178,7 +179,7 @@ app.get('/', (_req, res) => res.redirect('/admin/dashboard.html'));
 app.get('/health', (_req, res) => {
   res.json({
     ok: true,
-    version: process.env.npm_package_version || '1.0.0',
+    version: process.env.npm_package_version || (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version; } catch { return '0.0.0'; } })(),
     uptime: Math.floor(process.uptime()),
   });
 });

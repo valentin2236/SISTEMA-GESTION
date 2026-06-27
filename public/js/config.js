@@ -429,14 +429,21 @@
 
 
   /* ── Refs IA ── */
-const $apiKey       = document.getElementById('anthropicApiKey');
-const $btnToggleKey = document.getElementById('btnToggleKey');
-const $btnTestKey   = document.getElementById('btnTestKey');
-const $keyStatus    = document.getElementById('anthropicKeyStatus');
-const $iaEstado     = document.getElementById('cfg-ia-estado');
- 
+const $apiKey            = document.getElementById('anthropicApiKey');
+const $btnToggleKey      = document.getElementById('btnToggleKey');
+const $btnTestKey        = document.getElementById('btnTestKey');
+const $keyStatus         = document.getElementById('anthropicKeyStatus');
+const $iaEstado          = document.getElementById('cfg-ia-estado');
+const $iaProvider        = document.getElementById('iaProvider');
+const $sectionAnthropic  = document.getElementById('ia-section-anthropic');
+const $sectionGemini     = document.getElementById('ia-section-gemini');
+const $geminiApiKey      = document.getElementById('geminiApiKey');
+const $btnToggleGeminiKey = document.getElementById('btnToggleGeminiKey');
+const $btnTestGeminiKey  = document.getElementById('btnTestGeminiKey');
+const $geminiKeyStatus   = document.getElementById('geminiKeyStatus');
+
 const token = localStorage.getItem('token');
- 
+
 async function apiCfg(method, body = null) {
   const opts = {
     method,
@@ -449,105 +456,125 @@ async function apiCfg(method, body = null) {
   const res = await fetch('/api/config', opts);
   return res;
 }
- 
-/* ── Cargar estado de key desde servidor ── */
+
+/* ── Provider toggle ── */
+$iaProvider?.addEventListener('change', async () => {
+  const provider = $iaProvider.value;
+  if ($sectionAnthropic) $sectionAnthropic.style.display = provider === 'anthropic' ? '' : 'none';
+  if ($sectionGemini) $sectionGemini.style.display = provider === 'gemini' ? '' : 'none';
+  await apiCfg('PUT', { ia_provider: provider });
+  cargarEstadoIA();
+});
+
+/* ── Cargar estado de IA desde servidor ── */
 async function cargarEstadoIA() {
   if (!token) return;
   try {
     const res = await apiCfg('GET');
     if (!res.ok) return;
     const data = await res.json();
- 
-    if (data.anthropic_key_configurada) {
-      $keyStatus.textContent = '✅ API key configurada en el servidor.';
-      $keyStatus.style.color = 'var(--success, green)';
+
+    const provider = data.ia_provider || 'gemini';
+    if ($iaProvider) $iaProvider.value = provider;
+    if ($sectionAnthropic) $sectionAnthropic.style.display = provider === 'anthropic' ? '' : 'none';
+    if ($sectionGemini) $sectionGemini.style.display = provider === 'gemini' ? '' : 'none';
+
+    if ($keyStatus) {
+      $keyStatus.textContent = data.anthropic_key_configurada ? '✅ Key configurada.' : 'Sin key configurada.';
+      $keyStatus.style.color = data.anthropic_key_configurada ? 'var(--success, green)' : 'var(--muted)';
+    }
+    if ($geminiKeyStatus) {
+      $geminiKeyStatus.textContent = data.gemini_key_configurada ? '✅ Key configurada.' : 'Sin key configurada.';
+      $geminiKeyStatus.style.color = data.gemini_key_configurada ? 'var(--success, green)' : 'var(--muted)';
+    }
+
+    const keyOk = provider === 'gemini' ? data.gemini_key_configurada : data.anthropic_key_configurada;
+    const provLabel = provider === 'gemini' ? 'Google Gemini (gratis)' : 'Anthropic Claude';
+
+    if (keyOk) {
       $iaEstado.style.display = '';
       $iaEstado.innerHTML = `
         <div class="cfg-ia-ok">
-          <span>✅ La función de importar desde foto está activa.</span>
+          <span>✅ Importar desde foto activo — ${provLabel}</span>
           <button id="btnBorrarKey" class="btn btn-outline btn-sm btn-danger-outline">
             🗑 Quitar key
           </button>
         </div>`;
-      document.getElementById('btnBorrarKey')?.addEventListener('click', borrarKey);
+      document.getElementById('btnBorrarKey')?.addEventListener('click', () => borrarKey(provider));
     } else {
-      $keyStatus.textContent = 'Sin key configurada. La función de importar foto estará deshabilitada.';
-      $keyStatus.style.color = 'var(--muted)';
       $iaEstado.style.display = 'none';
     }
   } catch (e) {
     console.error('cargarEstadoIA', e);
   }
 }
- 
-/* ── Mostrar/ocultar key ── */
+
+/* ── Anthropic: toggle/test ── */
 $btnToggleKey?.addEventListener('click', () => {
   const isPass = $apiKey.type === 'password';
   $apiKey.type = isPass ? 'text' : 'password';
   $btnToggleKey.textContent = isPass ? '🙈' : '👁';
 });
- 
-/* ── Probar key ── */
+
 $btnTestKey?.addEventListener('click', async () => {
   const key = $apiKey.value.trim();
-  if (!key) {
-    $keyStatus.textContent = 'Ingresá una key para probar.';
-    $keyStatus.style.color = 'var(--danger)';
-    return;
-  }
- 
-  $btnTestKey.disabled = true;
-  $btnTestKey.textContent = 'Probando…';
-  $keyStatus.textContent = '';
- 
+  if (!key) { $keyStatus.textContent = 'Ingresá una key para probar.'; $keyStatus.style.color = 'var(--danger)'; return; }
+  $btnTestKey.disabled = true; $btnTestKey.textContent = 'Probando…'; $keyStatus.textContent = '';
   try {
-    // Guardamos la key y la probamos en el servidor
     const resSave = await apiCfg('PUT', { anthropic_api_key: key });
-    if (!resSave.ok) throw new Error('No se pudo guardar la key');
- 
-    // Hacemos un ping mínimo a Anthropic desde el backend
-    const resTest = await fetch('/api/config/test-ia', {
-      headers: { Authorization: 'Bearer ' + token },
-    });
+    if (!resSave.ok) throw new Error('No se pudo guardar');
+    const resTest = await fetch('/api/config/test-ia', { headers: { Authorization: 'Bearer ' + token } });
     const result = await resTest.json();
- 
     if (resTest.ok && result.ok) {
-      $keyStatus.textContent = '✅ Key válida y funcionando.';
-      $keyStatus.style.color = 'var(--success, green)';
-      toast('API key guardada y verificada.');
-      cargarEstadoIA();
+      $keyStatus.textContent = '✅ Key válida y funcionando.'; $keyStatus.style.color = 'var(--success, green)';
+      toast('API key de Anthropic guardada y verificada.'); cargarEstadoIA();
     } else {
-      $keyStatus.textContent = '❌ Key inválida: ' + (result.details || 'error desconocido');
-      $keyStatus.style.color = 'var(--danger)';
-      // Borrar key inválida del servidor
+      $keyStatus.textContent = '❌ Key inválida: ' + (result.details || 'error'); $keyStatus.style.color = 'var(--danger)';
       await apiCfg('PUT', { anthropic_api_key: '' });
     }
-  } catch (e) {
-    $keyStatus.textContent = '❌ Error al probar: ' + e.message;
-    $keyStatus.style.color = 'var(--danger)';
-  } finally {
-    $btnTestKey.disabled = false;
-    $btnTestKey.textContent = 'Probar';
-    $apiKey.value = ''; // limpiar input por seguridad
-    $apiKey.type = 'password';
-    $btnToggleKey.textContent = '👁';
-  }
+  } catch (e) { $keyStatus.textContent = '❌ Error: ' + e.message; $keyStatus.style.color = 'var(--danger)'; }
+  finally { $btnTestKey.disabled = false; $btnTestKey.textContent = 'Probar'; $apiKey.value = ''; $apiKey.type = 'password'; $btnToggleKey.textContent = '👁'; }
 });
- 
-/* ── Borrar key ── */
-async function borrarKey() {
-  if (!confirm('¿Quitar la API key? La función de importar foto quedará deshabilitada.')) return;
+
+/* ── Gemini: toggle/test ── */
+$btnToggleGeminiKey?.addEventListener('click', () => {
+  const isPass = $geminiApiKey.type === 'password';
+  $geminiApiKey.type = isPass ? 'text' : 'password';
+  $btnToggleGeminiKey.textContent = isPass ? '🙈' : '👁';
+});
+
+$btnTestGeminiKey?.addEventListener('click', async () => {
+  const key = $geminiApiKey.value.trim();
+  if (!key) { $geminiKeyStatus.textContent = 'Ingresá una key para probar.'; $geminiKeyStatus.style.color = 'var(--danger)'; return; }
+  $btnTestGeminiKey.disabled = true; $btnTestGeminiKey.textContent = 'Probando…'; $geminiKeyStatus.textContent = '';
   try {
-    await apiCfg('PUT', { anthropic_api_key: '' });
-    $keyStatus.textContent = 'Key eliminada.';
-    $keyStatus.style.color = 'var(--muted)';
-    $iaEstado.style.display = 'none';
-    toast('API key eliminada.', 'warn');
-  } catch (e) {
-    toast('Error al eliminar la key.', 'error');
-  }
+    const resSave = await apiCfg('PUT', { gemini_api_key: key });
+    if (!resSave.ok) throw new Error('No se pudo guardar');
+    const resTest = await fetch('/api/config/test-gemini', { headers: { Authorization: 'Bearer ' + token } });
+    const result = await resTest.json();
+    if (resTest.ok && result.ok) {
+      $geminiKeyStatus.textContent = '✅ Key válida y funcionando.'; $geminiKeyStatus.style.color = 'var(--success, green)';
+      toast('API key de Gemini guardada y verificada.'); cargarEstadoIA();
+    } else {
+      $geminiKeyStatus.textContent = '❌ Key inválida: ' + (result.details || 'error'); $geminiKeyStatus.style.color = 'var(--danger)';
+      await apiCfg('PUT', { gemini_api_key: '' });
+    }
+  } catch (e) { $geminiKeyStatus.textContent = '❌ Error: ' + e.message; $geminiKeyStatus.style.color = 'var(--danger)'; }
+  finally { $btnTestGeminiKey.disabled = false; $btnTestGeminiKey.textContent = 'Probar'; $geminiApiKey.value = ''; $geminiApiKey.type = 'password'; $btnToggleGeminiKey.textContent = '👁'; }
+});
+
+/* ── Borrar key ── */
+async function borrarKey(provider = 'anthropic') {
+  const label = provider === 'gemini' ? 'Gemini' : 'Anthropic';
+  if (!confirm('¿Quitar la API key de ' + label + '?')) return;
+  try {
+    const keyName = provider === 'gemini' ? 'gemini_api_key' : 'anthropic_api_key';
+    await apiCfg('PUT', { [keyName]: '' });
+    toast('API key de ' + label + ' eliminada.', 'warn');
+    cargarEstadoIA();
+  } catch (e) { toast('Error al eliminar la key.', 'error'); }
 }
- 
+
 /* ── Init ── */
 cargarEstadoIA();
 

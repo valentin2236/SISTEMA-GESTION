@@ -45,8 +45,8 @@ router.get("/", requireAuth, async (req, res) => {
 
     const cfg = {};
     for (const row of rows) {
-      // Nunca devolver la API key al frontend
       if (row.clave === "anthropic_api_key") continue;
+      if (row.clave === "gemini_api_key") continue;
       try { cfg[row.clave] = JSON.parse(row.valor); }
       catch { cfg[row.clave] = row.valor; }
     }
@@ -56,6 +56,11 @@ router.get("/", requireAuth, async (req, res) => {
       `SELECT valor FROM configuracion WHERE clave = 'anthropic_api_key'`
     );
     cfg.anthropic_key_configurada = !!(keyRow?.valor);
+
+    const geminiRow = await get(
+      `SELECT valor FROM configuracion WHERE clave = 'gemini_api_key'`
+    );
+    cfg.gemini_key_configurada = !!(geminiRow?.valor);
 
     res.json(cfg);
   } catch (e) {
@@ -84,7 +89,9 @@ router.put("/", requireAuth, requireRole("admin"), async (req, res) => {
       );
     }
 
-    const claves = Object.keys(data).map(k => k === 'anthropic_api_key' ? 'anthropic_api_key (oculta)' : k);
+    const claves = Object.keys(data).map(k =>
+      (k === 'anthropic_api_key' || k === 'gemini_api_key') ? k + ' (oculta)' : k
+    );
     registrarAuditoria(req.user.email, 'CAMBIAR_CONFIG', claves.join(', '));
 
     res.json({ ok: true });
@@ -109,8 +116,29 @@ export async function getAnthropicKey() {
 }
 
 
+export async function getGeminiKey() {
+  try {
+    const row = await get(
+      `SELECT valor FROM configuracion WHERE clave = 'gemini_api_key'`
+    );
+    return row?.valor || process.env.GEMINI_API_KEY || null;
+  } catch {
+    return process.env.GEMINI_API_KEY || null;
+  }
+}
+
+export async function getIAProvider() {
+  try {
+    const row = await get(
+      `SELECT valor FROM configuracion WHERE clave = 'ia_provider'`
+    );
+    return row?.valor || 'gemini';
+  } catch {
+    return 'gemini';
+  }
+}
+
 // ── GET /api/config/test-ia ──────────────────────────────────
-// Hace un ping mínimo a Anthropic para verificar que la key es válida
 router.get("/test-ia", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const apiKey = await getAnthropicKey();
@@ -145,4 +173,38 @@ router.get("/test-ia", requireAuth, requireRole("admin"), async (req, res) => {
     res.status(500).json({ ok: false, details: e.message });
   }
 });
+// ── GET /api/config/test-gemini ──────────────────────────────
+router.get("/test-gemini", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const apiKey = await getGeminiKey();
+    if (!apiKey) {
+      return res.status(402).json({ ok: false, details: "Sin API key de Gemini configurada" });
+    }
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "di solo: ok" }] }],
+          generationConfig: { maxOutputTokens: 10 },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      return res.status(200).json({
+        ok: false,
+        details: err?.error?.message || `HTTP ${response.status}`,
+      });
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, details: e.message });
+  }
+});
+
 export default router;
