@@ -1182,3 +1182,206 @@ body.pos-page {
   font-size: 13px !important;
 }
 }
+
+/* ===== BOTTOM PANEL SIMPLIFICADO ===== */
+.pos-bottom-panel {
+  flex-shrink: 0;
+}
+
+/* ===== MODAL DE PAGO ===== */
+.dlg-pago {
+  width: 640px;
+  max-height: 90vh;
+  margin: 5vh auto;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow-y: auto;
+  padding-top: 0;
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dlg-actions { gap: 10px; }
+  .btn-finalizar { justify-content: center; }
+}
+
+/* Botones método de pago */
+.pago-metodo-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pago-metodo-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.pago-metodo-btn {
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--input-bg);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  text-align: center;
+
+  &:hover { border-color: var(--accent); color: var(--text); }
+  &.active {
+    border-color: var(--accent);
+    background: rgba(0, 216, 117, .1);
+    color: var(--accent);
+    font-weight: 700;
+  }
+}
+
+/* Campos condicionales */
+.pago-fields {
+  display: flex;
+  gap: 12px;
+  .field { flex: 1; }
+}
+
+/* Cliente section */
+.pago-cliente-section {
+  padding: 12px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pago-sin-cliente { color: var(--danger); font-weight: 600; font-size: 13px; }
+
+.pago-cliente-ok {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(0, 216, 117, .08);
+  border: 1px solid rgba(0, 216, 117, .25);
+  border-radius: 8px;
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #000;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+}
+
+.pago-cliente-buscar {
+  display: flex;
+  gap: 6px;
+  .field-input { flex: 1; padding: 7px 11px; font-size: 13px; }
+}
+
+.pago-clientes-result {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pago-cli-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s;
+  &:hover { border-color: var(--accent); }
+}
+
+/* Resumen de totales */
+.pago-resumen {
+  padding: 16px;
+  background: var(--input-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pago-linea {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.pago-desc-val { color: var(--danger); font-weight: 600; }
+
+/* Total grande */
+.pago-total-box {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: rgba(0, 216, 117, .08);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pago-total-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pago-total-numero {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+/* Cambio grande */
+.pago-cambio-box {
+  margin-top: 4px;
+  padding: 10px 16px;
+  background: rgba(96, 165, 250, .08);
+  border: 2px solid #60a5fa;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pago-cambio-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pago-cambio-numero {
+  font-size: 26px;
+  font-weight: 800;
+  color: #60a5fa;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}

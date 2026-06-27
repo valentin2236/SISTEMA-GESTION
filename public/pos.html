@@ -89,106 +89,18 @@
           </div>
         </div>
 
-        <!-- Panel de Pagos -->
-        <div class="panel pagos-panel">
-          <div class="panel-head">
-            <h2 class="panel-title">💳 Pago</h2>
-          </div>
-
-          <div class="pagos-body">
-            <!-- Inputs de pago -->
-            <div class="paygrid">
-              <div class="field">
-                <label class="field-label">Medio de pago</label>
-                <select id="medio-pago" class="field-input">
-                  <option value="efectivo" id="metodo-top">💵 Efectivo</option>
-                  <option value="tarjeta" id="motodo-top">💳 Tarjeta</option>
-                  <option value="transferencia" id="metodo-top">
-                    📲 Transferencia
-                  </option>
-                  <option value="cuenta_corriente" id="metodo-top">
-                    📒 Cuenta Corriente
-                  </option>
-                </select>
-              </div>
-
-              <div class="field" id="lbl-interes">
-                <label class="field-label">Interés %</label>
-                <input
-                  id="interes-pct"
-                  class="field-input"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0"
-                />
-              </div>
-
-              <div class="field">
-                <label class="field-label">Descuento</label>
-                <div class="input-group">
-                  <select id="desc-tipo" class="field-input select-mini">
-                    <option value="monto">$</option>
-                    <option value="porcentaje">%</option>
-                  </select>
-                  <input
-                    id="desc-valor"
-                    class="field-input"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div class="field" id="lbl-monto">
-                <label class="field-label">Efectivo entregado</label>
-                <input
-                  id="monto-pago"
-                  class="field-input field-input--highlight"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
-
-            <!-- Cash rápido -->
-            <div class="cashbar">
-              <span class="cashbar-label">Rápido:</span>
-              <button class="btn btn-cash qcash" data-cash="5000">
-                $5.000
-              </button>
-              <button class="btn btn-cash qcash" data-cash="10000">
-                $10.000
-              </button>
-              <button class="btn btn-cash qcash" data-cash="20000">
-                $20.000
-              </button>
-              <button class="btn btn-cash qcash-exacto">Exacto</button>
-            </div>
-          </div>
-
-          <!-- Barra inferior: totales + botón finalizar -->
+        <!-- Barra inferior: total + botón finalizar -->
+        <div class="panel pos-bottom-panel">
           <div class="bottom-bar">
             <div class="mini-totals">
               <div class="mini-item">
+                <span class="mini-label">Items</span>
+                <span class="mini-val"><span id="t-items">0</span></span>
+              </div>
+              <div class="mini-sep">·</div>
+              <div class="mini-item">
                 <span class="mini-label">Subtotal</span>
                 <span class="mini-val">$<span id="t-subtotal">0,00</span></span>
-              </div>
-              <div class="mini-sep">·</div>
-              <div class="mini-item">
-                <span class="mini-label">Descuento</span>
-                <span class="mini-val"><span id="t-desc">0</span></span>
-              </div>
-              <div class="mini-sep">·</div>
-              <div class="mini-item">
-                <span class="mini-label">Cambio</span>
-                <span class="mini-val cambio"
-                  >$<span id="t-cambio">0,00</span></span
-                >
               </div>
             </div>
 
@@ -397,6 +309,119 @@
           >
             Cancelar
           </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Pago ===== -->
+    <dialog id="dlg-pago" class="dlg dlg-pago">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>💳 Finalizar venta</h2>
+          <button id="btn-cerrar-pago" class="dlg-close" aria-label="Cerrar">✕</button>
+        </div>
+
+        <div class="form">
+          <!-- Cliente para cuenta corriente -->
+          <div id="pago-cliente-section" class="pago-cliente-section" style="display:none">
+            <div class="pago-cliente-header">
+              <span class="field-label">Cliente (requerido para Cta. Corriente)</span>
+            </div>
+            <div id="pago-cliente-info" class="pago-cliente-info">
+              <span class="pago-sin-cliente">Sin cliente seleccionado</span>
+            </div>
+            <div class="pago-cliente-buscar">
+              <input id="pago-buscar-cliente" class="field-input" placeholder="Buscar cliente por nombre, DNI o email..." autocomplete="off"/>
+              <button id="pago-btn-buscar-cli" class="btn btn-search" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+              </button>
+            </div>
+            <div id="pago-clientes-result" class="pago-clientes-result"></div>
+          </div>
+
+          <!-- Medio de pago -->
+          <div class="pago-metodo-wrap">
+            <span class="field-label">Medio de pago</span>
+            <div class="pago-metodo-btns">
+              <button class="pago-metodo-btn active" data-metodo="efectivo">💵 Efectivo</button>
+              <button class="pago-metodo-btn" data-metodo="tarjeta">💳 Tarjeta</button>
+              <button class="pago-metodo-btn" data-metodo="transferencia">📲 Transferencia</button>
+              <button class="pago-metodo-btn" data-metodo="cuenta_corriente">📒 Cta. Corriente</button>
+            </div>
+            <select id="medio-pago" class="field-input" style="display:none">
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="cuenta_corriente">Cuenta Corriente</option>
+            </select>
+          </div>
+
+          <!-- Campos condicionales -->
+          <div class="pago-fields">
+            <div class="field" id="lbl-interes" style="display:none">
+              <label class="field-label">Interés %</label>
+              <input id="interes-pct" class="field-input" type="number" step="0.01" min="0" placeholder="0"/>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Descuento</label>
+              <div class="input-group">
+                <select id="desc-tipo" class="field-input select-mini">
+                  <option value="monto">$</option>
+                  <option value="porcentaje">%</option>
+                </select>
+                <input id="desc-valor" class="field-input" type="number" step="0.01" min="0" placeholder="0"/>
+              </div>
+            </div>
+
+            <div class="field" id="lbl-monto">
+              <label class="field-label">Efectivo entregado</label>
+              <input id="monto-pago" class="field-input field-input--highlight" type="number" step="0.01" min="0" placeholder="0,00"/>
+            </div>
+          </div>
+
+          <!-- Cash rápido -->
+          <div class="cashbar" id="pago-cashbar">
+            <span class="cashbar-label">Rápido:</span>
+            <button class="btn btn-cash qcash" data-cash="5000">$5.000</button>
+            <button class="btn btn-cash qcash" data-cash="10000">$10.000</button>
+            <button class="btn btn-cash qcash" data-cash="20000">$20.000</button>
+            <button class="btn btn-cash qcash-exacto">Exacto</button>
+          </div>
+
+          <!-- Resumen grande -->
+          <div class="pago-resumen">
+            <div class="pago-linea">
+              <span>Subtotal</span>
+              <span>$<span id="t-desc-sub">0,00</span></span>
+            </div>
+            <div class="pago-linea" id="pago-linea-desc" style="display:none">
+              <span>Descuento</span>
+              <span class="pago-desc-val" id="t-desc">-$0</span>
+            </div>
+            <div class="pago-linea" id="pago-linea-recargo" style="display:none">
+              <span>Recargo</span>
+              <span id="t-recargo">+$0</span>
+            </div>
+            <div class="pago-total-box">
+              <span class="pago-total-label">TOTAL A COBRAR</span>
+              <span class="pago-total-numero">$<span id="t-modal-total">0,00</span></span>
+            </div>
+            <div class="pago-cambio-box" id="pago-linea-cambio" style="display:none">
+              <span class="pago-cambio-label">CAMBIO</span>
+              <span class="pago-cambio-numero">$<span id="t-cambio">0,00</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dlg-actions">
+          <button id="btn-confirmar-pago" class="btn btn-finalizar" style="flex:1">
+            <span>Confirmar venta</span>
+            <kbd>F9</kbd>
+          </button>
+          <button class="btn btn-outline" onclick="document.getElementById('dlg-pago').close()">Cancelar</button>
         </div>
       </div>
     </dialog>

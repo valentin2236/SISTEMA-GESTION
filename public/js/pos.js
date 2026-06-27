@@ -91,21 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const $clientesRes = document.getElementById("clientes-result");
   const $clienteSel = document.getElementById("cliente-seleccionado");
   const $carritoTbody = document.getElementById("carrito-tbody");
-  const $medioPago = document.getElementById("medio-pago");
-  const $lblInteres = document.getElementById("lbl-interes");
-  const $interesPct = document.getElementById("interes-pct");
-  const $descTipo = document.getElementById("desc-tipo");
-  const $descValor = document.getElementById("desc-valor");
-  const $lblMonto = document.getElementById("lbl-monto");
-  const $montoPago = document.getElementById("monto-pago");
   const $tSubtotal = document.getElementById("t-subtotal");
-  const $tDesc = document.getElementById("t-desc");
   const $tTotalGrande = document.getElementById("t-total-grande");
-  const $tCambio = document.getElementById("t-cambio");
+  const $tItems = document.getElementById("t-items");
   const $btnVaciar = document.getElementById("btn-vaciar-carrito");
   const $btnFinalizar = document.getElementById("btn-finalizar");
   const $totalBox = document.querySelector(".total-box");
-  const $cashbar = document.querySelector(".cashbar");
   const $dlgCliente = document.getElementById("dlg-cliente");
   const $clNombre = document.getElementById("cl-nombre");
   const $clEmail = document.getElementById("cl-email");
@@ -114,6 +105,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const $clDir = document.getElementById("cl-direccion");
   const $btnGuardarCli = document.getElementById("btn-guardar-cliente");
   const $btnCerrarCli = document.getElementById("btn-cerrar-cliente");
+
+  // Modal de pago
+  const $dlgPago = document.getElementById("dlg-pago");
+  const $medioPago = document.getElementById("medio-pago");
+  const $lblInteres = document.getElementById("lbl-interes");
+  const $interesPct = document.getElementById("interes-pct");
+  const $descTipo = document.getElementById("desc-tipo");
+  const $descValor = document.getElementById("desc-valor");
+  const $lblMonto = document.getElementById("lbl-monto");
+  const $montoPago = document.getElementById("monto-pago");
+  const $tDesc = document.getElementById("t-desc");
+  const $tCambio = document.getElementById("t-cambio");
+  const $cashbar = document.getElementById("pago-cashbar");
+  const $btnConfirmarPago = document.getElementById("btn-confirmar-pago");
 
   /* ===================== Estado ===================== */
   const state = {
@@ -728,6 +733,17 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
   }
   function refreshTotals() {
     const sub = calcSubTotal();
+    const items = state.carrito.reduce((s, i) => s + i.cantidad, 0);
+
+    if ($tSubtotal) $tSubtotal.textContent = money(sub);
+    if ($tTotalGrande) $tTotalGrande.textContent = money(sub);
+    if ($tItems) $tItems.textContent = items;
+
+    if ($dlgPago?.open) refreshModalTotals();
+  }
+
+  function refreshModalTotals() {
+    const sub = calcSubTotal();
     const desc = Math.min(calcDesc(sub), sub);
     const base = Math.max(0, sub - desc);
     const interesPct =
@@ -744,24 +760,43 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     const cambio =
       state.medioPago === "efectivo" ? Math.max(0, pagado - total) : 0;
 
-    if ($tSubtotal) $tSubtotal.textContent = money(sub);
-    if ($tDesc)
-      $tDesc.textContent =
-        state.descuentoTipo === "porcentaje"
-          ? `${state.descuentoValor || 0}%`
-          : `$ ${money(state.descuentoValor || 0)}`;
-    if ($tTotalGrande) $tTotalGrande.textContent = money(total);
+    const $descSub = document.getElementById("t-desc-sub");
+    const $modalTotal = document.getElementById("t-modal-total");
+    const $lineaDesc = document.getElementById("pago-linea-desc");
+    const $lineaRecargo = document.getElementById("pago-linea-recargo");
+    const $lineaCambio = document.getElementById("pago-linea-cambio");
+    const $tRecargo = document.getElementById("t-recargo");
+
+    if ($descSub) $descSub.textContent = money(sub);
+    if ($tDesc) $tDesc.textContent = `-$${money(desc)}`;
+    if ($lineaDesc) $lineaDesc.style.display = desc > 0 ? "" : "none";
+    if ($tRecargo) $tRecargo.textContent = `+$${money(recargo)}`;
+    if ($lineaRecargo) $lineaRecargo.style.display = recargo > 0 ? "" : "none";
+    if ($modalTotal) $modalTotal.textContent = money(total);
     if ($tCambio) $tCambio.textContent = money(cambio);
+    if ($lineaCambio) $lineaCambio.style.display = state.medioPago === "efectivo" ? "" : "none";
+
+    if ($tTotalGrande) $tTotalGrande.textContent = money(total);
+
+    const labels = {
+      efectivo: "💵 Efectivo",
+      tarjeta: "💳 Tarjeta",
+      transferencia: "📲 Transferencia",
+      cuenta_corriente: "📒 Cta. Cte.",
+    };
+    const top = document.getElementById("metodo-top");
+    if (top) top.textContent = labels[state.medioPago] || state.medioPago;
+    updateTotalColor();
   }
 
   $descTipo?.addEventListener("change", () => {
     state.descuentoTipo = $descTipo.value;
-    refreshTotals();
+    refreshModalTotals();
     renderPreview();
   });
   $descValor?.addEventListener("input", () => {
     state.descuentoValor = Number($descValor.value || 0);
-    refreshTotals();
+    refreshModalTotals();
     renderPreview();
   });
   $medioPago?.addEventListener("change", () => {
@@ -774,35 +809,23 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     }
     const isCash = state.medioPago === "efectivo";
     if ($lblMonto) $lblMonto.style.display = isCash ? "" : "none";
+    if ($cashbar) $cashbar.style.display = isCash ? "" : "none";
     if (!isCash) {
       state.montoPago = 0;
       if ($montoPago) $montoPago.value = "";
     }
-    // Actualizar metodo-top
-    const labels = {
-      efectivo: "💵 Efectivo",
-      tarjeta: "💳 Tarjeta",
-      transferencia: "📲 Transferencia",
-      cuenta_corriente: "📒 Cta. Cte.",
-    };
-    const top = document.getElementById("metodo-top");
-    if (top) top.textContent = labels[state.medioPago] || state.medioPago;
-    updateTotalColor();
-    refreshTotals();
+    refreshModalTotals();
     renderPreview();
   });
-  if ($lblInteres) $lblInteres.style.display = "none";
-  if ($lblMonto) $lblMonto.style.display = "";
-  updateTotalColor();
 
   $interesPct?.addEventListener("input", () => {
     state.interesPct = Number($interesPct.value || 0);
-    refreshTotals();
+    refreshModalTotals();
     renderPreview();
   });
   $montoPago?.addEventListener("input", () => {
     state.montoPago = Number($montoPago.value || 0);
-    refreshTotals();
+    refreshModalTotals();
     renderPreview();
   });
 
@@ -863,16 +886,8 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     });
   });
 
-  /* ===================== FINALIZAR VENTA ===================== */
-  $btnFinalizar?.addEventListener("click", async () => {
-    if (state.medioPago === "cuenta_corriente" && !state.cliente) {
-      Swal.fire({
-        icon: "warning",
-        title: "Seleccione un cliente",
-        text: "La cuenta corriente requiere un cliente",
-      });
-      return;
-    }
+  /* ===================== ABRIR MODAL DE PAGO ===================== */
+  function abrirModalPago() {
     if (!state.carrito.length) {
       Swal.fire({
         icon: "warning",
@@ -882,51 +897,162 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       });
       return;
     }
+
+    state.medioPago = "efectivo";
+    state.descuentoTipo = "monto";
+    state.descuentoValor = 0;
+    state.montoPago = 0;
+    state.interesPct = 0;
+    if ($medioPago) $medioPago.value = "efectivo";
+    if ($descTipo) $descTipo.value = "monto";
+    if ($descValor) $descValor.value = "";
+    if ($montoPago) $montoPago.value = "";
+    if ($interesPct) $interesPct.value = "";
+    if ($lblInteres) $lblInteres.style.display = "none";
+    if ($lblMonto) $lblMonto.style.display = "";
+    if ($cashbar) $cashbar.style.display = "";
+
+    // Reset método de pago visual
+    document.querySelectorAll(".pago-metodo-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.metodo === "efectivo");
+    });
+
+    // Cliente section
+    const $cliSection = document.getElementById("pago-cliente-section");
+    if ($cliSection) $cliSection.style.display = "none";
+    const $cliResult = document.getElementById("pago-clientes-result");
+    if ($cliResult) $cliResult.innerHTML = "";
+    const $cliBuscar = document.getElementById("pago-buscar-cliente");
+    if ($cliBuscar) $cliBuscar.value = "";
+    renderPagoCliente();
+
+    $dlgPago?.showModal();
+    refreshModalTotals();
+    setTimeout(() => $montoPago?.focus(), 50);
+  }
+
+  $btnFinalizar?.addEventListener("click", abrirModalPago);
+  document.getElementById("btn-cerrar-pago")?.addEventListener("click", () => $dlgPago?.close());
+
+  /* ===================== BOTONES MÉTODO DE PAGO ===================== */
+  document.querySelectorAll(".pago-metodo-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".pago-metodo-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const metodo = btn.dataset.metodo;
+      state.medioPago = metodo;
+      if ($medioPago) $medioPago.value = metodo;
+
+      const isCard = metodo === "tarjeta";
+      if ($lblInteres) $lblInteres.style.display = isCard ? "" : "none";
+      if (!isCard) { state.interesPct = 0; if ($interesPct) $interesPct.value = ""; }
+
+      const isCash = metodo === "efectivo";
+      if ($lblMonto) $lblMonto.style.display = isCash ? "" : "none";
+      if ($cashbar) $cashbar.style.display = isCash ? "" : "none";
+      if (!isCash) { state.montoPago = 0; if ($montoPago) $montoPago.value = ""; }
+
+      const isCta = metodo === "cuenta_corriente";
+      const $cliSection = document.getElementById("pago-cliente-section");
+      if ($cliSection) $cliSection.style.display = isCta ? "" : "none";
+
+      refreshModalTotals();
+      renderPreview();
+    });
+  });
+
+  /* ===================== CLIENTE EN MODAL DE PAGO ===================== */
+  function renderPagoCliente() {
+    const $info = document.getElementById("pago-cliente-info");
+    if (!$info) return;
+    if (state.cliente) {
+      $info.innerHTML = `
+        <div class="pago-cliente-ok">
+          <div class="avatar">${state.cliente.nombre.charAt(0).toUpperCase()}</div>
+          <div style="flex:1">
+            <strong>${state.cliente.nombre}</strong>
+            <div style="font-size:11px;opacity:.7">Cliente #${state.cliente.id}</div>
+          </div>
+          <button class="btn btn-outline btn-sm" id="pago-quitar-cli"
+            style="font-size:11px;padding:4px 10px;color:var(--danger);border-color:var(--danger)">✕</button>
+        </div>`;
+      document.getElementById("pago-quitar-cli")?.addEventListener("click", () => {
+        state.cliente = null;
+        renderPagoCliente();
+        renderCliente();
+      });
+    } else {
+      $info.innerHTML = '<span class="pago-sin-cliente">Sin cliente seleccionado</span>';
+    }
+  }
+
+  document.getElementById("pago-btn-buscar-cli")?.addEventListener("click", buscarClienteEnModal);
+  document.getElementById("pago-buscar-cliente")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); buscarClienteEnModal(); }
+  });
+
+  async function buscarClienteEnModal() {
+    const $input = document.getElementById("pago-buscar-cliente");
+    const $result = document.getElementById("pago-clientes-result");
+    if (!$result) return;
+    const q = ($input?.value || "").trim();
+    const url = q ? `/api/clientes?search=${encodeURIComponent(q)}` : `/api/clientes`;
+    const r = await api(url, {}, { fallbackNoAuth: true });
+    if (!r.ok) { $result.innerHTML = '<div style="font-size:12px;color:var(--danger)">Error buscando</div>'; return; }
+    const data = r.data || [];
+    $result.innerHTML = data.length
+      ? data.slice(0, 5).map(c => `
+          <div class="pago-cli-item" data-cli-id="${c.id}" data-cli-nombre="${c.nombre}">
+            <span><strong>${c.nombre}</strong> <span style="opacity:.6;font-size:11px">${c.dni || ""}</span></span>
+            <span style="color:var(--accent);font-size:12px;font-weight:600">Seleccionar</span>
+          </div>`).join("")
+      : '<div style="font-size:12px;color:var(--muted);padding:6px">Sin resultados</div>';
+
+    $result.querySelectorAll(".pago-cli-item").forEach(item => {
+      item.addEventListener("click", () => {
+        state.cliente = { id: Number(item.dataset.cliId), nombre: item.dataset.cliNombre };
+        renderPagoCliente();
+        renderCliente();
+        $result.innerHTML = "";
+        if ($input) $input.value = "";
+      });
+    });
+  }
+
+  /* ===================== CONFIRMAR VENTA (desde modal) ===================== */
+  $btnConfirmarPago?.addEventListener("click", async () => {
+    if (state.medioPago === "cuenta_corriente" && !state.cliente) {
+      $dlgPago?.close();
+      await Swal.fire({ icon: "warning", title: "Seleccione un cliente", text: "La cuenta corriente requiere un cliente" });
+      $dlgPago?.showModal();
+      refreshModalTotals();
+      return;
+    }
     if (state.medioPago === "efectivo") {
       const montoEntregado = Number(state.montoPago || 0);
-      const totalVenta = Number(
-        ($tTotalGrande?.textContent || "0")
-          .replace(/\./g, "")
-          .replace(",", "."),
-      );
+      const sub = calcSubTotal();
+      const desc = Math.min(calcDesc(sub), sub);
+      const base = Math.max(0, sub - desc);
+      const ip = state.medioPago === "tarjeta" ? Math.max(0, Number(state.interesPct || 0)) : 0;
+      const totalVenta = Math.max(0, base + (state.medioPago === "tarjeta" ? (base * ip) / 100 : 0));
       if (montoEntregado <= 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Falta el efectivo",
-          text: "Ingresá el monto entregado por el cliente",
-        });
+        $dlgPago?.close();
+        await Swal.fire({ icon: "warning", title: "Falta el efectivo", text: "Ingresá el monto entregado por el cliente" });
+        $dlgPago?.showModal();
+        refreshModalTotals();
         return;
       }
       if (montoEntregado < totalVenta) {
-        Swal.fire({
-          icon: "error",
-          title: "Monto insuficiente",
-          text: "El efectivo recibido es menor al total",
-        });
+        $dlgPago?.close();
+        await Swal.fire({ icon: "error", title: "Monto insuficiente", text: "El efectivo recibido es menor al total" });
+        $dlgPago?.showModal();
+        refreshModalTotals();
         return;
       }
     }
 
-    const detalleProductos = state.carrito
-      .map((p) => `• ${p.nombre} x${p.cantidad}`)
-      .join("<br>");
-    const medioLabels = { efectivo: "💵 Efectivo", tarjeta: "💳 Tarjeta", transferencia: "🏦 Transferencia", cuenta_corriente: "📒 Cuenta Corriente" };
-    const confirm = await Swal.fire({
-      title: "¿Confirmar venta?",
-      html: `${state.cliente ? `<b>Cliente:</b> ${state.cliente.nombre}<br>` : ""}
-             <b>Medio de pago:</b> ${medioLabels[state.medioPago] || state.medioPago}<br><br>
-             <div style="text-align:left;max-height:150px;overflow:auto;font-size:13px">${detalleProductos}</div><br>
-             <div style="font-size:20px;font-weight:800">Total: $ ${$tTotalGrande?.textContent}</div>`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "✅ Confirmar venta",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#00d875",
-      cancelButtonColor: "#555",
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-    });
-    if (!confirm.isConfirmed) return;
+    $btnConfirmarPago.disabled = true;
+    $btnConfirmarPago.querySelector("span").textContent = "Procesando...";
 
     const body = {
       carrito: state.carrito.map((i) => ({
@@ -940,10 +1066,8 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       },
       pago: {
         medio: state.medioPago,
-        monto:
-          state.medioPago === "efectivo" ? Number(state.montoPago || 0) : null,
-        interes_porcentaje:
-          state.medioPago === "tarjeta" ? Number(state.interesPct || 0) : 0,
+        monto: state.medioPago === "efectivo" ? Number(state.montoPago || 0) : null,
+        interes_porcentaje: state.medioPago === "tarjeta" ? Number(state.interesPct || 0) : 0,
       },
       usuario: localStorage.getItem("user_email") || null,
       cliente_id: state.cliente?.id || null,
@@ -952,38 +1076,33 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
     const r = await api(
       "/api/ventas",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      },
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
       { expectJSON: true },
     );
 
+    $btnConfirmarPago.disabled = false;
+    $btnConfirmarPago.querySelector("span").textContent = "Confirmar venta";
+
+    $dlgPago?.close();
+
     if (!r.ok) {
-      Swal.fire({
-        icon: "error",
-        title: "Error al registrar venta",
-        text: r.data?.error || "Problema con el servidor",
-        confirmButtonColor: "#ff5c5c",
-      });
+      await Swal.fire({ icon: "error", title: "Error al registrar venta", text: r.data?.error || "Problema con el servidor", confirmButtonColor: "#ff5c5c" });
+      $dlgPago?.showModal();
+      refreshModalTotals();
       return;
     }
 
-    // Agregar al historial local
     if (!state.ventasHoy) state.ventasHoy = [];
     state.ventasHoy.push({
       id: r.data.id,
       fecha: new Date().toISOString(),
-      total:
-        calcSubTotal() - Math.min(calcDesc(calcSubTotal()), calcSubTotal()),
+      total: calcSubTotal() - Math.min(calcDesc(calcSubTotal()), calcSubTotal()),
       medio_pago: state.medioPago,
       cliente_nombre: state.cliente?.nombre || null,
     });
     incrementarContador();
     renderHistorial();
 
-    // Flash visual de éxito antes de resetear
     const posWrap = document.querySelector(".pos-wrap");
     if (posWrap) {
       posWrap.style.transition = "box-shadow .3s ease";
@@ -991,10 +1110,11 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       setTimeout(() => { posWrap.style.boxShadow = "none"; }, 1200);
     }
 
-    // Resetear estado inmediatamente (la venta ya se guardó en DB)
     state.carrito = [];
     state.cliente = null;
     state.montoPago = 0;
+    state.descuentoValor = 0;
+    state.interesPct = 0;
     if ($montoPago) $montoPago.value = "";
     renderCarrito();
     renderCliente();
@@ -1002,8 +1122,10 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     renderPreview();
     const topCliente = document.getElementById("cliente-top");
     if (topCliente) topCliente.textContent = "Consumidor Final";
+    const topMetodo = document.getElementById("metodo-top");
+    if (topMetodo) topMetodo.textContent = "💵 Efectivo";
+    updateTotalColor();
 
-    // Ticket (si falla la impresión, la venta ya está finalizada)
     const tok = localStorage.getItem("token") || "";
     const cfg = localStorage.getItem("cfg") || "{}";
     const ticketUrl = `/ticket.html?id=${r.data.id}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${encodeURIComponent(btoa(cfg))}`;
@@ -1011,43 +1133,25 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
     try {
       if (window.electronAPI?.printTicket && cfgObj.autoPrint !== "off") {
-        await window.electronAPI.printTicket(ticketUrl, {
-          deviceName: cfgObj.printerName,
-          silent: true,
-          margins: "none",
-          landscape: false,
-        });
-        Swal.fire({
-          icon: "success",
-          title: "Venta exitosa",
-          text: "Ticket enviado",
-          timer: 1800,
-          showConfirmButton: false,
-        });
+        await window.electronAPI.printTicket(ticketUrl, { deviceName: cfgObj.printerName, silent: true, margins: "none", landscape: false });
+        Swal.fire({ icon: "success", title: "Venta exitosa", text: "Ticket enviado", timer: 1800, showConfirmButton: false });
       } else {
         window.open(ticketUrl, "_blank");
-        Swal.fire({
-          icon: "success",
-          title: "Venta exitosa",
-          text: "Ticket abierto para imprimir",
-          timer: 1800,
-          showConfirmButton: false,
-        });
+        Swal.fire({ icon: "success", title: "Venta exitosa", text: "Ticket abierto para imprimir", timer: 1800, showConfirmButton: false });
       }
     } catch (e) {
       console.error("Print error:", e);
-      Swal.fire({
-        icon: "warning",
-        title: "Venta registrada",
-        text: "No se pudo imprimir el ticket",
-        timer: 2200,
-        showConfirmButton: false,
-      });
+      Swal.fire({ icon: "warning", title: "Venta registrada", text: "No se pudo imprimir el ticket", timer: 2200, showConfirmButton: false });
     }
 
-    if ($buscar) {
-      $buscar.value = "";
-      $buscar.focus();
+    if ($buscar) { $buscar.value = ""; $buscar.focus(); }
+  });
+
+  // Enter en el modal de pago confirma la venta
+  $dlgPago?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target?.tagName !== "BUTTON") {
+      e.preventDefault();
+      $btnConfirmarPago?.click();
     }
   });
 
@@ -1079,7 +1183,11 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     }
     if (e.key === "F9") {
       e.preventDefault();
-      if ($btnFinalizar && state.carrito.length > 0) $btnFinalizar.click();
+      if ($dlgPago?.open) {
+        $btnConfirmarPago?.click();
+      } else if (state.carrito.length > 0) {
+        abrirModalPago();
+      }
       return;
     }
 

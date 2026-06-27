@@ -77,7 +77,7 @@ router.get("/", async (req, res) => {
 
     if (!term) {
       const rows = await all(
-        `SELECT id, nombre, sku, categoria, precio, stock, imagen
+        `SELECT id, nombre, sku, categoria, precio, costo, stock, imagen
            FROM productos
            WHERE activo = 1
           ORDER BY nombre ASC
