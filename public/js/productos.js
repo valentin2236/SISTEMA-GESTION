@@ -1477,5 +1477,72 @@ function mostrarStatusFoto(msg, tipo = "ok") {
   $fotoStatus.style.display = "";
 }
 
+/* ══════════════════════════════════════════════
+   IA — Descripción automática y Reposición
+══════════════════════════════════════════════ */
+
+/* ── Generar descripción con IA ── */
+document.getElementById("btn-ia-desc")?.addEventListener("click", async () => {
+  const nombre    = $prodNombre?.value?.trim();
+  const categoria = $prodCategoria?.value?.trim();
+  const precio    = $prodPrecio?.value?.trim();
+
+  if (!nombre) {
+    Swal.fire({ icon: "warning", title: "Faltó el nombre", text: "Completá el nombre del producto antes de generar la descripción.", confirmButtonColor: "#1e9de8" });
+    return;
+  }
+
+  const btn = document.getElementById("btn-ia-desc");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-ia-icon">⏳</span> Generando…';
+
+  try {
+    const r = await apiFetch("/api/ia/descripcion", {
+      method: "POST",
+      body: JSON.stringify({ nombre, categoria, precio }),
+    });
+    const d = await r.json();
+
+    if (d.ok && d.descripcion) {
+      $prodDesc.value = d.descripcion;
+      $prodDesc.style.borderColor = "#1e9de8";
+      setTimeout(() => ($prodDesc.style.borderColor = ""), 2000);
+    } else {
+      Swal.fire({ icon: "error", title: "Error de IA", text: d.error || "No se pudo generar la descripción.", confirmButtonColor: "#1e9de8" });
+    }
+  } catch {
+    Swal.fire({ icon: "error", title: "Sin conexión", text: "No se pudo conectar con el servidor.", confirmButtonColor: "#1e9de8" });
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-ia-icon">🤖</span> Generar con IA';
+  }
+});
+
+/* ── Sugerencias de reposición ── */
+document.getElementById("btn-ia-reposicion")?.addEventListener("click", async () => {
+  const panel = document.getElementById("ia-reposicion-panel");
+  const body  = document.getElementById("ia-reposicion-body");
+  const btn   = document.getElementById("btn-ia-reposicion");
+
+  panel.classList.add("visible");
+  body.textContent = "Analizando inventario…";
+  btn.disabled = true;
+
+  try {
+    const r = await apiFetch("/api/ia/reposicion");
+    const d = await r.json();
+
+    if (d.ok) {
+      body.textContent = d.respuesta;
+    } else {
+      body.textContent = "⚠️ " + (d.error || "Error al consultar la IA.");
+    }
+  } catch {
+    body.textContent = "⚠️ Sin conexión con el servidor.";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 /* ===================== INIT ===================== */
 cargarProductos();

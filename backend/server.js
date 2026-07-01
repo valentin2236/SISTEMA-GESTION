@@ -1,4 +1,8 @@
 import 'dotenv/config';
+if (!globalThis.fetch) {
+  const mod = await import('node-fetch');
+  globalThis.fetch = mod.default;
+}
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
@@ -41,6 +45,7 @@ import pdfImportRoutes from './routes/pdf-import.js';
 import backupRoutes from './routes/backup.js';
 import licenciaRoutes from './routes/licencia.js';
 import exportarRoutes from './routes/exportar.js';
+import iaRoutes from './routes/ia.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -170,6 +175,7 @@ app.use('/api/auditoria', requireFeature('auditoria'), auditoriaRouter);
 app.use('/api/backup', requireFeature('backup'), backupRoutes);
 app.use('/api/exportar', requireFeature('exportar'), exportarRoutes);
 app.use('/api/pdf-import', requireFeature('ia'), pdfImportRoutes);
+app.use('/api/ia', requireFeature('ia'), iaRoutes);
 
 // ---------- Static & Home ----------
 app.use(express.static(path.join(__dirname, '../public')));

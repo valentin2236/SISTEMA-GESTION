@@ -39,10 +39,22 @@
           >
             📤 Exportar Excel
           </button>
+          <button id="btn-ia-reposicion" class="btn-ia" style="padding:7px 14px;font-size:13px;">
+            <span class="btn-ia-icon">🤖</span> Sugerencias de reposición
+          </button>
           <button id="btn-nuevo" class="btn btn-primary">
             + Nuevo producto
           </button>
         </div>
+      </div>
+
+      <!-- Panel reposición IA -->
+      <div id="ia-reposicion-panel">
+        <div class="ia-repo-head">
+          <span class="ia-repo-title">🤖 Sugerencias de reposición</span>
+          <button class="ia-repo-close" onclick="document.getElementById('ia-reposicion-panel').classList.remove('visible')">✕</button>
+        </div>
+        <div class="ia-repo-body" id="ia-reposicion-body">Analizando stock…</div>
       </div>
 
       <!-- Toolbar -->
@@ -240,7 +252,12 @@
 
               <!-- Descripción -->
               <div class="field form-full">
-                <label class="field-label">Descripción</label>
+                <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;">
+                  Descripción
+                  <button type="button" id="btn-ia-desc" class="btn-ia">
+                    <span class="btn-ia-icon">🤖</span> Generar con IA
+                  </button>
+                </label>
                 <textarea
                   id="prod-descripcion"
                   class="field-input field-textarea"
@@ -597,5 +614,6 @@
     <script src="/js/auth-guard.js"></script>
     <script src="../js/navbar.js"></script>
     <script src="/js/productos.js"></script>
+    <script src="/js/ia-chat.js"></script>
   </body>
 </html>
