@@ -161,6 +161,20 @@
       </table>
     </div>
 
+    <!-- IA Insights — solo plan Ultra -->
+    <div class="dash-panel panel-wide" id="dash-ia-panel" style="display:none">
+      <div class="dash-panel-header">
+        <span class="dash-panel-title">🤖 IA del negocio</span>
+        <div style="display:flex;gap:8px">
+          <button id="btn-resumen-diario" class="btn btn-primary btn-sm">📊 Resumen del día</button>
+          <button id="btn-prediccion-stock" class="btn btn-outline btn-sm">🔮 Predicción de stock</button>
+        </div>
+      </div>
+      <div id="dash-ia-result" class="dash-ia-result">
+        <p class="dash-ia-hint">Usá los botones para que la IA analice tu negocio.</p>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -299,7 +313,7 @@ if (rol === 'admin') {
   });
 }
 
-// Mostrar cards según features del plan
+// Mostrar cards según features del plan + panel IA
 fetch('/api/licencia/features', { headers: { Authorization: 'Bearer ' + token } })
   .then(r => r.ok ? r.json() : null)
   .then(data => {
@@ -316,8 +330,53 @@ fetch('/api/licencia/features', { headers: { Authorization: 'Bearer ' + token } 
         if (el) el.style.display = 'flex';
       }
     });
+    // Panel IA solo en Ultra
+    if (f.includes('ia')) {
+      const panel = document.getElementById('dash-ia-panel');
+      if (panel) panel.style.display = '';
+    }
   })
   .catch(() => {});
+
+// ── Panel IA del negocio ────────────────────────────────────
+(function() {
+  const $result = document.getElementById('dash-ia-result');
+  function setLoading(msg) {
+    if ($result) $result.innerHTML = `<div class="dash-ia-loading">${msg}</div>`;
+  }
+  function setRespuesta(texto) {
+    if (!$result) return;
+    const html = texto
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/^• /gm,'<span class="dash-ia-bullet">•</span> ')
+      .replace(/\n/g,'<br>');
+    $result.innerHTML = `<div class="dash-ia-respuesta">${html}</div>`;
+  }
+  function setError(msg) {
+    if ($result) $result.innerHTML = `<div class="dash-ia-error">❌ ${msg}</div>`;
+  }
+
+  document.getElementById('btn-resumen-diario')?.addEventListener('click', async () => {
+    setLoading('⏳ Generando resumen del día…');
+    try {
+      const r = await fetch('/api/ia/resumen-diario', { headers: { Authorization: 'Bearer ' + token } });
+      const d = await r.json();
+      if (d.ok) setRespuesta(d.respuesta);
+      else setError(d.error || 'Error al generar el resumen');
+    } catch(e) { setError('No se pudo conectar con la IA'); }
+  });
+
+  document.getElementById('btn-prediccion-stock')?.addEventListener('click', async () => {
+    setLoading('⏳ Analizando velocidad de ventas…');
+    try {
+      const r = await fetch('/api/ia/prediccion-stock', { headers: { Authorization: 'Bearer ' + token } });
+      const d = await r.json();
+      if (d.ok) setRespuesta(d.respuesta);
+      else setError(d.error || 'Error al analizar stock');
+    } catch(e) { setError('No se pudo conectar con la IA'); }
+  });
+})();
 </script>
 <script src="/js/ia-chat.js"></script>
 </body>

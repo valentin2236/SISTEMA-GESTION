@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "../db.js";
 import { registrarAuditoria } from "../utils/auditoria.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { autoRefreshNotificaciones } from "./notificaciones.js";
 
 const router = Router();
 
@@ -411,6 +412,9 @@ router.post(
         ...totals,
         fecha,
       });
+
+      // Actualizar notificaciones de stock en background (no bloquea la respuesta)
+      autoRefreshNotificaciones().catch(() => {});
     } catch (e) {
       console.error(e);
 

@@ -40,7 +40,7 @@
   max-height: 0;
   overflow: hidden;
   border-radius: 14px;
-  background: var(--bg-card, #fff);
+  background: var(--surface, #fff);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
@@ -106,16 +106,16 @@
 
   &.ia-msg-ia {
     align-self: flex-start;
-    background: var(--bg-alt, #f0f4f8);
-    color: var(--text-primary, #1a202c);
+    background: var(--surface2, #f0f4f8);
+    color: var(--text, #1a202c);
     border-bottom-left-radius: 3px;
   }
 
   &.ia-msg-error {
     align-self: flex-start;
-    background: #fff5f5;
-    color: #c53030;
-    border: 1px solid #fed7d7;
+    background: rgba(197, 48, 48, 0.12);
+    color: #fc8181;
+    border: 1px solid rgba(197, 48, 48, 0.3);
     border-bottom-left-radius: 3px;
   }
 }
@@ -161,8 +161,8 @@
     padding: 8px 10px;
     font-size: 12px;
     font-family: inherit;
-    background: var(--bg, #fff);
-    color: var(--text-primary, #1a202c);
+    background: var(--surface2, #f8fafc);
+    color: var(--text, #1a202c);
     line-height: 1.4;
     outline: none;
     transition: border-color 0.2s;
@@ -219,8 +219,8 @@
 // ── Panel de reposición ───────────────────────
 #ia-reposicion-panel {
   margin-top: 16px;
-  background: var(--bg-card, #fff);
-  border: 1px solid #bee3f8;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #bee3f8);
   border-left: 4px solid #1e9de8;
   border-radius: 10px;
   padding: 16px;
@@ -238,24 +238,129 @@
   .ia-repo-title {
     font-size: 14px;
     font-weight: 700;
-    color: #0d6ea8;
+    color: #1e9de8;
   }
 
   .ia-repo-close {
     background: none;
     border: none;
     cursor: pointer;
-    color: #718096;
+    color: var(--text2, #718096);
     font-size: 16px;
     line-height: 1;
 
-    &:hover { color: #1a202c; }
+    &:hover { color: var(--text, #1a202c); }
   }
 
   .ia-repo-body {
     font-size: 13px;
-    color: var(--text-primary, #2d3748);
+    color: var(--text, #2d3748);
     line-height: 1.7;
     white-space: pre-wrap;
   }
+}
+
+// ── Carga Rápida ─────────────────────────────
+.dlg-carga-rapida { width: min(480px, 95vw); }
+
+.cr-instruccion {
+  font-size: 14px;
+  color: var(--text, #374151);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+.cr-scan-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cr-codigo-input {
+  flex: 1;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.cr-producto-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface2, #f8fafc);
+  border: 1px solid var(--border, #e5e7eb);
+  border-left: 4px solid #1e9de8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.cr-preview-img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border, #e5e7eb);
+  flex-shrink: 0;
+}
+
+.cr-preview-info { flex: 1; min-width: 0; }
+
+.cr-preview-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cr-preview-cat {
+  font-size: 12px;
+  color: var(--text2, #6b7280);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+.cr-preview-sku {
+  font-size: 11px;
+  color: var(--muted, #94a3b8);
+  margin-top: 2px;
+  font-family: monospace;
+}
+
+.cr-nombre-row { margin-bottom: 12px; }
+
+.cr-precios-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.cr-precio-input {
+  font-size: 18px !important;
+  font-weight: 700;
+}
+
+.cr-ya-existe {
+  margin-top: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #92400e;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cr-status {
+  margin-top: 10px;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.cr-status--ok    { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  &.cr-status--warn  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+  &.cr-status--error { background: rgba(239,68,68,.1); color: #dc2626; border: 1px solid rgba(239,68,68,.3); }
 }

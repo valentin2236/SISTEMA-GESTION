@@ -43,10 +43,14 @@ router.get("/", requireAuth, async (req, res) => {
       );
     });
 
+    const CLAVES_SECRETAS = new Set([
+      'anthropic_api_key', 'gemini_api_key',
+      'arca_certificado', 'arca_private_key',
+    ]);
+
     const cfg = {};
     for (const row of rows) {
-      if (row.clave === "anthropic_api_key") continue;
-      if (row.clave === "gemini_api_key") continue;
+      if (CLAVES_SECRETAS.has(row.clave)) continue;
       try { cfg[row.clave] = JSON.parse(row.valor); }
       catch { cfg[row.clave] = row.valor; }
     }
@@ -61,6 +65,16 @@ router.get("/", requireAuth, async (req, res) => {
       `SELECT valor FROM configuracion WHERE clave = 'gemini_api_key'`
     );
     cfg.gemini_key_configurada = !!(geminiRow?.valor);
+
+    const certRow = await get(
+      `SELECT valor FROM configuracion WHERE clave = 'arca_certificado'`
+    );
+    cfg.arca_cert_configurado = !!(certRow?.valor);
+
+    const pkRow = await get(
+      `SELECT valor FROM configuracion WHERE clave = 'arca_private_key'`
+    );
+    cfg.arca_key_configurado = !!(pkRow?.valor);
 
     res.json(cfg);
   } catch (e) {
@@ -89,9 +103,8 @@ router.put("/", requireAuth, requireRole("admin"), async (req, res) => {
       );
     }
 
-    const claves = Object.keys(data).map(k =>
-      (k === 'anthropic_api_key' || k === 'gemini_api_key') ? k + ' (oculta)' : k
-    );
+    const OCULTAS = new Set(['anthropic_api_key','gemini_api_key','arca_certificado','arca_private_key']);
+    const claves = Object.keys(data).map(k => OCULTAS.has(k) ? k + ' (oculta)' : k);
     registrarAuditoria(req.user.email, 'CAMBIAR_CONFIG', claves.join(', '));
 
     res.json({ ok: true });

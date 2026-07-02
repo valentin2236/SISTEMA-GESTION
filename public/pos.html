@@ -514,6 +514,62 @@
       </div>
     </dialog>
 
+    <!-- ===== MODAL: Factura Electrónica ARCA ===== -->
+    <dialog id="dlg-arca" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>🧾 Factura Electrónica ARCA</h2>
+          <button id="btn-cerrar-arca" class="dlg-close" aria-label="Cerrar">✕</button>
+        </div>
+
+        <div class="form">
+          <div style="display:flex; flex-direction:column; gap:14px">
+
+            <!-- Info de la venta -->
+            <div id="arca-venta-info" class="arca-pos-venta-info">
+              <!-- Llenado dinámicamente -->
+            </div>
+
+            <!-- Tipo de comprobante -->
+            <div class="field">
+              <label class="field-label">Tipo de comprobante</label>
+              <select id="arca-tipo-cbte" class="field-input">
+                <option value="11">Factura C — Monotributista / Exento</option>
+                <option value="6">Factura B — Resp. Inscripto → Consumidor</option>
+                <option value="1">Factura A — Resp. Inscripto → Empresa (CUIT)</option>
+              </select>
+            </div>
+
+            <!-- Tipo de documento del comprador -->
+            <div class="field">
+              <label class="field-label">Documento del comprador</label>
+              <div style="display:flex; gap:8px">
+                <select id="arca-doc-tipo" class="field-input" style="flex:0 0 180px">
+                  <option value="99">Consumidor Final</option>
+                  <option value="80">CUIT</option>
+                  <option value="96">DNI</option>
+                  <option value="86">CUIL</option>
+                </select>
+                <input id="arca-doc-nro" class="field-input" type="text"
+                  placeholder="Nro. de documento" style="flex:1; display:none"/>
+              </div>
+            </div>
+
+            <!-- Resultado / estado -->
+            <div id="arca-result" style="display:none"></div>
+
+          </div>
+        </div>
+
+        <div class="dlg-actions">
+          <button id="btn-emitir-factura" class="btn btn-primary" style="flex:1">
+            🧾 Emitir Factura
+          </button>
+          <button id="btn-omitir-arca" class="btn btn-outline">Omitir</button>
+        </div>
+      </div>
+    </dialog>
+
     <script src="js/auth-guard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/navbar.js"></script>

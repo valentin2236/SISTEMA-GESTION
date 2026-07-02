@@ -18,7 +18,8 @@ import {
   ensureStockTables,
   ensureProductColumns,
   ensureVentaItemsCosto,
-  ensureVentaItemsLibre
+  ensureVentaItemsLibre,
+  ensureVentasArcaColumns,
 } from './db.js';
 
 import logger from './utils/logger.js';
@@ -46,6 +47,7 @@ import backupRoutes from './routes/backup.js';
 import licenciaRoutes from './routes/licencia.js';
 import exportarRoutes from './routes/exportar.js';
 import iaRoutes from './routes/ia.js';
+import arcaRoutes from './routes/arca.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -136,6 +138,7 @@ async function ensureAdminUser() {
     await ensureConfigTable();
     await ensureVentaItemsCosto();
     await ensureVentaItemsLibre();
+    await ensureVentasArcaColumns();
 
     if (!process.env.JWT_SECRET) {
       if (process.env.NODE_ENV === 'production') {
@@ -176,6 +179,7 @@ app.use('/api/backup', requireFeature('backup'), backupRoutes);
 app.use('/api/exportar', requireFeature('exportar'), exportarRoutes);
 app.use('/api/pdf-import', requireFeature('ia'), pdfImportRoutes);
 app.use('/api/ia', requireFeature('ia'), iaRoutes);
+app.use('/api/arca', requireFeature('ia'), arcaRoutes);
 
 // ---------- Static & Home ----------
 app.use(express.static(path.join(__dirname, '../public')));

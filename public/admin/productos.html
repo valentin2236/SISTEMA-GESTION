@@ -39,6 +39,9 @@
           >
             📤 Exportar Excel
           </button>
+          <button id="btn-carga-rapida" class="btn btn-secondary" title="Escanear código de barras y cargar rápido" style="display:none">
+            ⚡ Carga rápida
+          </button>
           <button id="btn-ia-reposicion" class="btn-ia" style="padding:7px 14px;font-size:13px;">
             <span class="btn-ia-icon">🤖</span> Sugerencias de reposición
           </button>
@@ -599,6 +602,77 @@
 
           <!-- Estado -->
           <div id="pdf-status" class="foto-status" style="display: none"></div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Carga Rápida ===== -->
+    <dialog id="dlg-carga-rapida" class="dlg dlg-carga-rapida">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>⚡ Carga rápida</h2>
+          <button id="btn-cerrar-carga-rapida" class="dlg-close">✕</button>
+        </div>
+        <div class="dlg-body">
+
+          <!-- PASO 1: escanear -->
+          <div id="cr-step-scan">
+            <p class="cr-instruccion">Escaneá el código de barras del producto</p>
+            <div class="cr-scan-row">
+              <input id="cr-codigo" class="field-input cr-codigo-input"
+                     placeholder="Apuntá el escáner o escribí el código…"
+                     autocomplete="off" inputmode="numeric" />
+              <button id="cr-btn-buscar" class="btn btn-primary">Buscar</button>
+            </div>
+            <p id="cr-scan-hint" class="field-hint">Presioná Enter o el botón para buscar</p>
+          </div>
+
+          <!-- PASO 2: confirmar y completar precios -->
+          <div id="cr-step-form" style="display:none">
+            <div class="cr-producto-preview">
+              <img id="cr-preview-img" src="" alt="" class="cr-preview-img" style="display:none" />
+              <div class="cr-preview-info">
+                <div class="cr-preview-nombre" id="cr-preview-nombre"></div>
+                <div class="cr-preview-cat" id="cr-preview-cat"></div>
+                <div class="cr-preview-sku" id="cr-preview-sku"></div>
+              </div>
+            </div>
+
+            <div class="cr-nombre-row">
+              <label class="field-label">Nombre del producto</label>
+              <input id="cr-nombre" class="field-input" placeholder="Nombre del producto" />
+            </div>
+
+            <div class="cr-precios-grid">
+              <div class="field">
+                <label class="field-label">Precio de venta *</label>
+                <input id="cr-precio" class="field-input field-input--highlight cr-precio-input"
+                       type="number" step="0.01" min="0" placeholder="0,00" />
+              </div>
+              <div class="field">
+                <label class="field-label">Costo</label>
+                <input id="cr-costo" class="field-input"
+                       type="number" step="0.01" min="0" placeholder="0,00" />
+              </div>
+              <div class="field">
+                <label class="field-label">Stock inicial</label>
+                <input id="cr-stock" class="field-input"
+                       type="number" min="0" placeholder="0" value="1" />
+              </div>
+            </div>
+
+            <p id="cr-ya-existe" class="cr-ya-existe" style="display:none">
+              ⚠ Este SKU ya existe. Se actualizará el precio y stock del producto existente.
+            </p>
+          </div>
+
+          <!-- Estado -->
+          <div id="cr-status" class="cr-status" style="display:none"></div>
+
+        </div>
+        <div class="dlg-actions" id="cr-actions" style="display:none">
+          <button id="cr-btn-guardar" class="btn btn-primary">✅ Guardar y continuar</button>
+          <button id="cr-btn-cancelar-form" class="btn btn-outline">↩ Otro código</button>
         </div>
       </div>
     </dialog>

@@ -1385,3 +1385,57 @@ body.pos-page {
   letter-spacing: -0.5px;
   line-height: 1;
 }
+
+// ── ARCA modal en el POS ───────────────────────────────────
+.arca-pos-venta-info {
+  background: var(--surface2, #f8fafc);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.arca-pos-venta-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.arca-pos-label {
+  font-size: 13px;
+  color: var(--text2, #6b7280);
+}
+
+.arca-pos-total {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent, #00d875);
+  letter-spacing: -0.5px;
+}
+
+.arca-cbte-detalle {
+  margin-top: 10px;
+  background: var(--surface2, #f8fafc);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.arca-cbte-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+
+  span { color: var(--text2, #6b7280); }
+  strong { color: var(--text, #111827); }
+}
+
+.arca-cae-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}

@@ -1126,9 +1126,12 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     if (topMetodo) topMetodo.textContent = "💵 Efectivo";
     updateTotalColor();
 
+    const _ventaId    = r.data.id;
+    const _ventaTotal = r.data.total;
+
     const tok = localStorage.getItem("token") || "";
     const cfg = localStorage.getItem("cfg") || "{}";
-    const ticketUrl = `/ticket.html?id=${r.data.id}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${encodeURIComponent(btoa(cfg))}`;
+    const ticketUrl = `/ticket.html?id=${_ventaId}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${encodeURIComponent(btoa(cfg))}`;
     const cfgObj = JSON.parse(cfg || "{}");
 
     try {
@@ -1145,6 +1148,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     }
 
     if ($buscar) { $buscar.value = ""; $buscar.focus(); }
+    if (state.arcaHabilitado) setTimeout(() => abrirModalArca(_ventaId, _ventaTotal), 400);
   });
 
   // Enter en el modal de pago confirma la venta
@@ -1571,6 +1575,151 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
   document
     .getElementById("btn-historial")
     ?.addEventListener("click", toggleHistorial);
+
+  /* ===================== ARCA ===================== */
+  // Estado ARCA
+  state.arcaHabilitado = false;
+  state.arcaInfo = null;
+
+  // Verificar si ARCA está configurado al cargar el POS
+  (async () => {
+    try {
+      const r = await api('/api/arca/info', {}, { expectJSON: true, fallbackNoAuth: false });
+      if (r.ok && r.data?.configurado) {
+        state.arcaHabilitado = true;
+        state.arcaInfo = r.data;
+        // Pre-seleccionar tipo de comprobante según condición fiscal
+        const sel = document.getElementById('arca-tipo-cbte');
+        if (sel && r.data.condicion) {
+          if (r.data.condicion === 'responsable_inscripto') sel.value = '6';
+          else sel.value = '11'; // monotributista / exento
+        }
+      }
+    } catch { /* ARCA no disponible, se ignora */ }
+  })();
+
+  // DOM refs del modal ARCA
+  const $dlgArca        = document.getElementById('dlg-arca');
+  const $arcaVentaInfo  = document.getElementById('arca-venta-info');
+  const $arcaTipoCbte   = document.getElementById('arca-tipo-cbte');
+  const $arcaDocTipo    = document.getElementById('arca-doc-tipo');
+  const $arcaDocNro     = document.getElementById('arca-doc-nro');
+  const $arcaResult     = document.getElementById('arca-result');
+  const $btnEmitir      = document.getElementById('btn-emitir-factura');
+  const $btnOmitir      = document.getElementById('btn-omitir-arca');
+  const $btnCerrarArca  = document.getElementById('btn-cerrar-arca');
+
+  function abrirModalArca(ventaId, ventaTotal) {
+    if (!$dlgArca) return;
+
+    // Guardar en state para usarlo al emitir
+    state._arcaVentaId    = ventaId;
+    state._arcaVentaTotal = ventaTotal;
+
+    // Info de la venta
+    if ($arcaVentaInfo) {
+      $arcaVentaInfo.innerHTML = `
+        <div class="arca-pos-venta-summary">
+          <span class="arca-pos-label">Venta <strong>#${ventaId}</strong></span>
+          <span class="arca-pos-total">$${money(ventaTotal)}</span>
+        </div>`;
+    }
+
+    // Reset resultado
+    if ($arcaResult) { $arcaResult.style.display = 'none'; $arcaResult.innerHTML = ''; }
+    if ($btnEmitir) { $btnEmitir.disabled = false; $btnEmitir.textContent = '🧾 Emitir Factura'; }
+    if ($arcaDocNro) { $arcaDocNro.value = ''; $arcaDocNro.style.display = 'none'; }
+    if ($arcaDocTipo) $arcaDocTipo.value = '99';
+
+    $dlgArca.showModal();
+  }
+
+  // Mostrar/ocultar campo de número de documento según tipo
+  $arcaDocTipo?.addEventListener('change', () => {
+    const tipo = $arcaDocTipo.value;
+    if ($arcaDocNro) {
+      $arcaDocNro.style.display = tipo === '99' ? 'none' : '';
+      if (tipo !== '99') $arcaDocNro.focus();
+    }
+  });
+
+  // Emitir factura
+  $btnEmitir?.addEventListener('click', async () => {
+    const ventaId = state._arcaVentaId;
+    if (!ventaId) return;
+
+    const tipoCbte = Number($arcaTipoCbte?.value || 11);
+    const docTipo  = Number($arcaDocTipo?.value || 99);
+    const docNro   = ($arcaDocNro?.value || '').trim();
+
+    if (docTipo !== 99 && !docNro) {
+      showStatus('Ingresá el número de documento', 'error');
+      $arcaDocNro?.focus();
+      return;
+    }
+
+    $btnEmitir.disabled = true;
+    $btnEmitir.textContent = '⏳ Emitiendo...';
+    if ($arcaResult) { $arcaResult.style.display = 'none'; }
+
+    const r = await api('/api/arca/facturar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        venta_id: ventaId,
+        tipo_comprobante: tipoCbte,
+        doc_tipo: docTipo,
+        doc_nro: docNro || 0,
+      }),
+    }, { expectJSON: true });
+
+    $btnEmitir.disabled = false;
+    $btnEmitir.textContent = '🧾 Emitir Factura';
+
+    if ($arcaResult) {
+      $arcaResult.style.display = '';
+      if (r.ok && r.data?.ok) {
+        const d = r.data;
+        $arcaResult.innerHTML = `
+          <div class="arca-estado arca-estado--ok">
+            ✅ Factura emitida correctamente
+          </div>
+          <div class="arca-cbte-detalle">
+            <div class="arca-cbte-row">
+              <span>Comprobante</span>
+              <strong>${d.tipo_nombre} N° ${String(d.punto_venta).padStart(4,'0')}-${String(d.nro_comprobante).padStart(8,'0')}</strong>
+            </div>
+            <div class="arca-cbte-row">
+              <span>CAE</span>
+              <strong class="arca-cae-num">${d.cae}</strong>
+            </div>
+            <div class="arca-cbte-row">
+              <span>Vencimiento CAE</span>
+              <strong>${d.cae_vto ? d.cae_vto.replace(/(\d{4})(\d{2})(\d{2})/, '$3/$2/$1') : '–'}</strong>
+            </div>
+          </div>`;
+        if ($btnEmitir) $btnEmitir.style.display = 'none';
+        if ($btnOmitir) $btnOmitir.textContent = 'Cerrar';
+      } else {
+        const msg = r.data?.error || 'Error al emitir factura';
+        $arcaResult.innerHTML = `
+          <div class="arca-estado arca-estado--error">
+            ❌ ${msg}
+          </div>`;
+      }
+    }
+  });
+
+  $btnOmitir?.addEventListener('click', () => {
+    $dlgArca?.close();
+    if ($btnEmitir) $btnEmitir.style.display = '';
+    if ($btnOmitir) $btnOmitir.textContent = 'Omitir';
+  });
+  $btnCerrarArca?.addEventListener('click', () => {
+    $dlgArca?.close();
+    if ($btnEmitir) $btnEmitir.style.display = '';
+    if ($btnOmitir) $btnOmitir.textContent = 'Omitir';
+  });
 
   /* ===================== INIT ===================== */
   renderCliente();

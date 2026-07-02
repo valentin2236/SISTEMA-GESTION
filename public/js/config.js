@@ -790,4 +790,127 @@ window.descargarCSV = async function(tipo) {
   } catch { toast('Error de conexión', 'error'); }
 };
 
+/* ══════════════════════════════════════════════════════════
+   ARCA — Facturación electrónica
+══════════════════════════════════════════════════════════ */
+const $arcaCuit        = document.getElementById('arcaCuit');
+const $arcaPuntoVenta  = document.getElementById('arcaPuntoVenta');
+const $arcaCondicion   = document.getElementById('arcaCondicion');
+const $arcaAmbiente    = document.getElementById('arcaAmbiente');
+const $arcaCert        = document.getElementById('arcaCertificado');
+const $arcaKey         = document.getElementById('arcaPrivateKey');
+const $btnTestArca     = document.getElementById('btnTestArca');
+const $arcaEstado      = document.getElementById('arca-estado');
+const $arcaEstadoTxt   = document.getElementById('arca-estado-txt');
+const $arcaCertStatus  = document.getElementById('arca-cert-status');
+const $arcaKeyStatus   = document.getElementById('arca-key-status');
+
+async function cargarConfigArca() {
+  if (!token) return;
+  try {
+    const res = await fetch('/api/config', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    if (!res.ok) return;
+    const cfg = await res.json();
+
+    if ($arcaCuit)       $arcaCuit.value       = cfg.arca_cuit        || '';
+    if ($arcaPuntoVenta) $arcaPuntoVenta.value  = cfg.arca_punto_venta || '';
+    if ($arcaCondicion)  $arcaCondicion.value   = cfg.arca_condicion   || 'monotributista';
+    if ($arcaAmbiente)   $arcaAmbiente.value    = cfg.arca_ambiente    || 'homologacion';
+
+    // Mostrar si cert/key están configurados (sin revelar contenido)
+    if ($arcaCertStatus) $arcaCertStatus.style.display = cfg.arca_cert_configurado ? '' : 'none';
+    if ($arcaKeyStatus)  $arcaKeyStatus.style.display  = cfg.arca_key_configurado  ? '' : 'none';
+  } catch {}
+}
+
+async function guardarConfigArca() {
+  if (!token) return;
+  const data = {
+    arca_cuit:        ($arcaCuit?.value        || '').trim(),
+    arca_punto_venta: ($arcaPuntoVenta?.value  || '').trim(),
+    arca_condicion:   $arcaCondicion?.value    || 'monotributista',
+    arca_ambiente:    $arcaAmbiente?.value     || 'homologacion',
+  };
+
+  const cert = ($arcaCert?.value || '').trim();
+  const key  = ($arcaKey?.value  || '').trim();
+  if (cert) data.arca_certificado = cert;
+  if (key)  data.arca_private_key = key;
+
+  const res = await fetch('/api/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify(data),
+  });
+  return res.ok;
+}
+
+// Guardar ARCA junto con el resto de la config
+const _saveOriginal = document.getElementById('btnGuardar');
+_saveOriginal?.addEventListener('click', async () => {
+  const ok = await guardarConfigArca();
+  if (!ok) toast('Error guardando configuración ARCA', 'error');
+});
+
+// Probar conexión con ARCA
+$btnTestArca?.addEventListener('click', async () => {
+  const cuit = $arcaCuit?.value?.trim();
+  const pv   = $arcaPuntoVenta?.value?.trim();
+
+  if (!cuit || !pv) {
+    setArcaEstado('warn', '⚠ Completá el CUIT y el Punto de venta primero');
+    return;
+  }
+
+  await guardarConfigArca();
+
+  $btnTestArca.disabled = true;
+  $btnTestArca.textContent = '⏳ Probando…';
+  setArcaEstado('pendiente', 'Conectando con ARCA…');
+
+  try {
+    const res = await fetch('/api/arca/test', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      setArcaEstado('ok', `✅ Conexión exitosa — ${data.ambiente === 'produccion' ? 'Producción' : 'Prueba'} · Token válido`);
+      toast('Conexión con ARCA exitosa');
+    } else {
+      setArcaEstado('error', '❌ ' + (data.error || 'Error de conexión'));
+      toast('Error conectando con ARCA', 'error');
+    }
+  } catch {
+    setArcaEstado('error', '❌ No se pudo conectar con el servidor');
+    toast('Error de conexión', 'error');
+  } finally {
+    $btnTestArca.disabled = false;
+    $btnTestArca.textContent = '🔌 Probar conexión con ARCA';
+  }
+});
+
+function setArcaEstado(tipo, msg) {
+  if (!$arcaEstado || !$arcaEstadoTxt) return;
+  $arcaEstado.className = `arca-estado arca-estado--${tipo}`;
+  $arcaEstadoTxt.textContent = msg;
+}
+
+// Mostrar tab ARCA solo en plan Ultra (feature 'ia')
+(async () => {
+  try {
+    const token = localStorage.getItem('token') || '';
+    const r = await fetch('/api/licencia/features', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const data = await r.json();
+    const tieneIA = Array.isArray(data.features) && data.features.includes('ia');
+    const tabArca = document.getElementById('tab-btn-arca');
+    if (tabArca) tabArca.style.display = tieneIA ? '' : 'none';
+    if (tieneIA) cargarConfigArca();
+  } catch { /* ignora si falla */ }
+})();
+
 })();

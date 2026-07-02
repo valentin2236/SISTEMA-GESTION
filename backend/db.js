@@ -268,7 +268,18 @@ export async function ensureVentaItemsLibre() {
 
   console.log("venta_items migrada correctamente");
 }
- 
+
+// ==============================
+// ENSURE VENTAS ARCA COLUMNS
+// ==============================
+
+export async function ensureVentasArcaColumns() {
+  await addColumnIfMissing("ventas", "cae",              "TEXT",    null);
+  await addColumnIfMissing("ventas", "cae_vto",          "TEXT",    null);
+  await addColumnIfMissing("ventas", "nro_comprobante",  "INTEGER", null);
+  await addColumnIfMissing("ventas", "tipo_comprobante", "INTEGER", null);
+}
+
 // ==============================
 // TABLAS SINCRÓNICAS (serialize)
 // ==============================

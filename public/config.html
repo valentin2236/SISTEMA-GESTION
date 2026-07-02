@@ -37,6 +37,7 @@
         <button class="cfg-tab" data-tab="backup">💾 Backup</button>
         <button class="cfg-tab" data-tab="licencia">🔐 Licencia</button>
         <button class="cfg-tab" data-tab="ia">🤖 IA</button>
+        <button class="cfg-tab" data-tab="arca" id="tab-btn-arca" style="display:none">🧾 ARCA</button>
       </div>
 
       <!-- ═══════════════════════════════════════════════════════
@@ -489,6 +490,122 @@
           </div>
         </div>
       </section>
+    </main>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: ARCA
+      ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-arca" style="display:none">
+
+        <!-- Estado de conexión -->
+        <div class="panel" id="arca-estado-panel">
+          <div class="panel-head">
+            <span class="panel-title">Estado de conexión</span>
+            <span class="panel-sub">Verificá que los datos estén correctos antes de emitir facturas</span>
+          </div>
+          <div id="arca-estado" class="arca-estado arca-estado--pendiente">
+            <span class="arca-estado-dot"></span>
+            <span id="arca-estado-txt">Sin configurar — completá los datos y presioná "Probar conexión"</span>
+          </div>
+          <div style="margin-top:12px">
+            <button id="btnTestArca" class="btn btn-outline">🔌 Probar conexión con ARCA</button>
+          </div>
+        </div>
+
+        <!-- Datos del contribuyente -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Datos del contribuyente</span>
+            <span class="panel-sub">Información fiscal de tu negocio</span>
+          </div>
+          <div class="cfg-grid">
+
+            <div class="field">
+              <label class="field-label">CUIT</label>
+              <input id="arcaCuit" class="field-input" placeholder="20-12345678-9"
+                     autocomplete="off" inputmode="numeric" maxlength="13" />
+              <p class="field-hint">Sin guiones — ej: 20123456789</p>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Punto de venta</label>
+              <input id="arcaPuntoVenta" class="field-input" placeholder="1"
+                     type="number" min="1" max="9999" />
+              <p class="field-hint">Número registrado en ARCA (ej: 1, 2, 3…)</p>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Condición fiscal</label>
+              <select id="arcaCondicion" class="field-input">
+                <option value="monotributista">Monotributista — emite Factura C</option>
+                <option value="responsable_inscripto">Responsable Inscripto — emite Factura A / B</option>
+                <option value="exento">Exento de IVA</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Ambiente</label>
+              <select id="arcaAmbiente" class="field-input">
+                <option value="homologacion">Prueba / Homologación (no emite facturas reales)</option>
+                <option value="produccion">Producción (facturas reales)</option>
+              </select>
+              <p class="field-hint">Usá <strong>Prueba</strong> para configurar y testear sin riesgo</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Certificado digital -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Certificado digital</span>
+            <span class="panel-sub">
+              Generado desde el portal de ARCA —
+              <a href="https://serviciosweb.afip.gob.ar/clavefiscal/index.aspx" target="_blank" class="field-hint">
+                Ir a ARCA →
+              </a>
+            </span>
+          </div>
+
+          <div class="cfg-grid">
+            <div class="field field--full">
+              <label class="field-label">
+                Certificado (.crt)
+                <span id="arca-cert-status" class="arca-key-badge" style="display:none">✅ Configurado</span>
+              </label>
+              <textarea id="arcaCertificado" class="field-input field-textarea arca-pem-input"
+                        placeholder="-----BEGIN CERTIFICATE-----&#10;MIIEpDCCA4y...&#10;-----END CERTIFICATE-----"
+                        rows="4" autocomplete="off" spellcheck="false"></textarea>
+              <p class="field-hint">Pegá el contenido del archivo .crt que generaste en ARCA</p>
+            </div>
+
+            <div class="field field--full">
+              <label class="field-label">
+                Clave privada (.key)
+                <span id="arca-key-status" class="arca-key-badge" style="display:none">✅ Configurado</span>
+              </label>
+              <textarea id="arcaPrivateKey" class="field-input field-textarea arca-pem-input"
+                        placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;MIIEpAIBAAK...&#10;-----END RSA PRIVATE KEY-----"
+                        rows="4" autocomplete="off" spellcheck="false"></textarea>
+              <p class="field-hint">Pegá el contenido del archivo .key — se guarda encriptado en el servidor</p>
+            </div>
+          </div>
+
+          <!-- Guía rápida -->
+          <div class="arca-guia">
+            <p class="arca-guia-title">¿Cómo obtengo el certificado?</p>
+            <ol class="arca-guia-steps">
+              <li>Entrá a <strong>ARCA → Mis Servicios → Administrador de Relaciones</strong></li>
+              <li>Creá un representante con el servicio <strong>wsfe</strong> habilitado</li>
+              <li>Generá el certificado digital desde el mismo portal</li>
+              <li>Descargá el <strong>.crt</strong> y el <strong>.key</strong>, y pegá su contenido acá</li>
+              <li>Registrá un <strong>Punto de Venta</strong> de tipo "Factura electrónica"</li>
+            </ol>
+          </div>
+        </div>
+
+      </section>
+
     </main>
 
     <script src="/js/navbar.js"></script>

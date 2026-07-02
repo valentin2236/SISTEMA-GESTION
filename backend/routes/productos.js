@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { requireFeature } from "../middleware/licencia.js";
 import { registrarAuditoria } from "../utils/auditoria.js";
 import { getAnthropicKey, getGeminiKey, getIAProvider } from "./config.js";
 
@@ -27,7 +28,7 @@ function all(sql, params = []) {
 }
 
 function parseLimitOffset(q) {
-  const limit = Math.min(Math.max(parseInt(q.limit ?? "50", 10), 1), 200);
+  const limit = Math.min(Math.max(parseInt(q.limit ?? "50", 10), 1), 5000);
   const offset = Math.max(parseInt(q.offset ?? "0", 10), 0);
   return { limit, offset };
 }
@@ -104,6 +105,42 @@ router.get("/", async (req, res) => {
     res.json(rows);
   } catch (e) {
     res.status(500).json({ error: "DB_ERROR", details: e.message });
+  }
+});
+
+// GET /api/productos/barcode-lookup/:codigo  (solo plan Ultra)
+router.get("/barcode-lookup/:codigo", requireAuth, requireFeature("ia"), async (req, res) => {
+  const { codigo } = req.params;
+  try {
+    const r = await fetch(
+      `https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(codigo)}.json`,
+      { headers: { "User-Agent": "SistemaGestionPRO/2.2.4" } }
+    );
+    const data = await r.json();
+
+    if (data.status !== 1 || !data.product) {
+      return res.json({ encontrado: false });
+    }
+
+    const p = data.product;
+    const nombre =
+      p.product_name_es?.trim() ||
+      p.product_name?.trim() ||
+      p.abbreviated_product_name?.trim() ||
+      "";
+
+    const rawCat = p.categories_tags?.[0] || "";
+    const categoria = rawCat.replace(/^(en:|es:)/, "").replace(/-/g, " ") || "";
+
+    res.json({
+      encontrado: !!nombre,
+      nombre,
+      categoria,
+      imagen: p.image_front_url || p.image_url || "",
+      marca: p.brands || "",
+    });
+  } catch {
+    res.json({ encontrado: false });
   }
 });
 

@@ -371,3 +371,50 @@
     color: var(--warning);
   }
 }
+
+// ── Panel IA del negocio ──────────────────────────────────
+.dash-ia-result {
+  padding: 12px 4px 4px;
+  min-height: 60px;
+}
+
+.dash-ia-hint {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.dash-ia-loading {
+  color: var(--text2);
+  font-size: 13px;
+  padding: 16px 0;
+  text-align: center;
+  animation: dash-ia-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dash-ia-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.dash-ia-respuesta {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: normal;
+
+  strong { color: var(--accent); }
+}
+
+.dash-ia-bullet {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.dash-ia-error {
+  font-size: 13px;
+  color: var(--danger, #e05260);
+  padding: 10px 0;
+}

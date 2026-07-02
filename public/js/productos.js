@@ -64,7 +64,7 @@ let filtros = {
 async function cargarProductos(search = "") {
   try {
     const res = await apiFetch(
-      `/api/productos?search=${encodeURIComponent(search)}&limit=200`,
+      `/api/productos?search=${encodeURIComponent(search)}&limit=5000`,
     );
     const data = await res.json();
     productosCache = Array.isArray(data) ? data : [];
@@ -1544,5 +1544,245 @@ document.getElementById("btn-ia-reposicion")?.addEventListener("click", async ()
   }
 });
 
+/* ===================== CARGA RÁPIDA ===================== */
+const $dlgCR          = document.getElementById('dlg-carga-rapida');
+const $crCodigo       = document.getElementById('cr-codigo');
+const $crBtnBuscar    = document.getElementById('cr-btn-buscar');
+const $crStepScan     = document.getElementById('cr-step-scan');
+const $crStepForm     = document.getElementById('cr-step-form');
+const $crActions      = document.getElementById('cr-actions');
+const $crStatus       = document.getElementById('cr-status');
+const $crPreviewImg   = document.getElementById('cr-preview-img');
+const $crPreviewNombre= document.getElementById('cr-preview-nombre');
+const $crPreviewCat   = document.getElementById('cr-preview-cat');
+const $crPreviewSku   = document.getElementById('cr-preview-sku');
+const $crNombre       = document.getElementById('cr-nombre');
+const $crPrecio       = document.getElementById('cr-precio');
+const $crCosto        = document.getElementById('cr-costo');
+const $crStock        = document.getElementById('cr-stock');
+const $crYaExiste     = document.getElementById('cr-ya-existe');
+const $crBtnGuardar   = document.getElementById('cr-btn-guardar');
+const $crBtnCancelarForm = document.getElementById('cr-btn-cancelar-form');
+
+let crCodigoActual = '';
+let crProductoExistenteId = null;
+
+document.getElementById('btn-carga-rapida')?.addEventListener('click', () => {
+  resetCargaRapida();
+  $dlgCR.showModal();
+  setTimeout(() => $crCodigo?.focus(), 80);
+});
+
+document.getElementById('btn-cerrar-carga-rapida')?.addEventListener('click', () => {
+  $dlgCR.close();
+});
+
+function resetCargaRapida() {
+  crCodigoActual = '';
+  crProductoExistenteId = null;
+  $crCodigo.value = '';
+  $crStepScan.style.display = '';
+  $crStepForm.style.display = 'none';
+  $crActions.style.display = 'none';
+  $crStatus.style.display = 'none';
+  $crYaExiste.style.display = 'none';
+  $crNombre.value = '';
+  $crPrecio.value = '';
+  $crCosto.value = '';
+  $crStock.value = '1';
+  $crPreviewImg.src = '';
+  $crPreviewImg.style.display = 'none';
+  document.getElementById('cr-scan-hint').textContent = 'Presioná Enter o el botón para buscar';
+}
+
+function crMostrarStatus(msg, tipo = 'ok') {
+  $crStatus.textContent = msg;
+  $crStatus.className = `cr-status cr-status--${tipo}`;
+  $crStatus.style.display = '';
+  setTimeout(() => { $crStatus.style.display = 'none'; }, 3000);
+}
+
+async function crBuscarCodigo() {
+  const codigo = $crCodigo.value.trim();
+  if (!codigo) return;
+  crCodigoActual = codigo;
+
+  $crBtnBuscar.disabled = true;
+  $crBtnBuscar.textContent = '⏳';
+  document.getElementById('cr-scan-hint').textContent = 'Buscando…';
+  crProductoExistenteId = null;
+  $crYaExiste.style.display = 'none';
+
+  try {
+    // Verificar si el SKU ya existe en el sistema
+    const resLocal = await apiFetch(`/api/productos?search=${encodeURIComponent(codigo)}&limit=5`);
+    const locales = await resLocal.json();
+    const existente = Array.isArray(locales)
+      ? locales.find(p => p.sku === codigo)
+      : null;
+
+    if (existente) {
+      crProductoExistenteId = existente.id;
+      $crNombre.value = existente.nombre || '';
+      $crPreviewNombre.textContent = existente.nombre || '';
+      $crPreviewCat.textContent = existente.categoria || '';
+      $crPreviewSku.textContent = `SKU: ${codigo}`;
+      if (existente.imagen) {
+        $crPreviewImg.src = existente.imagen;
+        $crPreviewImg.style.display = '';
+      }
+      $crPrecio.value = existente.precio ?? '';
+      $crCosto.value = existente.costo ?? '';
+      $crStock.value = existente.stock ?? '1';
+      $crYaExiste.style.display = '';
+    } else {
+      // Buscar en Open Food Facts
+      const resOFF = await apiFetch(`/api/productos/barcode-lookup/${encodeURIComponent(codigo)}`);
+      const off = await resOFF.json();
+
+      if (off.encontrado) {
+        $crNombre.value = off.nombre;
+        $crPreviewNombre.textContent = off.nombre;
+        $crPreviewCat.textContent = [off.marca, off.categoria].filter(Boolean).join(' · ');
+        $crPreviewSku.textContent = `SKU: ${codigo}`;
+        if (off.imagen) {
+          $crPreviewImg.src = off.imagen;
+          $crPreviewImg.style.display = '';
+        } else {
+          $crPreviewImg.style.display = 'none';
+        }
+      } else {
+        $crNombre.value = '';
+        $crPreviewNombre.textContent = 'Producto no encontrado en la base de datos';
+        $crPreviewCat.textContent = 'Completá el nombre manualmente';
+        $crPreviewSku.textContent = `SKU: ${codigo}`;
+        $crPreviewImg.style.display = 'none';
+      }
+      $crPrecio.value = '';
+      $crCosto.value = '';
+      $crStock.value = '1';
+    }
+
+    $crStepForm.style.display = '';
+    $crActions.style.display = '';
+    setTimeout(() => $crPrecio?.focus(), 50);
+
+  } catch (e) {
+    document.getElementById('cr-scan-hint').textContent = '⚠ Error al buscar. Intentá de nuevo.';
+  } finally {
+    $crBtnBuscar.disabled = false;
+    $crBtnBuscar.textContent = 'Buscar';
+  }
+}
+
+$crBtnBuscar?.addEventListener('click', crBuscarCodigo);
+$crCodigo?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); crBuscarCodigo(); } });
+
+// Enter en precio → foco a costo
+$crPrecio?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $crCosto?.focus(); } });
+// Enter en costo → foco a stock
+$crCosto?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $crStock?.focus(); } });
+// Enter en stock → guardar
+$crStock?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); crGuardar(); } });
+
+$crBtnCancelarForm?.addEventListener('click', () => {
+  $crStepForm.style.display = 'none';
+  $crActions.style.display = 'none';
+  $crCodigo.value = '';
+  crCodigoActual = '';
+  crProductoExistenteId = null;
+  $crYaExiste.style.display = 'none';
+  setTimeout(() => $crCodigo?.focus(), 50);
+});
+
+async function crGuardar() {
+  const nombre = $crNombre.value.trim();
+  const precio = Number($crPrecio.value || 0);
+  const costo  = Number($crCosto.value  || 0);
+  const stock  = Number($crStock.value  || 0);
+
+  if (!nombre) {
+    $crNombre.focus();
+    crMostrarStatus('⚠ El nombre es obligatorio', 'warn');
+    return;
+  }
+  if (precio <= 0) {
+    $crPrecio.focus();
+    crMostrarStatus('⚠ Ingresá el precio de venta', 'warn');
+    return;
+  }
+
+  $crBtnGuardar.disabled = true;
+  $crBtnGuardar.textContent = 'Guardando…';
+
+  try {
+    let res;
+    if (crProductoExistenteId) {
+      res = await apiFetch(`/api/productos/${crProductoExistenteId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ nombre, precio, costo, stock, sku: crCodigoActual }),
+      });
+    } else {
+      res = await apiFetch('/api/productos', {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre, precio, costo, stock,
+          sku: crCodigoActual,
+          imagen: $crPreviewImg.src || '',
+          activo: 1,
+        }),
+      });
+    }
+
+    if (!res.ok) {
+      const d = await res.json();
+      crMostrarStatus('⚠ ' + (d.error || 'Error al guardar'), 'error');
+      return;
+    }
+
+    crMostrarStatus(`✅ "${nombre}" guardado`, 'ok');
+    cargarProductos();
+
+    // Limpiar para el siguiente producto
+    setTimeout(() => {
+      $crStepForm.style.display = 'none';
+      $crActions.style.display = 'none';
+      $crCodigo.value = '';
+      crCodigoActual = '';
+      crProductoExistenteId = null;
+      $crNombre.value = '';
+      $crPrecio.value = '';
+      $crCosto.value = '';
+      $crStock.value = '1';
+      $crPreviewImg.src = '';
+      $crPreviewImg.style.display = 'none';
+      $crYaExiste.style.display = 'none';
+      $crCodigo?.focus();
+    }, 800);
+
+  } catch {
+    crMostrarStatus('⚠ Error de conexión', 'error');
+  } finally {
+    $crBtnGuardar.disabled = false;
+    $crBtnGuardar.textContent = '✅ Guardar y continuar';
+  }
+}
+
+$crBtnGuardar?.addEventListener('click', crGuardar);
+
 /* ===================== INIT ===================== */
 cargarProductos();
+
+// Mostrar botón Carga Rápida solo si el plan tiene feature 'ia' (Ultra)
+(async () => {
+  try {
+    const res = await apiFetch('/api/licencia/features');
+    const data = await res.json();
+    const tieneIA = Array.isArray(data.features) && data.features.includes('ia');
+    const btnCR = document.getElementById('btn-carga-rapida');
+    if (btnCR) btnCR.style.display = tieneIA ? '' : 'none';
+  } catch {
+    const btnCR = document.getElementById('btn-carga-rapida');
+    if (btnCR) btnCR.style.display = 'none';
+  }
+})();
