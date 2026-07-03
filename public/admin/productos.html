@@ -45,6 +45,12 @@
           <button id="btn-ia-reposicion" class="btn-ia" style="padding:7px 14px;font-size:13px;">
             <span class="btn-ia-icon">🤖</span> Sugerencias de reposición
           </button>
+          <button id="btn-seleccionar" class="btn btn-outline" title="Seleccionar productos para acciones masivas">
+            ☑️ Seleccionar
+          </button>
+          <button id="btn-actualizar-precios" class="btn btn-outline" title="Aumento masivo de precios y costos">
+            💹 Actualizar precios
+          </button>
           <button id="btn-nuevo" class="btn btn-primary">
             + Nuevo producto
           </button>
@@ -131,6 +137,9 @@
           <table class="tbl">
             <thead>
               <tr>
+                <th class="col-check" style="width:40px;display:none">
+                  <input type="checkbox" id="chk-todos" title="Seleccionar todos">
+                </th>
                 <th style="width: 60px">Imagen</th>
                 <th>Nombre</th>
                 <th>SKU / Código</th>
@@ -299,6 +308,150 @@
           >
             Cancelar
           </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== BARRA FLOTANTE SELECCIÓN ===== -->
+    <div id="barra-seleccion" class="barra-seleccion" style="display:none">
+      <span id="sel-count" class="sel-count">0 seleccionados</span>
+      <div class="sel-acciones">
+        <button id="sel-btn-precios" class="btn btn-sm btn-outline sel-btn">💹 Actualizar precios</button>
+        <button id="sel-btn-stock"   class="btn btn-sm btn-outline sel-btn">📦 Ajustar stock</button>
+        <button id="sel-btn-cat"     class="btn btn-sm btn-outline sel-btn">🏷️ Cambiar categoría</button>
+      </div>
+      <button id="sel-btn-cancelar" class="btn btn-sm sel-btn-cancel">✕ Cancelar</button>
+    </div>
+
+    <!-- ===== MODAL: Ajustar stock masivo ===== -->
+    <dialog id="dlg-ajustar-stock-masivo" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>📦 Ajustar stock</h2>
+          <button onclick="document.getElementById('dlg-ajustar-stock-masivo').close()" class="dlg-close">✕</button>
+        </div>
+        <div class="dlg-body" style="display:flex;flex-direction:column;gap:16px;">
+          <p style="font-size:13px;color:var(--muted)" id="asm-desc">Se aplicará a <strong id="asm-count">0</strong> productos seleccionados.</p>
+          <div class="form-group">
+            <label class="form-label">Operación</label>
+            <select id="asm-operacion" class="form-control">
+              <option value="set">Fijar stock en un valor exacto</option>
+              <option value="add">Agregar unidades al stock actual</option>
+              <option value="sub">Restar unidades del stock actual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cantidad</label>
+            <input type="number" id="asm-cantidad" class="form-control" placeholder="0" min="0" step="1">
+          </div>
+          <div id="asm-status" style="display:none;font-size:13px;padding:8px 12px;border-radius:8px;"></div>
+        </div>
+        <div class="dlg-foot">
+          <button id="asm-btn-aplicar" class="btn btn-primary">✅ Aplicar</button>
+          <button onclick="document.getElementById('dlg-ajustar-stock-masivo').close()" class="btn btn-outline">Cancelar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Cambiar categoría masivo ===== -->
+    <dialog id="dlg-cambiar-cat" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>🏷️ Cambiar categoría</h2>
+          <button onclick="document.getElementById('dlg-cambiar-cat').close()" class="dlg-close">✕</button>
+        </div>
+        <div class="dlg-body" style="display:flex;flex-direction:column;gap:16px;">
+          <p style="font-size:13px;color:var(--muted)">Se cambiará la categoría de <strong id="cc-count">0</strong> productos seleccionados.</p>
+          <div class="form-group">
+            <label class="form-label">Nueva categoría</label>
+            <select id="cc-categoria-existente" class="form-control">
+              <option value="">— Elegir categoría existente —</option>
+            </select>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px">— o escribí una nueva —</div>
+          <div class="form-group">
+            <input type="text" id="cc-categoria-nueva" class="form-control" placeholder="Nueva categoría…">
+          </div>
+          <div id="cc-status" style="display:none;font-size:13px;padding:8px 12px;border-radius:8px;"></div>
+        </div>
+        <div class="dlg-foot">
+          <button id="cc-btn-aplicar" class="btn btn-primary">✅ Aplicar</button>
+          <button onclick="document.getElementById('dlg-cambiar-cat').close()" class="btn btn-outline">Cancelar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Actualizar precios masivo ===== -->
+    <dialog id="dlg-actualizar-precios" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>💹 Actualizar precios</h2>
+          <button onclick="document.getElementById('dlg-actualizar-precios').close()" class="dlg-close">✕</button>
+        </div>
+        <div class="dlg-body" style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- Filtro -->
+          <div class="form-group" id="ap-filtro-row">
+            <label class="form-label">Aplicar a</label>
+            <select id="ap-filtro" class="form-control">
+              <option value="todos">Todos los productos</option>
+              <option value="categoria">Una categoría</option>
+            </select>
+          </div>
+          <div id="ap-sel-info" style="display:none;font-size:13px;color:var(--accent);font-weight:600;padding:6px 0">
+            ☑️ <span id="ap-sel-count">0</span> productos seleccionados
+          </div>
+          <div class="form-group" id="ap-cat-row" style="display:none">
+            <label class="form-label">Categoría</label>
+            <select id="ap-categoria" class="form-control"></select>
+          </div>
+
+          <!-- Porcentajes -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">% aumento precio de venta</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="number" id="ap-pct-precio" class="form-control" placeholder="0" min="-99" max="999" step="0.1" style="width:100%">
+                <span style="color:var(--muted);font-size:13px">%</span>
+              </div>
+              <span class="form-hint">Negativo para reducir</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">% aumento costo</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="number" id="ap-pct-costo" class="form-control" placeholder="0" min="-99" max="999" step="0.1" style="width:100%">
+                <span style="color:var(--muted);font-size:13px">%</span>
+              </div>
+              <span class="form-hint">Dejar en 0 para no cambiar</span>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div id="ap-preview-wrap" style="display:none">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">
+              Vista previa — <span id="ap-preview-count">0</span> productos afectados
+            </div>
+            <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="background:var(--surface2);">
+                    <th style="padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;">Producto</th>
+                    <th style="padding:8px 12px;text-align:right;color:var(--muted);font-weight:600;">Precio actual</th>
+                    <th style="padding:8px 12px;text-align:right;color:var(--accent);font-weight:600;">Precio nuevo</th>
+                    <th style="padding:8px 12px;text-align:right;color:var(--muted);font-weight:600;">Costo nuevo</th>
+                  </tr>
+                </thead>
+                <tbody id="ap-preview-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="ap-status" style="display:none;font-size:13px;padding:8px 12px;border-radius:8px;"></div>
+        </div>
+        <div class="dlg-foot">
+          <button id="ap-btn-preview" class="btn btn-outline">👁 Vista previa</button>
+          <button id="ap-btn-aplicar" class="btn btn-primary" disabled>✅ Aplicar cambios</button>
+          <button onclick="document.getElementById('dlg-actualizar-precios').close()" class="btn btn-outline">Cancelar</button>
         </div>
       </div>
     </dialog>
@@ -689,5 +842,148 @@
     <script src="../js/navbar.js"></script>
     <script src="/js/productos.js"></script>
     <script src="/js/ia-chat.js"></script>
+    <script>
+    /* ===== ACTUALIZAR PRECIOS MASIVO ===== */
+    (function() {
+      const $dlg       = document.getElementById('dlg-actualizar-precios');
+      const $filtro    = document.getElementById('ap-filtro');
+      const $catRow    = document.getElementById('ap-cat-row');
+      const $catSel    = document.getElementById('ap-categoria');
+      const $pctPrecio = document.getElementById('ap-pct-precio');
+      const $pctCosto  = document.getElementById('ap-pct-costo');
+      const $preview   = document.getElementById('ap-preview-wrap');
+      const $prevCount = document.getElementById('ap-preview-count');
+      const $prevBody  = document.getElementById('ap-preview-body');
+      const $status    = document.getElementById('ap-status');
+      const $btnPrev   = document.getElementById('ap-btn-preview');
+      const $btnApl    = document.getElementById('ap-btn-aplicar');
+
+      function money(n) {
+        return Number(n||0).toLocaleString('es-AR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+      }
+      function setStatus(msg, tipo) {
+        $status.textContent = msg;
+        $status.style.display = '';
+        $status.style.background = tipo === 'ok' ? 'rgba(0,196,112,.12)' : 'rgba(239,68,68,.12)';
+        $status.style.color = tipo === 'ok' ? 'var(--accent)' : 'var(--danger)';
+      }
+
+      // Abrir modal
+      document.getElementById('btn-actualizar-precios')?.addEventListener('click', async () => {
+        $preview.style.display = 'none';
+        $status.style.display = 'none';
+        $btnApl.disabled = true;
+        $pctPrecio.value = '';
+        $pctCosto.value = '';
+        $filtro.value = 'todos';
+        $catRow.style.display = 'none';
+
+        // Cargar categorías
+        try {
+          const token = localStorage.getItem('token');
+          const r = await fetch('/api/productos?limit=5000', { headers: { Authorization: 'Bearer ' + token } });
+          const prods = await r.json();
+          const cats = [...new Set(prods.map(p => p.categoria).filter(Boolean))].sort();
+          $catSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        } catch {}
+
+        $dlg.showModal();
+      });
+
+      $filtro.addEventListener('change', () => {
+        $catRow.style.display = $filtro.value === 'categoria' ? '' : 'none';
+        $preview.style.display = 'none';
+        $btnApl.disabled = true;
+      });
+
+      // Vista previa
+      $btnPrev.addEventListener('click', async () => {
+        const pctPrecio = Number($pctPrecio.value || 0);
+        const pctCosto  = Number($pctCosto.value  || 0);
+        if (pctPrecio === 0 && pctCosto === 0) {
+          setStatus('Ingresá al menos un porcentaje distinto de 0.', 'err');
+          return;
+        }
+        $btnPrev.disabled = true;
+        $btnPrev.textContent = '⏳';
+        $status.style.display = 'none';
+        try {
+          const token = localStorage.getItem('token');
+          const body = window._getApBody ? window._getApBody() : {
+            porcentaje_precio: pctPrecio,
+            porcentaje_costo: pctCosto,
+            filtro: $filtro.value,
+            categoria: $catSel.value,
+          };
+          const r = await fetch('/api/productos/actualizar-precios?preview=1', {
+            method: 'PUT',
+            headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const d = await r.json();
+          if (!d.ok) { setStatus(d.error || 'Error', 'err'); return; }
+
+          $prevCount.textContent = d.total;
+          $prevBody.innerHTML = d.productos.map(p => `
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 12px;color:var(--text)">${p.nombre}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--muted)">$${money(p.precio_actual)}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--accent);font-weight:700">$${money(p.precio_nuevo)}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--muted)">${p.costo_nuevo ? '$'+money(p.costo_nuevo) : '—'}</td>
+            </tr>`).join('');
+          $preview.style.display = '';
+          $btnApl.disabled = false;
+        } catch(e) {
+          setStatus('Error al generar vista previa.', 'err');
+        } finally {
+          $btnPrev.disabled = false;
+          $btnPrev.textContent = '👁 Vista previa';
+        }
+      });
+
+      // Aplicar
+      $btnApl.addEventListener('click', async () => {
+        const pctPrecio = Number($pctPrecio.value || 0);
+        const pctCosto  = Number($pctCosto.value  || 0);
+        const filtro    = $filtro.value;
+        const cat       = $catSel.value;
+        const desc      = filtro === 'categoria' ? `categoría "${cat}"` : 'todos los productos';
+
+        const ok = await Swal.fire({
+          title: '¿Confirmar actualización?',
+          html: `Se actualizarán los precios de <strong>${$prevCount.textContent} productos</strong> (${desc}).<br>Esta acción no se puede deshacer fácilmente.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, actualizar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#00c470',
+        });
+        if (!ok.isConfirmed) return;
+
+        $btnApl.disabled = true;
+        $btnApl.textContent = '⏳ Aplicando…';
+        try {
+          const token = localStorage.getItem('token');
+          const r = await fetch('/api/productos/actualizar-precios', {
+            method: 'PUT',
+            headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(window._getApBody ? window._getApBody() : { porcentaje_precio: pctPrecio, porcentaje_costo: pctCosto, filtro, categoria: cat }),
+          });
+          const d = await r.json();
+          if (d.ok) {
+            setStatus(`✅ ${d.afectados} productos actualizados correctamente.`, 'ok');
+            $btnApl.disabled = true;
+            setTimeout(() => { $dlg.close(); if (typeof cargarProductos === 'function') cargarProductos(); }, 1500);
+          } else {
+            setStatus(d.error || 'Error al aplicar.', 'err');
+          }
+        } catch {
+          setStatus('Error de conexión.', 'err');
+        } finally {
+          $btnApl.textContent = '✅ Aplicar cambios';
+        }
+      });
+    })();
+    </script>
   </body>
 </html>

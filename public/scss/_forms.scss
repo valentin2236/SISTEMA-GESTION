@@ -13,6 +13,20 @@
   }
 }
 
+.form-label {
+  display: block;
+  font-size: $text-xs; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--text2); margin-bottom: $space-2;
+}
+
+.form-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 // Base compartida
 %input-base {
   width: 100%;

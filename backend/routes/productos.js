@@ -108,6 +108,109 @@ router.get("/", async (req, res) => {
   }
 });
 
+// PUT /api/productos/ajustar-stock-masivo
+router.put("/ajustar-stock-masivo", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { operacion, cantidad, ids } = req.body;
+    const cant = Number(cantidad ?? 0);
+    if (!['set','add','sub'].includes(operacion)) return res.status(400).json({ error: "Operación inválida" });
+    if (cant < 0) return res.status(400).json({ error: "La cantidad no puede ser negativa" });
+    if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: "Sin productos seleccionados" });
+
+    const where = `WHERE id IN (${ids.map(() => "?").join(",")}) AND activo = 1`;
+    let sql;
+    if (operacion === 'set') sql = `UPDATE productos SET stock = ? ${where}`;
+    else if (operacion === 'add') sql = `UPDATE productos SET stock = stock + ? ${where}`;
+    else sql = `UPDATE productos SET stock = MAX(0, stock - ?) ${where}`;
+
+    const result = await run(sql, [cant, ...ids]);
+    await registrarAuditoria(req.user?.id, "ajustar_stock_masivo",
+      `operacion=${operacion} cantidad=${cant} ids=[${ids.join(',')}] afectados=${result.changes}`);
+    res.json({ ok: true, afectados: result.changes });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /api/productos/cambiar-categoria-masivo
+router.put("/cambiar-categoria-masivo", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { categoria, ids } = req.body;
+    const cat = String(categoria ?? "").trim();
+    if (!cat) return res.status(400).json({ error: "La categoría no puede estar vacía" });
+    if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: "Sin productos seleccionados" });
+
+    const where = `WHERE id IN (${ids.map(() => "?").join(",")})`;
+    const result = await run(`UPDATE productos SET categoria = ? ${where}`, [cat, ...ids]);
+    await registrarAuditoria(req.user?.id, "cambiar_categoria_masivo",
+      `categoria="${cat}" ids=[${ids.join(',')}] afectados=${result.changes}`);
+    res.json({ ok: true, afectados: result.changes });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /api/productos/actualizar-precios  — aumento masivo por porcentaje
+router.put("/actualizar-precios", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { porcentaje_precio, porcentaje_costo, filtro = "todos", categoria, ids } = req.body;
+
+    const pctPrecio = Number(porcentaje_precio ?? 0);
+    const pctCosto  = Number(porcentaje_costo  ?? 0);
+
+    if (pctPrecio === 0 && pctCosto === 0)
+      return res.status(400).json({ error: "Ingresá al menos un porcentaje mayor a 0" });
+
+    // Construir WHERE según filtro
+    let where = "WHERE activo = 1";
+    let params = [];
+    if (filtro === "categoria" && categoria) {
+      where += " AND categoria = ?";
+      params.push(categoria);
+    } else if (filtro === "ids" && Array.isArray(ids) && ids.length) {
+      where += ` AND id IN (${ids.map(() => "?").join(",")})`;
+      params.push(...ids);
+    }
+
+    // Preview: devolver cuántos productos se afectan
+    if (req.query.preview === "1") {
+      const rows = await all(
+        `SELECT id, nombre, precio, costo FROM productos ${where} ORDER BY nombre ASC LIMIT 200`,
+        params
+      );
+      return res.json({
+        ok: true,
+        total: rows.length,
+        productos: rows.map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          precio_actual: p.precio,
+          precio_nuevo: pctPrecio !== 0 ? Math.round(p.precio * (1 + pctPrecio / 100) * 100) / 100 : p.precio,
+          costo_actual: p.costo,
+          costo_nuevo: pctCosto !== 0 ? Math.round((p.costo || 0) * (1 + pctCosto / 100) * 100) / 100 : p.costo,
+        })),
+      });
+    }
+
+    // Aplicar actualización
+    const setClauses = [];
+    if (pctPrecio !== 0) setClauses.push(`precio = ROUND(precio * ${1 + pctPrecio / 100}, 2)`);
+    if (pctCosto  !== 0) setClauses.push(`costo  = ROUND(COALESCE(costo,0) * ${1 + pctCosto / 100}, 2)`);
+
+    const result = await run(
+      `UPDATE productos SET ${setClauses.join(", ")} ${where}`,
+      params
+    );
+
+    await registrarAuditoria(req.user?.id, "actualizar_precios_masivo",
+      `filtro=${filtro} pct_precio=${pctPrecio}% pct_costo=${pctCosto}% afectados=${result.changes}`);
+
+    res.json({ ok: true, afectados: result.changes });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /api/productos/barcode-lookup/:codigo  (solo plan Ultra)
 router.get("/barcode-lookup/:codigo", requireAuth, requireFeature("ia"), async (req, res) => {
   const { codigo } = req.params;

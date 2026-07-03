@@ -205,7 +205,7 @@ function renderProductos(productos) {
 
   if (!productos.length) {
     $tbody.innerHTML = `
-      <tr><td colspan="8">
+      <tr><td colspan="${window._modoSeleccion?.() ? 9 : 8}">
         <div class="empty-state">
           <span class="empty-icon">📦</span>
           <span>No hay productos que coincidan con los filtros.</span>
@@ -223,8 +223,13 @@ function renderProductos(productos) {
         ? `<img src="${p.imagen}" class="prod-img" onclick="verImagen('${p.imagen}')" alt="${p.nombre}"/>`
         : `<div class="prod-img-placeholder">📦</div>`;
 
+      const chkCol = window._modoSeleccion?.()
+        ? `<td class="col-check"><input type="checkbox" data-id="${p.id}" ${window._idsSeleccionados?.().has(String(p.id)) ? 'checked' : ''}></td>`
+        : '';
+
       return `
       <tr>
+        ${chkCol}
         <td>${imgEl}</td>
         <td>
           <div class="prod-nombre">${p.nombre}</div>
@@ -1785,4 +1790,201 @@ cargarProductos();
     const btnCR = document.getElementById('btn-carga-rapida');
     if (btnCR) btnCR.style.display = 'none';
   }
+})();
+
+/* ===================== MODO SELECCIÓN ===================== */
+(function() {
+  let modoSeleccion = false;
+  let idsSeleccionados = new Set();
+
+  const $btnSel      = document.getElementById('btn-seleccionar');
+  const $barra       = document.getElementById('barra-seleccion');
+  const $selCount    = document.getElementById('sel-count');
+  const $chkTodos    = document.getElementById('chk-todos');
+  const $colChecks   = document.querySelectorAll('.col-check');
+
+  function getIdsArray() { return [...idsSeleccionados].map(Number); }
+
+  function actualizarBarra() {
+    const n = idsSeleccionados.size;
+    $selCount.textContent = `${n} seleccionado${n !== 1 ? 's' : ''}`;
+    $barra.style.display  = modoSeleccion ? '' : 'none';
+    const btns = $barra.querySelectorAll('.sel-btn');
+    btns.forEach(b => b.disabled = n === 0);
+  }
+
+  function activarModo() {
+    modoSeleccion = true;
+    idsSeleccionados.clear();
+    $btnSel.textContent = '✕ Salir';
+    $btnSel.classList.add('btn-danger');
+    // Mostrar columna checkbox en header
+    document.querySelectorAll('.col-check').forEach(el => el.style.display = '');
+    // Re-render para incluir checkboxes en filas
+    filtrarYMostrar();
+    actualizarBarra();
+  }
+
+  function desactivarModo() {
+    modoSeleccion = false;
+    idsSeleccionados.clear();
+    $btnSel.textContent = '☑️ Seleccionar';
+    $btnSel.classList.remove('btn-danger');
+    document.querySelectorAll('.col-check').forEach(el => el.style.display = 'none');
+    filtrarYMostrar();
+    actualizarBarra();
+  }
+
+  $btnSel?.addEventListener('click', () => modoSeleccion ? desactivarModo() : activarModo());
+  document.getElementById('sel-btn-cancelar')?.addEventListener('click', desactivarModo);
+
+  // Checkbox maestro
+  $chkTodos?.addEventListener('change', () => {
+    const checks = $tbody.querySelectorAll('input[type=checkbox][data-id]');
+    checks.forEach(c => {
+      c.checked = $chkTodos.checked;
+      if ($chkTodos.checked) idsSeleccionados.add(c.dataset.id);
+      else idsSeleccionados.delete(c.dataset.id);
+    });
+    actualizarBarra();
+  });
+
+  // Delegación de clicks en checkboxes de fila
+  $tbody.addEventListener('change', e => {
+    if (!e.target.matches('input[type=checkbox][data-id]')) return;
+    if (e.target.checked) idsSeleccionados.add(e.target.dataset.id);
+    else idsSeleccionados.delete(e.target.dataset.id);
+    // Actualizar estado del maestro
+    const todos = $tbody.querySelectorAll('input[type=checkbox][data-id]');
+    $chkTodos.indeterminate = idsSeleccionados.size > 0 && idsSeleccionados.size < todos.length;
+    $chkTodos.checked = idsSeleccionados.size === todos.length && todos.length > 0;
+    actualizarBarra();
+  });
+
+  // Exponer para que renderProductos pueda usarlo
+  window._modoSeleccion    = () => modoSeleccion;
+  window._idsSeleccionados = () => idsSeleccionados;
+
+  /* ---------- Ajustar stock masivo ---------- */
+  document.getElementById('sel-btn-stock')?.addEventListener('click', () => {
+    const n = idsSeleccionados.size;
+    if (!n) return;
+    document.getElementById('asm-count').textContent = n;
+    document.getElementById('asm-cantidad').value = '';
+    document.getElementById('asm-status').style.display = 'none';
+    document.getElementById('dlg-ajustar-stock-masivo').showModal();
+  });
+
+  document.getElementById('asm-btn-aplicar')?.addEventListener('click', async () => {
+    const operacion = document.getElementById('asm-operacion').value;
+    const cantidad  = Number(document.getElementById('asm-cantidad').value ?? 0);
+    const $st       = document.getElementById('asm-status');
+    const $btn      = document.getElementById('asm-btn-aplicar');
+
+    if (isNaN(cantidad) || cantidad < 0) {
+      $st.textContent = '⚠ Ingresá una cantidad válida.';
+      $st.style.display = ''; $st.style.background = 'rgba(239,68,68,.12)'; $st.style.color = 'var(--danger)';
+      return;
+    }
+    $btn.disabled = true; $btn.textContent = '⏳ Aplicando…';
+    try {
+      const r = await apiFetch('/api/productos/ajustar-stock-masivo', {
+        method: 'PUT', body: JSON.stringify({ operacion, cantidad, ids: getIdsArray() })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        $st.textContent = `✅ Stock actualizado en ${d.afectados} productos.`;
+        $st.style.background = 'rgba(0,196,112,.12)'; $st.style.color = 'var(--accent)';
+        $st.style.display = '';
+        setTimeout(() => { document.getElementById('dlg-ajustar-stock-masivo').close(); desactivarModo(); cargarProductos(); }, 1400);
+      } else {
+        $st.textContent = '❌ ' + (d.error || 'Error'); $st.style.background = 'rgba(239,68,68,.12)'; $st.style.color = 'var(--danger)'; $st.style.display = '';
+      }
+    } catch { $st.textContent = 'Error de conexión.'; $st.style.display = ''; }
+    finally { $btn.disabled = false; $btn.textContent = '✅ Aplicar'; }
+  });
+
+  /* ---------- Cambiar categoría masivo ---------- */
+  document.getElementById('sel-btn-cat')?.addEventListener('click', async () => {
+    const n = idsSeleccionados.size;
+    if (!n) return;
+    document.getElementById('cc-count').textContent = n;
+    document.getElementById('cc-categoria-nueva').value = '';
+    document.getElementById('cc-status').style.display = 'none';
+    // Poblar categorías existentes
+    const cats = [...new Set(productosCache.map(p => p.categoria).filter(Boolean))].sort();
+    document.getElementById('cc-categoria-existente').innerHTML =
+      '<option value="">— Elegir existente —</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    document.getElementById('dlg-cambiar-cat').showModal();
+  });
+
+  document.getElementById('cc-btn-aplicar')?.addEventListener('click', async () => {
+    const catExistente = document.getElementById('cc-categoria-existente').value;
+    const catNueva     = document.getElementById('cc-categoria-nueva').value.trim();
+    const cat = catNueva || catExistente;
+    const $st = document.getElementById('cc-status');
+    const $btn = document.getElementById('cc-btn-aplicar');
+    if (!cat) {
+      $st.textContent = '⚠ Seleccioná o escribí una categoría.';
+      $st.style.display = ''; $st.style.background = 'rgba(239,68,68,.12)'; $st.style.color = 'var(--danger)';
+      return;
+    }
+    $btn.disabled = true; $btn.textContent = '⏳ Aplicando…';
+    try {
+      const r = await apiFetch('/api/productos/cambiar-categoria-masivo', {
+        method: 'PUT', body: JSON.stringify({ categoria: cat, ids: getIdsArray() })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        $st.textContent = `✅ Categoría actualizada en ${d.afectados} productos.`;
+        $st.style.background = 'rgba(0,196,112,.12)'; $st.style.color = 'var(--accent)'; $st.style.display = '';
+        setTimeout(() => { document.getElementById('dlg-cambiar-cat').close(); desactivarModo(); cargarProductos(); }, 1400);
+      } else {
+        $st.textContent = '❌ ' + (d.error || 'Error'); $st.style.background = 'rgba(239,68,68,.12)'; $st.style.color = 'var(--danger)'; $st.style.display = '';
+      }
+    } catch { $st.textContent = 'Error de conexión.'; $st.style.display = ''; }
+    finally { $btn.disabled = false; $btn.textContent = '✅ Aplicar'; }
+  });
+
+  /* ---------- Actualizar precios desde selección ---------- */
+  document.getElementById('sel-btn-precios')?.addEventListener('click', async () => {
+    const n = idsSeleccionados.size;
+    if (!n) return;
+    // Abrir modal de actualizar precios en modo "ids"
+    document.getElementById('ap-filtro-row').style.display = 'none';
+    document.getElementById('ap-cat-row').style.display    = 'none';
+    document.getElementById('ap-sel-info').style.display   = '';
+    document.getElementById('ap-sel-count').textContent    = n;
+    document.getElementById('ap-preview-wrap').style.display = 'none';
+    document.getElementById('ap-status').style.display     = 'none';
+    document.getElementById('ap-btn-aplicar').disabled     = true;
+    document.getElementById('ap-pct-precio').value         = '';
+    document.getElementById('ap-pct-costo').value          = '';
+    // Marcar que viene de selección
+    document.getElementById('dlg-actualizar-precios').dataset.modo = 'ids';
+    document.getElementById('dlg-actualizar-precios').showModal();
+  });
+
+  // También resetear el modal cuando se abre desde el botón normal
+  document.getElementById('btn-actualizar-precios')?.addEventListener('click', () => {
+    document.getElementById('ap-filtro-row').style.display = '';
+    document.getElementById('ap-sel-info').style.display   = 'none';
+    document.getElementById('dlg-actualizar-precios').dataset.modo = 'normal';
+  });
+
+  // Parchar el preview y aplicar para que usen ids cuando corresponde
+  const _getApBody = () => {
+    const modo = document.getElementById('dlg-actualizar-precios').dataset.modo;
+    const pctPrecio = Number(document.getElementById('ap-pct-precio').value || 0);
+    const pctCosto  = Number(document.getElementById('ap-pct-costo').value  || 0);
+    if (modo === 'ids') {
+      return { porcentaje_precio: pctPrecio, porcentaje_costo: pctCosto, filtro: 'ids', ids: getIdsArray() };
+    }
+    return {
+      porcentaje_precio: pctPrecio, porcentaje_costo: pctCosto,
+      filtro: document.getElementById('ap-filtro').value,
+      categoria: document.getElementById('ap-categoria').value,
+    };
+  };
+  window._getApBody = _getApBody;
 })();
