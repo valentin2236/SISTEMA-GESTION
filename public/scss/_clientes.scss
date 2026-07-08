@@ -54,6 +54,24 @@ body.clientes-page {
 
   .cli-search-panel {
     padding: $space-3 $space-4;
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+  }
+
+  .cli-filtro-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 6px 12px;
+    transition: 0.15s;
+
+    &.active {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--danger);
+      color: var(--danger);
+      font-weight: 700;
+    }
   }
 
   .cli-search-input {
@@ -73,8 +91,38 @@ body.clientes-page {
   // Columnas de tabla
   // ─────────────────────────────────────────
 
-  .col-id { width: 50px; }
-  .col-acciones { width: 200px; }
+  .col-id      { width: 50px; }
+  .col-saldo   { width: 140px; white-space: nowrap; }
+  .col-acciones{ width: 200px; }
+
+  // Badges de saldo en tabla
+  .saldo-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    &--deuda {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    &--ok {
+      background: rgba(0, 196, 112, 0.08);
+      color: var(--accent);
+      border: 1px solid rgba(0, 196, 112, 0.2);
+    }
+
+    &--favor {
+      background: rgba(96, 165, 250, 0.1);
+      color: #60a5fa;
+      border: 1px solid rgba(96, 165, 250, 0.25);
+    }
+  }
 
   // ─────────────────────────────────────────
   // Avatar de cliente

@@ -78,8 +78,6 @@
         { href: "/admin/proveedores.html",   icon: "🚚", label: "Proveedores", feature: "proveedores" },
         { href: "/admin/compras.html",       icon: "🛒", label: "Compras", feature: "compras" },
         { href: "/admin/ganancias.html",     icon: "📈", label: "Ganancias", feature: "ganancias" },
-        { href: "/admin/cierre.html",        icon: "🧮", label: "Cierre de Caja", feature: "reportes" },
-        { href: "/admin/historialcaja.html", icon: "📅", label: "Historial Caja", feature: "reportes" },
         { href: "/admin/usuarios.html",      icon: "🔑", label: "Usuarios", feature: null },
         { href: "/admin/auditoria.html",     icon: "🔍", label: "Auditoría", feature: "auditoria" },
         { href: "/config.html",              icon: "⚙️", label: "Configuración", feature: null },

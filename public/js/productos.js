@@ -19,6 +19,47 @@ async function apiFetch(url, opts = {}) {
   return res;
 }
 
+/* ── Barcode lookup ── */
+async function lookupBarcode(code) {
+  try {
+    const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const d = await r.json();
+    if (d.status === 1 && d.product) {
+      const p = d.product;
+      return {
+        nombre: p.product_name_es || p.product_name || p.abbreviated_product_name || "",
+        categoria: (p.categories_tags?.[0] || "").replace(/^[a-z]{2}:/, ""),
+        fuente: "Open Food Facts"
+      };
+    }
+  } catch {}
+  try {
+    const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`);
+    const d = await r.json();
+    if (d.items?.length) {
+      const item = d.items[0];
+      return { nombre: item.title || "", categoria: item.category || "", fuente: "UPC Item DB" };
+    }
+  } catch {}
+  return null;
+}
+
+async function autocompletarDesdeBarcode(code) {
+  if (!code || !/^\d{6,}$/.test(code)) return;
+  if ($scanHint) { $scanHint.textContent = "🔍 Buscando en base de datos…"; $scanHint.style.color = "var(--accent)"; }
+  const info = await lookupBarcode(code);
+  if (info?.nombre) {
+    if ($prodNombre && !$prodNombre.value) $prodNombre.value = info.nombre;
+    if ($prodCategoria && !$prodCategoria.value && info.categoria) $prodCategoria.value = info.categoria;
+    if ($scanHint) { $scanHint.textContent = `✅ Datos de ${info.fuente}`; $scanHint.style.color = "var(--success, green)"; }
+  } else {
+    if ($scanHint) { $scanHint.textContent = "No encontrado en base de datos — completá manualmente"; $scanHint.style.color = ""; }
+  }
+  setTimeout(() => {
+    if ($scanHint) { $scanHint.textContent = "Apuntá el escáner al código de barras o presioná 📷"; $scanHint.style.color = ""; }
+  }, 3000);
+}
+
 /* ── DOM refs ── */
 const $tbody = document.getElementById("tbody-productos");
 const $search = document.getElementById("search");
@@ -113,6 +154,8 @@ function poblarCategorias(productos) {
       .join("");
 }
 
+let productosFiltrados = [];
+
 /* ── Aplicar filtros sobre el cache ── */
 function aplicarFiltros() {
   let resultado = [...productosCache];
@@ -145,8 +188,59 @@ function aplicarFiltros() {
   if (filtros.stock === "out")
     resultado = resultado.filter((p) => Number(p.stock) <= 0);
 
+  productosFiltrados = resultado;
   renderProductos(resultado);
   actualizarStats(resultado);
+}
+
+/* ===================== IMPRIMIR CÓDIGOS DE BARRAS ===================== */
+function imprimirCodigosBarras() {
+  const conSku = productosFiltrados.filter(p => p.sku);
+  if (!conSku.length) {
+    Swal.fire({ icon: "info", title: "Sin códigos", text: "No hay productos con código de barras en la lista actual.", timer: 2000, showConfirmButton: false });
+    return;
+  }
+
+  const html = `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Códigos de barras</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#fff;padding:10mm}
+.no-print{margin-bottom:10mm}
+.no-print button{padding:8px 20px;font-size:14px;cursor:pointer;background:#1e9de8;color:#fff;border:none;border-radius:6px}
+.no-print span{margin-left:12px;font-size:13px;color:#666}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm}
+.card{border:1px solid #ccc;border-radius:4px;padding:3mm;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.nombre{font-size:9px;font-weight:700;margin-bottom:1mm;line-height:1.3;max-height:2.6em;overflow:hidden}
+.sku{font-size:8px;color:#666;font-family:monospace;margin-bottom:1mm}
+.precio{font-size:11px;font-weight:700;margin-top:2mm}
+img{max-width:100%;height:auto;display:block;margin:0 auto}
+@media print{@page{margin:8mm}.no-print{display:none}}
+</style>
+</head><body>
+<div class="no-print">
+  <button onclick="window.print()">🖨 Imprimir</button>
+  <span>${conSku.length} producto${conSku.length !== 1 ? "s" : ""} con código de barras</span>
+</div>
+<div class="grid">
+${conSku.map(p => `<div class="card">
+  <div class="nombre">${p.nombre}</div>
+  <div class="sku">${p.sku}</div>
+  <img src="/api/barcode/${encodeURIComponent(p.sku)}" alt="${p.sku}">
+  <div class="precio">$${money(p.precio)}</div>
+</div>`).join("\n")}
+</div>
+</body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) {
+    Swal.fire({ icon: "warning", title: "Bloqueador de popups activo", text: "Permitir ventanas emergentes para este sitio", timer: 3000, showConfirmButton: false });
+    return;
+  }
+  w.document.write(html);
+  w.document.close();
 }
 
 /* ── Listeners de filtros ── */
@@ -356,24 +450,89 @@ document.addEventListener("keydown", (e) => {
       if (scanBuffer.length >= 4 && $prodSku) {
         $prodSku.value = scanBuffer;
         $prodSku.style.borderColor = "var(--accent)";
-        setTimeout(() => {
-          $prodSku.style.borderColor = "";
-        }, 1000);
-        if ($scanHint) {
-          $scanHint.textContent = `✅ Código capturado: ${scanBuffer}`;
-          $scanHint.style.color = "var(--accent)";
-          setTimeout(() => {
-            $scanHint.textContent =
-              "Apuntá el escáner al código de barras o presioná 📷";
-            $scanHint.style.color = "";
-          }, 2000);
-        }
+        setTimeout(() => { $prodSku.style.borderColor = ""; }, 1000);
+        autocompletarDesdeBarcode(scanBuffer);
       }
       scanBuffer = "";
     }, 80);
   } else {
     scanBuffer = e.key.length === 1 ? e.key : "";
   }
+});
+
+/* ===================== SCANNER GLOBAL (página sin modal abierto) ===================== */
+let gScanBuf = "";
+let gScanTmr = null;
+let gScanLast = 0;
+
+document.addEventListener("keydown", (e) => {
+  // Solo cuando ningún modal está abierto
+  if ($dlg?.open || $dlgCR?.open ||
+      document.getElementById("dlg-importar")?.open ||
+      document.getElementById("dlg-foto-import")?.open ||
+      document.getElementById("dlg-pdf-import")?.open ||
+      document.getElementById("dlg-imagen")?.open) return;
+
+  // No interferir con inputs/textarea donde el usuario escribe
+  const tag = (document.activeElement?.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+  if (e.key.length !== 1) { gScanBuf = ""; return; }
+
+  const now = Date.now();
+  if (now - gScanLast > 120) gScanBuf = ""; // pausa larga = no es escáner
+  gScanLast = now;
+  gScanBuf += e.key;
+
+  clearTimeout(gScanTmr);
+  gScanTmr = setTimeout(async () => {
+    const code = gScanBuf.trim();
+    gScanBuf = "";
+    if (code.length < 4 || !/^\d{4,}$/.test(code)) return;
+
+    // Buscar en el cache local (viene de la DB)
+    const existente = productosCache.find(p => String(p.sku || "").trim() === code);
+
+    if (existente) {
+      const r = await Swal.fire({
+        icon: "info",
+        title: existente.nombre,
+        html: `<div style="text-align:left;line-height:2">
+          <span style="color:var(--muted);font-size:12px">SKU: ${existente.sku}</span><br>
+          <b>Precio de venta:</b> $${money(existente.precio)}<br>
+          <b>Costo:</b> $${money(existente.costo || 0)}<br>
+          <b>Stock:</b> ${existente.stock}
+          ${existente.categoria ? `<br><b>Categoría:</b> ${existente.categoria}` : ""}
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: "Editar",
+        cancelButtonText: "Cerrar",
+        confirmButtonColor: "#1e9de8",
+      });
+      if (r.isConfirmed) editarProducto(existente.id);
+    } else {
+      // No existe → abrir modal nuevo con SKU y buscar nombre en APIs externas
+      limpiarForm();
+      if ($dlgTitulo) $dlgTitulo.textContent = "Nuevo producto";
+      if ($prodSku) $prodSku.value = code;
+      $dlg?.showModal();
+      setTimeout(() => {
+        $prodNombre?.focus();
+        autocompletarDesdeBarcode(code);
+      }, 80);
+    }
+  }, 80);
+});
+
+/* ── Lookup manual desde campo SKU ── */
+$prodSku?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    autocompletarDesdeBarcode($prodSku.value.trim());
+  }
+});
+$prodSku?.addEventListener("blur", () => {
+  autocompletarDesdeBarcode($prodSku.value.trim());
 });
 
 /* ===================== GUARDAR PRODUCTO ===================== */
@@ -472,6 +631,7 @@ async function editarProducto(id) {
   }
 }
 window.editarProducto = editarProducto;
+window.imprimirCodigosBarras = imprimirCodigosBarras;
 
 /* ===================== ELIMINAR ===================== */
 async function eliminarProducto(id) {
@@ -733,7 +893,7 @@ function procesarArchivoImport(file) {
               (p) => `
           <tr>
             <td>${p.nombre}</td>
-            <td>${p.sku || "–"}</td>
+            <td>${p.sku || "<span style='color:var(--muted);font-size:11px'>vacío</span>"}</td>
             <td>${p.precio || "–"}</td>
             <td>${p.costo || "–"}</td>
             <td>${p.stock || "0"}</td>
@@ -1009,6 +1169,10 @@ function renderTablaFoto(productos) {
                value="${escHtml(p.nombre)}" placeholder="Nombre del producto" />
       </td>
       <td>
+        <input class="field-input field-input--sm foto-field" data-i="${i}" data-field="sku"
+               value="${escHtml(p.sku || '')}" placeholder="Escanear o escribir" />
+      </td>
+      <td>
         <input class="field-input field-input--sm foto-field" data-i="${i}" data-field="precio"
                type="number" min="0" step="0.01" value="${p.precio || 0}" />
       </td>
@@ -1114,15 +1278,12 @@ $btnImportarFoto?.addEventListener("click", async () => {
     const row = document.getElementById(`foto-row-${i}`);
 
     // Leer valores actuales desde los inputs de la fila (el user pudo editarlos)
-    const nombre = row?.querySelector('[data-field="nombre"]')?.value?.trim();
-    const precio =
-      parseFloat(row?.querySelector('[data-field="precio"]')?.value) || 0;
-    const costo =
-      parseFloat(row?.querySelector('[data-field="costo"]')?.value) || 0;
-    const stock =
-      parseInt(row?.querySelector('[data-field="stock"]')?.value) || 0;
-    const categoria =
-      row?.querySelector('[data-field="categoria"]')?.value?.trim() || "";
+    const nombre    = row?.querySelector('[data-field="nombre"]')?.value?.trim();
+    const sku       = row?.querySelector('[data-field="sku"]')?.value?.trim() || "";
+    const precio    = parseFloat(row?.querySelector('[data-field="precio"]')?.value) || 0;
+    const costo     = parseFloat(row?.querySelector('[data-field="costo"]')?.value)  || 0;
+    const stock     = parseInt(row?.querySelector('[data-field="stock"]')?.value)    || 0;
+    const categoria = row?.querySelector('[data-field="categoria"]')?.value?.trim()  || "";
 
     if (!nombre) {
       errores++;
@@ -1134,6 +1295,7 @@ $btnImportarFoto?.addEventListener("click", async () => {
         method: "POST",
         body: JSON.stringify({
           nombre,
+          sku: sku || undefined,
           precio,
           costo,
           stock,
@@ -1358,6 +1520,10 @@ function renderTablaPdf(productos) {
                value="${escHtml(p.nombre)}" placeholder="Nombre del producto" />
       </td>
       <td>
+        <input class="field-input field-input--sm pdf-field" data-i="${i}" data-field="sku"
+               value="${escHtml(p.sku || '')}" placeholder="Escanear o escribir" />
+      </td>
+      <td>
         <input class="field-input field-input--sm pdf-field" data-i="${i}" data-field="precio"
                type="number" min="0" step="0.01" value="${p.precio || 0}" />
       </td>
@@ -1440,18 +1606,19 @@ $btnPdfImportar?.addEventListener('click', async () => {
   for (const check of checks) {
     const i = +check.dataset.i;
     const row = document.getElementById(`pdf-row-${i}`);
-    const nombre   = row?.querySelector('[data-field="nombre"]')?.value?.trim();
-    const precio   = parseFloat(row?.querySelector('[data-field="precio"]')?.value) || 0;
-    const costo    = parseFloat(row?.querySelector('[data-field="costo"]')?.value)  || 0;
-    const stock    = parseInt(row?.querySelector('[data-field="stock"]')?.value)    || 0;
-    const categoria= row?.querySelector('[data-field="categoria"]')?.value?.trim() || '';
+    const nombre    = row?.querySelector('[data-field="nombre"]')?.value?.trim();
+    const sku       = row?.querySelector('[data-field="sku"]')?.value?.trim()       || '';
+    const precio    = parseFloat(row?.querySelector('[data-field="precio"]')?.value) || 0;
+    const costo     = parseFloat(row?.querySelector('[data-field="costo"]')?.value)  || 0;
+    const stock     = parseInt(row?.querySelector('[data-field="stock"]')?.value)    || 0;
+    const categoria = row?.querySelector('[data-field="categoria"]')?.value?.trim() || '';
 
     if (!nombre) { errores++; continue; }
 
     try {
       const res = await apiFetch('/api/productos', {
         method: 'POST',
-        body: JSON.stringify({ nombre, precio, costo, stock, categoria, activo: 1 }),
+        body: JSON.stringify({ nombre, sku: sku || undefined, precio, costo, stock, categoria, activo: 1 }),
       });
       if (!res.ok) throw new Error();
       ok++;

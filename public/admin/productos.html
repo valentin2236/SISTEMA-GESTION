@@ -39,6 +39,14 @@
           >
             📤 Exportar Excel
           </button>
+          <button
+            id="btn-imprimir-codigos"
+            class="btn btn-outline"
+            title="Imprimir códigos de barras de los productos visibles"
+            onclick="imprimirCodigosBarras()"
+          >
+            🖨 Imprimir códigos
+          </button>
           <button id="btn-carga-rapida" class="btn btn-secondary" title="Escanear código de barras y cargar rápido" style="display:none">
             ⚡ Carga rápida
           </button>
@@ -457,7 +465,7 @@
     </dialog>
 
     <!-- ===== MODAL: Importar Excel ===== -->
-    <dialog id="dlg-importar" class="dlg dlg-wide">
+    <dialog id="dlg-importar" class="dlg dlg-xl">
       <div class="dlg-card">
         <div class="dlg-head">
           <h2>📥 Importar desde Excel</h2>
@@ -516,7 +524,7 @@
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>SKU</th>
+                    <th>SKU / Cód. barras</th>
                     <th>Precio</th>
                     <th>Costo</th>
                     <th>Stock</th>
@@ -559,7 +567,7 @@
       </button>
     </dialog>
 
-    <dialog id="dlg-foto-import" class="dlg dlg-wide">
+    <dialog id="dlg-foto-import" class="dlg dlg-xl">
       <div class="dlg-card">
         <div class="dlg-head">
           <h2>📷 Importar desde foto</h2>
@@ -627,10 +635,11 @@
                       />
                     </th>
                     <th>Nombre</th>
+                    <th style="width: 130px">Cód. barras</th>
                     <th style="width: 100px">Precio venta</th>
                     <th style="width: 90px">Costo</th>
                     <th style="width: 80px">Stock</th>
-                    <th style="width: 110px">Categoría</th>
+                    <th style="width: 100px">Categoría</th>
                     <th style="width: 32px"></th>
                   </tr>
                 </thead>
@@ -657,7 +666,7 @@
     </dialog>
 
     <!-- ===== MODAL: Importar desde PDF ===== -->
-    <dialog id="dlg-pdf-import" class="dlg dlg-wide">
+    <dialog id="dlg-pdf-import" class="dlg dlg-xl">
       <div class="dlg-card">
         <div class="dlg-head">
           <h2>📄 Importar desde PDF</h2>
@@ -732,10 +741,11 @@
                       />
                     </th>
                     <th>Nombre</th>
+                    <th style="width: 130px">Cód. barras</th>
                     <th style="width: 100px">Precio venta</th>
                     <th style="width: 90px">Costo</th>
                     <th style="width: 80px">Stock</th>
-                    <th style="width: 110px">Categoría</th>
+                    <th style="width: 100px">Categoría</th>
                     <th style="width: 32px"></th>
                   </tr>
                 </thead>

@@ -10,7 +10,7 @@
 
   <main class="caja-wrap">
 
-    <!-- ── Barra superior ── -->
+    <!-- ── Topbar ── -->
     <div class="caja-topbar">
       <div class="caja-topbar-left">
         <h1 class="caja-title">💵 Caja</h1>
@@ -21,157 +21,190 @@
       </div>
     </div>
 
-    <!-- ── Estado: caja cerrada ── -->
-    <div id="vista-cerrada" class="caja-vista" style="display:none">
-      <div class="caja-empty-state">
-        <div class="ces-icon">🔒</div>
-        <div class="ces-title">Caja cerrada</div>
-        <div class="ces-sub">Ingresá el monto inicial para comenzar la jornada</div>
-        <div class="ces-form">
-          <div class="field">
-            <label class="field-label">Monto inicial en caja ($)</label>
-            <input
-              id="monto-inicial"
-              class="field-input field-input--highlight"
-              type="number"
-              step="0.01"
-              min="0"
-              value="0"
-              placeholder="0,00"
-            />
+    <!-- ── Pestañas ── -->
+    <div class="caja-tabs">
+      <button class="caja-tab active" data-tab="estado">💵 Caja</button>
+      <button class="caja-tab caja-tab--locked" data-tab="movimientos" id="tab-btn-movimientos">
+        💸 Movimientos
+      </button>
+      <button class="caja-tab caja-tab--locked" data-tab="cierre" id="tab-btn-cierre">
+        🔒 Cierre
+      </button>
+      <button class="caja-tab" data-tab="historial">📅 Historial</button>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: CAJA (estado / apertura)
+    ══════════════════════════════════════ -->
+    <div id="tab-estado" class="caja-tab-panel">
+
+      <!-- Caja cerrada -->
+      <div id="vista-cerrada" style="display:none">
+        <div class="caja-empty-state">
+          <div class="ces-icon">🔒</div>
+          <div class="ces-title">Caja cerrada</div>
+          <div class="ces-sub">Ingresá el monto inicial para comenzar la jornada</div>
+          <div class="ces-form">
+            <div class="field">
+              <label class="field-label">Monto inicial en caja ($)</label>
+              <input id="monto-inicial" class="field-input field-input--highlight"
+                type="number" step="0.01" min="0" value="0" placeholder="0,00"/>
+            </div>
+            <button id="btn-abrir" class="btn-abrir-caja">🔓 Abrir caja</button>
           </div>
-          <button id="btn-abrir" class="btn-abrir-caja">
-            🔓 Abrir caja
-          </button>
+        </div>
+      </div>
+
+      <!-- Caja abierta: tarjetas resumen -->
+      <div id="vista-abierta" style="display:none">
+
+        <!-- Fila 1: Estado de caja -->
+        <div class="caja-cards">
+          <div class="caja-card caja-card--green">
+            <div class="cc-label">💵 Efectivo esperado</div>
+            <div class="cc-value" id="card-esperado">$0,00</div>
+            <div class="cc-sub" id="card-apertura"></div>
+          </div>
+          <div class="caja-card caja-card--blue">
+            <div class="cc-label">📈 Ingresos manuales</div>
+            <div class="cc-value" id="card-ingresos">$0,00</div>
+          </div>
+          <div class="caja-card caja-card--red">
+            <div class="cc-label">📉 Egresos</div>
+            <div class="cc-value" id="card-egresos">$0,00</div>
+          </div>
+          <div class="caja-card">
+            <div class="cc-label">💰 Monto inicial</div>
+            <div class="cc-value" id="card-inicial">$0,00</div>
+            <div class="cc-sub" id="card-usuario"></div>
+          </div>
+        </div>
+
+        <!-- Fila 2: Ventas por método -->
+        <div class="caja-cards-sub-label">Ventas por método de pago</div>
+        <div class="caja-cards caja-cards--metodos">
+          <div class="caja-card caja-card--green">
+            <div class="cc-label">💵 Efectivo</div>
+            <div class="cc-value" id="card-ventas">$0,00</div>
+            <div class="cc-sub" id="card-tickets">0 ventas</div>
+          </div>
+          <div class="caja-card">
+            <div class="cc-label">💳 Tarjeta</div>
+            <div class="cc-value" id="card-tarjeta">$0,00</div>
+            <div class="cc-sub" id="card-tarjeta-tickets">0 ventas</div>
+          </div>
+          <div class="caja-card">
+            <div class="cc-label">📲 Transferencia</div>
+            <div class="cc-value" id="card-transferencia">$0,00</div>
+            <div class="cc-sub" id="card-transferencia-tickets">0 ventas</div>
+          </div>
+          <div class="caja-card">
+            <div class="cc-label">📒 Cta. Corriente</div>
+            <div class="cc-value" id="card-cuenta">$0,00</div>
+            <div class="cc-sub" id="card-cuenta-tickets">0 ventas</div>
+          </div>
+          <div class="caja-card caja-card--blue">
+            <div class="cc-label">🧾 Total ventas</div>
+            <div class="cc-value" id="card-total-ventas">$0,00</div>
+            <div class="cc-sub" id="card-total-tickets">0 ventas</div>
+          </div>
+        </div>
+
+        <div class="caja-open-hint">
+          Usá las pestañas para agregar movimientos o cerrar la caja
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: MOVIMIENTOS
+    ══════════════════════════════════════ -->
+    <div id="tab-movimientos" class="caja-tab-panel" style="display:none">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">💸 Movimientos de la sesión</h2>
+          <button id="btn-nuevo-mov" class="btn btn-primary btn-sm">+ Agregar</button>
+        </div>
+
+        <!-- Form movimiento -->
+        <div id="form-movimiento" class="mov-form" style="display:none">
+          <div class="mov-form-grid">
+            <div class="field">
+              <label class="field-label">Tipo</label>
+              <select id="mov-tipo" class="field-input">
+                <option value="ingreso">📈 Ingreso</option>
+                <option value="egreso">📉 Egreso</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Concepto</label>
+              <input id="mov-concepto" class="field-input" placeholder="Ej: Retiro para gastos"/>
+            </div>
+            <div class="field">
+              <label class="field-label">Monto ($)</label>
+              <input id="mov-monto" class="field-input field-input--highlight"
+                type="number" step="0.01" min="0" placeholder="0,00"/>
+            </div>
+          </div>
+          <div class="mov-form-actions">
+            <button id="btn-agregar-mov" class="btn btn-primary">Registrar</button>
+            <button id="btn-cancelar-mov" class="btn btn-outline">Cancelar</button>
+          </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Hora</th><th>Tipo</th><th>Concepto</th>
+                <th class="right">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="mov-tbody">
+              <tr class="empty-row">
+                <td colspan="4">
+                  <div class="empty-state">
+                    <span class="empty-icon">📋</span>
+                    <span>Sin movimientos aún</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <!-- ── Estado: caja abierta ── -->
-    <div id="vista-abierta" class="caja-vista" style="display:none">
-
-      <!-- Tarjetas resumen -->
-      <div class="caja-cards">
-        <div class="caja-card caja-card--green">
-          <div class="cc-label">Efectivo esperado</div>
-          <div class="cc-value" id="card-esperado">$0,00</div>
-          <div class="cc-sub" id="card-apertura"></div>
-        </div>
-        <div class="caja-card">
-          <div class="cc-label">Ventas efectivo</div>
-          <div class="cc-value" id="card-ventas">$0,00</div>
-          <div class="cc-sub" id="card-tickets">0 tickets</div>
-        </div>
-        <div class="caja-card caja-card--blue">
-          <div class="cc-label">Ingresos manuales</div>
-          <div class="cc-value" id="card-ingresos">$0,00</div>
-        </div>
-        <div class="caja-card caja-card--red">
-          <div class="cc-label">Egresos</div>
-          <div class="cc-value" id="card-egresos">$0,00</div>
-        </div>
-        <div class="caja-card">
-          <div class="cc-label">Monto inicial</div>
-          <div class="cc-value" id="card-inicial">$0,00</div>
-          <div class="cc-sub" id="card-usuario"></div>
-        </div>
-      </div>
-
-      <!-- Grid: movimientos + cierre -->
+    <!-- ══════════════════════════════════════
+         TAB: CIERRE
+    ══════════════════════════════════════ -->
+    <div id="tab-cierre" class="caja-tab-panel" style="display:none">
       <div class="caja-grid">
 
-        <!-- Panel movimientos -->
+        <!-- Resumen de sesión -->
         <div class="panel">
           <div class="panel-head">
-            <h2 class="panel-title">📋 Movimientos</h2>
-            <button id="btn-nuevo-mov" class="btn btn-primary btn-sm">
-              + Nuevo
-            </button>
+            <h2 class="panel-title">📊 Resumen de sesión</h2>
           </div>
-
-          <!-- Form movimiento (colapsable) -->
-          <div id="form-movimiento" class="mov-form" style="display:none">
-            <div class="mov-form-grid">
-              <div class="field">
-                <label class="field-label">Tipo</label>
-                <select id="mov-tipo" class="field-input">
-                  <option value="ingreso">📈 Ingreso</option>
-                  <option value="egreso">📉 Egreso</option>
-                </select>
-              </div>
-              <div class="field">
-                <label class="field-label">Concepto</label>
-                <input
-                  id="mov-concepto"
-                  class="field-input"
-                  placeholder="Ej: Retiro para gastos"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Monto ($)</label>
-                <input
-                  id="mov-monto"
-                  class="field-input field-input--highlight"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
-            <div class="mov-form-actions">
-              <button id="btn-agregar-mov" class="btn btn-primary">Registrar</button>
-              <button id="btn-cancelar-mov" class="btn btn-outline">Cancelar</button>
-            </div>
-          </div>
-
-          <!-- Tabla movimientos -->
-          <div class="tbl-wrap">
-            <table class="tbl">
-              <thead>
-                <tr>
-                  <th>Hora</th>
-                  <th>Tipo</th>
-                  <th>Concepto</th>
-                  <th class="right">Monto</th>
-                </tr>
-              </thead>
-              <tbody id="mov-tbody">
-                <tr class="empty-row">
-                  <td colspan="4">
-                    <div class="empty-state">
-                      <span class="empty-icon">📋</span>
-                      <span>Sin movimientos aún</span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="cierre-body">
+            <div class="cierre-resumen" id="cierre-resumen-preview"></div>
           </div>
         </div>
 
-        <!-- Panel cierre -->
-        <div class="panel cierre-panel">
+        <!-- Formulario de cierre -->
+        <div class="panel">
           <div class="panel-head">
             <h2 class="panel-title">🔒 Cerrar caja</h2>
           </div>
           <div class="cierre-body">
-            <div class="cierre-resumen" id="cierre-resumen-preview">
-              <!-- se llena dinámicamente -->
-            </div>
             <div class="field">
               <label class="field-label">Conteo real de efectivo ($)</label>
-              <input
-                id="conteo"
-                class="field-input field-input--highlight"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="Ingresá el efectivo que tenés en caja"
-              />
-              <span class="field-hint">
-                Dejalo vacío si no querés registrar diferencia
-              </span>
+              <input id="conteo" class="field-input field-input--highlight"
+                type="number" step="0.01" min="0"
+                placeholder="Ingresá el efectivo que tenés en caja"/>
+              <span class="field-hint">Dejalo vacío si no querés registrar diferencia</span>
             </div>
             <div id="diferencia-preview" class="diferencia-preview" style="display:none">
               <span class="dif-label">Diferencia:</span>
@@ -179,18 +212,51 @@
             </div>
             <div class="field">
               <label class="field-label">Observación (opcional)</label>
-              <input
-                id="obs"
-                class="field-input"
-                placeholder="Ej: Caja con faltante por billete falso"
-              />
+              <input id="obs" class="field-input"
+                placeholder="Ej: Caja con faltante por billete falso"/>
             </div>
-            <button id="btn-cerrar" class="btn-cerrar-caja">
-              🔒 Cerrar caja
-            </button>
+            <button id="btn-cerrar" class="btn-cerrar-caja">🔒 Cerrar caja</button>
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: HISTORIAL
+    ══════════════════════════════════════ -->
+    <div id="tab-historial" class="caja-tab-panel" style="display:none">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">📅 Historial de sesiones</h2>
+          <span id="hist-stat" class="hist-stat">–</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Apertura</th>
+                <th>Cierre</th>
+                <th>Usuario</th>
+                <th class="right">Inicial</th>
+                <th class="right">Ventas ef.</th>
+                <th class="right">Esperado</th>
+                <th class="right">Conteo</th>
+                <th class="right">Diferencia</th>
+                <th class="center">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="hist-tbody">
+              <tr><td colspan="10">
+                <div class="empty-state">
+                  <span class="empty-icon">📅</span>
+                  <span>Cargando…</span>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

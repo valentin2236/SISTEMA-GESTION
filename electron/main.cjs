@@ -15,24 +15,16 @@ async function setupAutoUpdater() {
       provider: 'github',
       owner: 'valentin2236',
       repo: 'SISTEMA-GESTION',
-      private: true,
-      token: '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',
     });
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.on('checking-for-update', () => {
-      console.log('[updater] Buscando actualizaciones...');
-    });
     autoUpdater.on('update-available', (info) => {
       var resp = dialog.showMessageBoxSync({
         type: 'info', title: 'Actualización disponible',
-        message: 'Nueva versión disponible (v' + info.version + '). ¿Descargar?',
+        message: 'Nueva versión disponible (v' + info.version + '). ¿Descargar ahora?',
         buttons: ['Descargar', 'Más tarde'], defaultId: 0,
       });
       if (resp === 0) autoUpdater.downloadUpdate();
-    });
-    autoUpdater.on('update-not-available', () => {
-      console.log('[updater] Ya tenés la última versión');
     });
     autoUpdater.on('update-downloaded', () => {
       dialog.showMessageBox(win, {
@@ -43,18 +35,10 @@ async function setupAutoUpdater() {
     });
     autoUpdater.on('error', (err) => {
       console.error('[updater] Error:', err.message);
-      dialog.showMessageBoxSync({
-        type: 'error', title: 'Error de actualización',
-        message: 'No se pudo verificar actualizaciones:\n' + err.message,
-      });
     });
     autoUpdater.checkForUpdates();
   } catch (e) {
     console.error('[updater] Excepción:', e.message);
-    dialog.showMessageBoxSync({
-      type: 'error', title: 'Error updater',
-      message: 'Error al iniciar el actualizador:\n' + e.message + '\n\nKeys: ' + Object.keys(e).join(', '),
-    });
   }
 }
 

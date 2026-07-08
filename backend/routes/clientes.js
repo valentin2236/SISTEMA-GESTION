@@ -23,22 +23,49 @@ function all(sql, params=[]) {
   });
 }
 
-// GET /api/clientes?search=
+// GET /api/clientes?search=&soloDeuda=1
 router.get('/', requireAuth, requireRole('admin','vendedor'), async (req,res)=>{
   try{
-    const term = String(req.query.search||'').trim();
-    if (!term){
-      const rows = await all(`SELECT id, nombre, email, telefono, dni FROM clientes ORDER BY id DESC LIMIT 50`);
-      return res.json(rows);
+    const term      = String(req.query.search||'').trim();
+    const soloDeuda = req.query.soloDeuda === '1';
+
+    // CTE que calcula el saldo de cada cliente en una sola pasada
+    const cte = `
+      WITH saldos AS (
+        SELECT cliente_id,
+               COALESCE(SUM(CASE WHEN tipo='deuda' THEN monto
+                                 WHEN tipo='pago'  THEN -monto
+                                 ELSE 0 END), 0) AS saldo_cc
+        FROM cuentas_corrientes
+        GROUP BY cliente_id
+      )`;
+
+    const saldoDeudaFilter = soloDeuda ? 'AND COALESCE(s.saldo_cc, 0) > 0' : '';
+
+    let rows;
+    if (!term) {
+      rows = await all(`${cte}
+        SELECT c.id, c.nombre, c.email, c.telefono, c.dni,
+               COALESCE(s.saldo_cc, 0) AS saldo_cc
+        FROM clientes c
+        LEFT JOIN saldos s ON s.cliente_id = c.id
+        WHERE 1=1 ${saldoDeudaFilter}
+        ORDER BY ${soloDeuda ? 'saldo_cc DESC' : 'c.id DESC'}
+        LIMIT 200`);
+    } else {
+      const like = `%${term}%`;
+      rows = await all(`${cte}
+        SELECT c.id, c.nombre, c.email, c.telefono, c.dni,
+               COALESCE(s.saldo_cc, 0) AS saldo_cc
+        FROM clientes c
+        LEFT JOIN saldos s ON s.cliente_id = c.id
+        WHERE (c.nombre LIKE ? OR c.email LIKE ? OR c.dni LIKE ? OR c.telefono LIKE ?)
+          ${saldoDeudaFilter}
+        ORDER BY ${soloDeuda ? 'saldo_cc DESC' : 'c.nombre ASC'}
+        LIMIT 200`,
+        [like, like, like, like]
+      );
     }
-    const like = `%${term}%`;
-    const rows = await all(
-      `SELECT id, nombre, email, telefono, dni
-         FROM clientes
-        WHERE nombre LIKE ? OR email LIKE ? OR dni LIKE ?
-        ORDER BY nombre ASC LIMIT 50`,
-      [like, like, like]
-    );
     res.json(rows);
   }catch(e){
     res.status(500).json({ error:'DB_ERROR', details:e.message });

@@ -1,4 +1,4 @@
-// public/js/caja.js — Caja completa
+// public/js/caja.js — Caja con sistema de pestañas
 const token = localStorage.getItem("token");
 if (!token) location.href = "/admin/login.html";
 
@@ -37,49 +37,6 @@ async function api(path, opts = {}) {
   return res;
 }
 
-/* ── DOM refs ── */
-const $badge          = document.getElementById("caja-badge");
-const $vistaCerrada   = document.getElementById("vista-cerrada");
-const $vistaAbierta   = document.getElementById("vista-abierta");
-const $montoInicial   = document.getElementById("monto-inicial");
-const $btnAbrir       = document.getElementById("btn-abrir");
-
-// Cards
-const $cardEsperado   = document.getElementById("card-esperado");
-const $cardVentas     = document.getElementById("card-ventas");
-const $cardTickets    = document.getElementById("card-tickets");
-const $cardIngresos   = document.getElementById("card-ingresos");
-const $cardEgresos    = document.getElementById("card-egresos");
-const $cardInicial    = document.getElementById("card-inicial");
-const $cardApertura   = document.getElementById("card-apertura");
-const $cardUsuario    = document.getElementById("card-usuario");
-
-// Movimientos
-const $btnNuevoMov    = document.getElementById("btn-nuevo-mov");
-const $formMov        = document.getElementById("form-movimiento");
-const $movTipo        = document.getElementById("mov-tipo");
-const $movConcepto    = document.getElementById("mov-concepto");
-const $movMonto       = document.getElementById("mov-monto");
-const $btnAgregarMov  = document.getElementById("btn-agregar-mov");
-const $btnCancelarMov = document.getElementById("btn-cancelar-mov");
-const $movTbody       = document.getElementById("mov-tbody");
-
-// Cierre
-const $conteo         = document.getElementById("conteo");
-const $obs            = document.getElementById("obs");
-const $btnCerrar      = document.getElementById("btn-cerrar");
-const $difPreview     = document.getElementById("diferencia-preview");
-const $difValor       = document.getElementById("dif-valor");
-const $cierrePreview  = document.getElementById("cierre-resumen-preview");
-
-// Modal
-const $dlg            = document.getElementById("dlg-cierre");
-const $cierreResumen  = document.getElementById("cierre-resumen");
-const $cierreMovs     = document.getElementById("cierre-movs");
-const $btnImprimir    = document.getElementById("btn-imprimir");
-const $btnCerrarModal = document.getElementById("btn-cerrar-modal");
-const $btnCerrarModal2= document.getElementById("btn-cerrar-modal2");
-
 /* ── Reloj ── */
 function actualizarHora() {
   const el = document.getElementById("caja-hora");
@@ -89,6 +46,89 @@ function actualizarHora() {
 }
 setInterval(actualizarHora, 1000);
 actualizarHora();
+
+/* ── Sistema de pestañas ── */
+function switchTab(tabId) {
+  // No navegar a tab bloqueada
+  const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
+  if (targetBtn?.classList.contains("caja-tab--locked")) return;
+
+  document.querySelectorAll(".caja-tab").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".caja-tab-panel").forEach(p => p.style.display = "none");
+
+  targetBtn?.classList.add("active");
+  const panel = document.getElementById(`tab-${tabId}`);
+  if (panel) panel.style.display = "";
+
+  if (tabId === "historial") loadHistorial();
+}
+
+function setTabsEstado(abierta) {
+  const tabMovBtn   = document.getElementById("tab-btn-movimientos");
+  const tabCierreBtn= document.getElementById("tab-btn-cierre");
+
+  if (abierta) {
+    tabMovBtn?.classList.remove("caja-tab--locked");
+    tabCierreBtn?.classList.remove("caja-tab--locked");
+  } else {
+    tabMovBtn?.classList.add("caja-tab--locked");
+    tabCierreBtn?.classList.add("caja-tab--locked");
+    // Si estamos en una pestaña bloqueada, volver a estado
+    const active = document.querySelector(".caja-tab.active");
+    if (active?.dataset.tab === "movimientos" || active?.dataset.tab === "cierre") {
+      switchTab("estado");
+    }
+  }
+}
+
+document.querySelectorAll(".caja-tab[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+});
+
+/* ── DOM refs ── */
+const $badge          = document.getElementById("caja-badge");
+const $vistaCerrada   = document.getElementById("vista-cerrada");
+const $vistaAbierta   = document.getElementById("vista-abierta");
+const $montoInicial   = document.getElementById("monto-inicial");
+const $btnAbrir       = document.getElementById("btn-abrir");
+
+const $cardEsperado              = document.getElementById("card-esperado");
+const $cardVentas                = document.getElementById("card-ventas");
+const $cardTickets               = document.getElementById("card-tickets");
+const $cardIngresos              = document.getElementById("card-ingresos");
+const $cardEgresos               = document.getElementById("card-egresos");
+const $cardInicial               = document.getElementById("card-inicial");
+const $cardApertura              = document.getElementById("card-apertura");
+const $cardUsuario               = document.getElementById("card-usuario");
+const $cardTarjeta               = document.getElementById("card-tarjeta");
+const $cardTarjetaTickets        = document.getElementById("card-tarjeta-tickets");
+const $cardTransferencia         = document.getElementById("card-transferencia");
+const $cardTransferenciaTickets  = document.getElementById("card-transferencia-tickets");
+const $cardCuenta                = document.getElementById("card-cuenta");
+const $cardCuentaTickets         = document.getElementById("card-cuenta-tickets");
+
+const $btnNuevoMov    = document.getElementById("btn-nuevo-mov");
+const $formMov        = document.getElementById("form-movimiento");
+const $movTipo        = document.getElementById("mov-tipo");
+const $movConcepto    = document.getElementById("mov-concepto");
+const $movMonto       = document.getElementById("mov-monto");
+const $btnAgregarMov  = document.getElementById("btn-agregar-mov");
+const $btnCancelarMov = document.getElementById("btn-cancelar-mov");
+const $movTbody       = document.getElementById("mov-tbody");
+
+const $conteo         = document.getElementById("conteo");
+const $obs            = document.getElementById("obs");
+const $btnCerrar      = document.getElementById("btn-cerrar");
+const $difPreview     = document.getElementById("diferencia-preview");
+const $difValor       = document.getElementById("dif-valor");
+const $cierrePreview  = document.getElementById("cierre-resumen-preview");
+
+const $dlg            = document.getElementById("dlg-cierre");
+const $cierreResumen  = document.getElementById("cierre-resumen");
+const $cierreMovs     = document.getElementById("cierre-movs");
+const $btnImprimir    = document.getElementById("btn-imprimir");
+const $btnCerrarModal = document.getElementById("btn-cerrar-modal");
+const $btnCerrarModal2= document.getElementById("btn-cerrar-modal2");
 
 /* ── Estado global ── */
 let estadoActual = null;
@@ -111,6 +151,8 @@ async function loadEstado() {
 }
 
 function renderEstado(data) {
+  setTabsEstado(data.abierta);
+
   if (!data.abierta) {
     $badge.textContent = "Cerrada";
     $badge.className = "caja-badge caja-badge--cerrada";
@@ -126,20 +168,36 @@ function renderEstado(data) {
 
   const s = data.sesion;
 
-  // Cards
   if ($cardEsperado) $cardEsperado.textContent = `$${money(data.efectivo_esperado)}`;
-  if ($cardVentas)   $cardVentas.textContent   = `$${money(data.ventas_efectivo?.total)}`;
-  if ($cardTickets)  $cardTickets.textContent  = `${data.ventas_efectivo?.tickets || 0} tickets`;
   if ($cardIngresos) $cardIngresos.textContent = `$${money(data.total_ingresos)}`;
   if ($cardEgresos)  $cardEgresos.textContent  = `$${money(data.total_egresos)}`;
   if ($cardInicial)  $cardInicial.textContent  = `$${money(s.monto_inicial)}`;
   if ($cardApertura) $cardApertura.textContent = fechaHora(s.fecha_apertura);
   if ($cardUsuario)  $cardUsuario.textContent  = s.usuario_apertura;
 
-  // Movimientos
-  renderMovimientos(data.movimientos || []);
+  // Ventas por método
+  const ef = data.ventas_efectivo      || { total: 0, tickets: 0 };
+  const ta = data.ventas_tarjeta       || { total: 0, tickets: 0 };
+  const tr = data.ventas_transferencia || { total: 0, tickets: 0 };
+  const cc = data.ventas_cuenta        || { total: 0, tickets: 0 };
 
-  // Preview cierre
+  if ($cardVentas)               $cardVentas.textContent              = `$${money(ef.total)}`;
+  if ($cardTickets)              $cardTickets.textContent             = `${ef.tickets} venta${ef.tickets !== 1 ? "s" : ""}`;
+  if ($cardTarjeta)              $cardTarjeta.textContent             = `$${money(ta.total)}`;
+  if ($cardTarjetaTickets)       $cardTarjetaTickets.textContent      = `${ta.tickets} venta${ta.tickets !== 1 ? "s" : ""}`;
+  if ($cardTransferencia)        $cardTransferencia.textContent       = `$${money(tr.total)}`;
+  if ($cardTransferenciaTickets) $cardTransferenciaTickets.textContent= `${tr.tickets} venta${tr.tickets !== 1 ? "s" : ""}`;
+  if ($cardCuenta)               $cardCuenta.textContent              = `$${money(cc.total)}`;
+  if ($cardCuentaTickets)        $cardCuentaTickets.textContent       = `${cc.tickets} venta${cc.tickets !== 1 ? "s" : ""}`;
+
+  const totalVentas  = Number(ef.total) + Number(ta.total) + Number(tr.total) + Number(cc.total);
+  const totalTickets = Number(ef.tickets) + Number(ta.tickets) + Number(tr.tickets) + Number(cc.tickets);
+  const $cardTotalVentas  = document.getElementById("card-total-ventas");
+  const $cardTotalTickets = document.getElementById("card-total-tickets");
+  if ($cardTotalVentas)  $cardTotalVentas.textContent  = `$${money(totalVentas)}`;
+  if ($cardTotalTickets) $cardTotalTickets.textContent = `${totalTickets} venta${totalTickets !== 1 ? "s" : ""}`;
+
+  renderMovimientos(data.movimientos || []);
   renderCierrePreview(data);
 }
 
@@ -174,6 +232,19 @@ function renderMovimientos(movs) {
 
 function renderCierrePreview(data) {
   if (!$cierrePreview) return;
+
+  const ta = data.ventas_tarjeta       || { total: 0, tickets: 0 };
+  const tr = data.ventas_transferencia || { total: 0, tickets: 0 };
+  const cc = data.ventas_cuenta        || { total: 0, tickets: 0 };
+
+  const otrosRow = (icono, label, val, tickets) => val > 0 ? `
+    <div class="cierre-linea cierre-linea--otro">
+      <span>${icono} ${label} <small class="cierre-tickets">${tickets} venta${tickets !== 1 ? "s" : ""}</small></span>
+      <span class="cierre-otro-val">$${money(val)}</span>
+    </div>` : "";
+
+  const hayOtros = ta.total > 0 || tr.total > 0 || cc.total > 0;
+
   $cierrePreview.innerHTML = `
     <div class="cierre-linea">
       <span>Monto inicial</span>
@@ -192,9 +263,70 @@ function renderCierrePreview(data) {
       <span class="text-red">-$${money(data.total_egresos)}</span>
     </div>
     <div class="cierre-linea cierre-linea--total">
-      <span>Efectivo esperado</span>
+      <span>💵 Efectivo en caja</span>
       <span>$${money(data.efectivo_esperado)}</span>
-    </div>`;
+    </div>
+    ${hayOtros ? `
+    <div class="cierre-separador">Cobros fuera de caja</div>
+    ${otrosRow("💳", "Tarjeta", ta.total, ta.tickets)}
+    ${otrosRow("📲", "Transferencia", tr.total, tr.tickets)}
+    ${otrosRow("📒", "Cta. Corriente", cc.total, cc.tickets)}
+    ` : ""}`;
+}
+
+/* ── Historial ── */
+async function loadHistorial() {
+  const $tbody = document.getElementById("hist-tbody");
+  const $stat  = document.getElementById("hist-stat");
+  if (!$tbody) return;
+
+  $tbody.innerHTML = `<tr><td colspan="10">
+    <div class="empty-state"><span class="empty-icon">⏳</span><span>Cargando…</span></div>
+  </td></tr>`;
+
+  try {
+    const res = await api("/api/caja/historial");
+    if (!res.ok) throw new Error("error");
+    const rows = await res.json();
+
+    if ($stat) $stat.textContent = `${rows.length} sesión${rows.length !== 1 ? "es" : ""}`;
+
+    if (!rows.length) {
+      $tbody.innerHTML = `<tr><td colspan="10">
+        <div class="empty-state"><span class="empty-icon">📅</span><span>Sin historial aún</span></div>
+      </td></tr>`;
+      return;
+    }
+
+    $tbody.innerHTML = rows.map(r => {
+      const dif    = Number(r.diferencia ?? 0);
+      const difStr = r.conteo_efectivo != null
+        ? `<span class="${dif > 0 ? 'dif-pos' : dif < 0 ? 'dif-neg' : 'dif-cero'}">${dif >= 0 ? "+" : ""}$${money(dif)}</span>`
+        : `<span class="dif-cero">–</span>`;
+
+      const estadoBadge = r.fecha_cierre
+        ? `<span class="hc-badge hc-badge--closed">Cerrada</span>`
+        : `<span class="hc-badge hc-badge--open">Abierta</span>`;
+
+      return `<tr>
+        <td class="hc-id">#${r.id}</td>
+        <td class="hc-abierta">${fechaHora(r.fecha_apertura)}</td>
+        <td>${fechaHora(r.fecha_cierre)}</td>
+        <td>${r.usuario_apertura || "–"}</td>
+        <td class="right">$${money(r.monto_inicial)}</td>
+        <td class="right text-green">$${money(r.total_ventas_efectivo)}</td>
+        <td class="right">$${money(r.efectivo_esperado)}</td>
+        <td class="right">${r.conteo_efectivo != null ? `$${money(r.conteo_efectivo)}` : "–"}</td>
+        <td class="right">${difStr}</td>
+        <td class="center hc-stat">${estadoBadge}</td>
+      </tr>`;
+    }).join("");
+  } catch (e) {
+    console.error(e);
+    $tbody.innerHTML = `<tr><td colspan="10">
+      <div class="empty-state"><span class="empty-icon">⚠️</span><span>Error al cargar historial</span></div>
+    </td></tr>`;
+  }
 }
 
 /* ── Diferencia en tiempo real ── */
@@ -259,18 +391,15 @@ $btnAbrir?.addEventListener("click", async () => {
 
 /* ── Movimientos ── */
 $btnNuevoMov?.addEventListener("click", () => {
-  $formMov.style.display = $formMov.style.display === "none" ? "" : "none";
-  if ($formMov.style.display !== "none") {
-    $movConcepto?.focus();
-    $btnNuevoMov.textContent = "✕ Cancelar";
-  } else {
-    $btnNuevoMov.textContent = "+ Nuevo";
-  }
+  const isOpen = $formMov.style.display !== "none";
+  $formMov.style.display = isOpen ? "none" : "";
+  $btnNuevoMov.textContent = isOpen ? "+ Agregar" : "✕ Cancelar";
+  if (!isOpen) $movConcepto?.focus();
 });
 
 $btnCancelarMov?.addEventListener("click", () => {
   $formMov.style.display = "none";
-  $btnNuevoMov.textContent = "+ Nuevo";
+  $btnNuevoMov.textContent = "+ Agregar";
   if ($movConcepto) $movConcepto.value = "";
   if ($movMonto) $movMonto.value = "";
 });
@@ -304,7 +433,7 @@ $btnAgregarMov?.addEventListener("click", async () => {
     if ($movConcepto) $movConcepto.value = "";
     if ($movMonto)    $movMonto.value    = "";
     $formMov.style.display = "none";
-    $btnNuevoMov.textContent = "+ Nuevo";
+    $btnNuevoMov.textContent = "+ Agregar";
     await loadEstado();
     Swal.fire({
       icon: "success",
@@ -317,7 +446,6 @@ $btnAgregarMov?.addEventListener("click", async () => {
   }
 });
 
-// Enter en los campos del form movimiento
 [$movConcepto, $movMonto].forEach(el => {
   el?.addEventListener("keydown", e => {
     if (e.key === "Enter") $btnAgregarMov?.click();
@@ -331,18 +459,47 @@ $btnCerrar?.addEventListener("click", async () => {
   const esperado  = Number(estadoActual?.efectivo_esperado || 0);
   const dif       = conteoVal !== null ? conteoVal - esperado : null;
 
-  const html = conteoVal !== null
-    ? `Efectivo esperado: <b>$${money(esperado)}</b><br>
-       Conteo real: <b>$${money(conteoVal)}</b><br>
-       Diferencia: <b style="color:${dif >= 0 ? '#00d875' : '#ef4444'}">
-         ${dif >= 0 ? "+" : ""}$${money(dif)}
-       </b>`
-    : `Efectivo esperado: <b>$${money(esperado)}</b><br>
-       <span style="opacity:.7">Sin conteo registrado</span>`;
+  const ta = estadoActual?.ventas_tarjeta       || { total: 0, tickets: 0 };
+  const tr = estadoActual?.ventas_transferencia || { total: 0, tickets: 0 };
+  const cc = estadoActual?.ventas_cuenta        || { total: 0, tickets: 0 };
+
+  const otrosSwal = (icono, label, val, tickets) => val > 0
+    ? `<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:13px;opacity:.85">
+         <span>${icono} ${label} <span style="opacity:.6;font-size:11px">${tickets} vta${tickets !== 1 ? "s" : ""}</span></span>
+         <b>$${money(val)}</b>
+       </div>`
+    : "";
+
+  const hayOtros = ta.total > 0 || tr.total > 0 || cc.total > 0;
+
+  const htmlEfectivo = conteoVal !== null
+    ? `<div style="display:flex;justify-content:space-between">
+         <span>💵 Efectivo esperado</span><b>$${money(esperado)}</b>
+       </div>
+       <div style="display:flex;justify-content:space-between;margin-top:4px">
+         <span>Conteo real</span><b>$${money(conteoVal)}</b>
+       </div>
+       <div style="display:flex;justify-content:space-between;margin-top:4px">
+         <span>Diferencia</span>
+         <b style="color:${dif >= 0 ? '#00d875' : '#ef4444'}">${dif >= 0 ? "+" : ""}$${money(dif)}</b>
+       </div>`
+    : `<div style="display:flex;justify-content:space-between">
+         <span>💵 Efectivo esperado</span><b>$${money(esperado)}</b>
+       </div>
+       <div style="opacity:.6;font-size:12px;margin-top:4px">Sin conteo registrado</div>`;
+
+  const htmlOtros = hayOtros
+    ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(128,128,128,.25)">
+         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.5;margin-bottom:6px">Cobros fuera de caja</div>
+         ${otrosSwal("💳", "Tarjeta", ta.total, ta.tickets)}
+         ${otrosSwal("📲", "Transferencia", tr.total, tr.tickets)}
+         ${otrosSwal("📒", "Cta. Corriente", cc.total, cc.tickets)}
+       </div>`
+    : "";
 
   const confirm = await Swal.fire({
     title: "¿Cerrar la caja?",
-    html: `<div style="text-align:left">${html}</div><br><small style="opacity:.6">Esta acción finalizará la sesión actual</small>`,
+    html: `<div style="text-align:left">${htmlEfectivo}${htmlOtros}</div><br><small style="opacity:.5">Esta acción finalizará la sesión actual</small>`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "🔒 Cerrar caja",
@@ -365,7 +522,6 @@ $btnCerrar?.addEventListener("click", async () => {
       return;
     }
 
-    // Cargar detalle completo para el modal
     let detalle;
     try {
       const r2 = await api(`/api/caja/cierre/${data.cierre.sesion_id}`);
@@ -377,8 +533,7 @@ $btnCerrar?.addEventListener("click", async () => {
     const s    = detalle.sesion;
     const movs = detalle.movimientos || [];
 
-    // Diferencia con color
-    const difNum = Number(s.diferencia || 0);
+    const difNum   = Number(s.diferencia || 0);
     const difColor = difNum >= 0 ? "#00d875" : "#ef4444";
     const difSign  = difNum >= 0 ? "+" : "";
 
@@ -458,4 +613,5 @@ $btnCerrar?.addEventListener("click", async () => {
 });
 
 /* ── Init ── */
+switchTab("estado");
 loadEstado();

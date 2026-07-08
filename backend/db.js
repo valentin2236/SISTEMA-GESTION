@@ -364,3 +364,35 @@ db.serialize(() => {
     )
   `);
 });
+
+// ==============================
+// ENSURE CAJA TABLES
+// ==============================
+
+export async function ensureCajaTables() {
+  await execSQL(`
+    CREATE TABLE IF NOT EXISTS caja_sesiones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fecha_apertura DATETIME NOT NULL,
+      fecha_cierre DATETIME,
+      monto_inicial REAL DEFAULT 0,
+      monto_final REAL,
+      usuario_apertura TEXT,
+      usuario_cierre TEXT,
+      nota TEXT
+    );
+  `);
+
+  await execSQL(`
+    CREATE TABLE IF NOT EXISTS caja_movimientos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sesion_id INTEGER NOT NULL,
+      fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+      tipo TEXT NOT NULL,
+      concepto TEXT,
+      monto REAL NOT NULL,
+      usuario TEXT,
+      FOREIGN KEY (sesion_id) REFERENCES caja_sesiones(id)
+    );
+  `);
+}

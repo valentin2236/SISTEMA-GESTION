@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       @page {
-        size: auto;
+        size: 80mm auto;
         margin: 0;
       }
       body {
@@ -103,7 +103,7 @@
         let cfg = {};
         try {
           cfg = cfgQ
-            ? JSON.parse(atob(cfgQ))
+            ? JSON.parse(decodeURIComponent(escape(atob(cfgQ))))
             : JSON.parse(localStorage.getItem("cfg") || "{}");
         } catch {
           cfg = {};
@@ -112,6 +112,12 @@
         // Ancho de ticket
         const w = cfg.ticketWidth === "58" ? "48mm" : "72mm";
         document.querySelector(".ticket").style.width = w;
+
+        // Actualizar @page con el ancho correcto para la impresora térmica
+        const pageW = cfg.ticketWidth === "58" ? "58mm" : "80mm";
+        const pageStyle = document.createElement("style");
+        pageStyle.textContent = `@page { size: ${pageW} auto; margin: 0; }`;
+        document.head.appendChild(pageStyle);
 
         // Logo
         const $logo = document.getElementById("logo");

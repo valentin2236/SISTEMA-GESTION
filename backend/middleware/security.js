@@ -8,7 +8,7 @@ export const helmetMiddleware = helmet({
 
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  max: 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'RATE_LIMIT', message: 'Demasiadas solicitudes. Intentá de nuevo en unos minutos.' },

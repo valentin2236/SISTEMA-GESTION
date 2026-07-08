@@ -12,7 +12,9 @@ const router = Router();
 // =====================================
 
 function nowSql() {
-  return new Date().toISOString().slice(0, 19).replace("T", " ");
+  return new Date().toLocaleString("sv-SE", {
+    timeZone: "America/Argentina/Buenos_Aires",
+  });
 }
 
 function getOne(sql, params = []) {
@@ -129,19 +131,28 @@ router.get(
         });
       }
 
-      // ventas efectivo
+      // ventas agrupadas por método de pago
 
-      const ventas = await getOne(
+      const ventasPorMetodo = await all(
         `
         SELECT
-          IFNULL(SUM(total),0) AS total,
-          COUNT(*) AS tickets
+          IFNULL(medio_pago, 'efectivo') AS medio_pago,
+          IFNULL(SUM(total), 0)          AS total,
+          COUNT(*)                        AS tickets
         FROM ventas
-        WHERE medio_pago = 'efectivo'
-          AND datetime(fecha) >= datetime(?)
+        WHERE datetime(fecha) >= datetime(?)
+        GROUP BY IFNULL(medio_pago, 'efectivo')
       `,
         [s.fecha_apertura],
       );
+
+      const getMet = (m) =>
+        ventasPorMetodo.find((v) => v.medio_pago === m) || { total: 0, tickets: 0 };
+
+      const ventas              = getMet("efectivo");
+      const ventasTarjeta       = getMet("tarjeta");
+      const ventasTransferencia = getMet("transferencia");
+      const ventasCuenta        = getMet("cuenta_corriente");
 
       // movimientos
 
@@ -184,13 +195,15 @@ router.get(
           monto_inicial: s.monto_inicial,
         },
 
-        ventas_efectivo: ventas,
+        ventas_efectivo:      ventas,
+        ventas_tarjeta:       ventasTarjeta,
+        ventas_transferencia: ventasTransferencia,
+        ventas_cuenta:        ventasCuenta,
 
         movimientos: movs,
 
         total_ingresos: totalIng,
-
-        total_egresos: totalEgr,
+        total_egresos:  totalEgr,
 
         efectivo_esperado: efectivoEsperado,
       });

@@ -108,10 +108,9 @@ router.post(
           Number(item.costo_unitario || 0);
       }
 
-      const fecha = new Date()
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
+      const fecha = new Date().toLocaleString("sv-SE", {
+        timeZone: "America/Argentina/Buenos_Aires",
+      });
 
       const usuario = req.user?.email || "admin";
 
@@ -228,6 +227,21 @@ router.post(
 
       registrarAuditoria(usuario, 'CREAR_COMPRA', `Compra #${compraId} - Total $${total}`);
       logger.info('Compra creada', { compraId, total, user: usuario });
+
+      // Registrar egreso en caja si hay sesión abierta
+      try {
+        const cajaAbierta = await get(
+          `SELECT id FROM caja_sesiones WHERE fecha_cierre IS NULL ORDER BY id DESC LIMIT 1`
+        );
+        if (cajaAbierta) {
+          await run(
+            `INSERT INTO caja_movimientos (sesion_id, tipo, concepto, monto) VALUES (?, 'egreso', ?, ?)`,
+            [cajaAbierta.id, `Compra #${compraId}${nota ? ` - ${nota}` : ''}`, total]
+          );
+        }
+      } catch (e) {
+        logger.warn('[compras] No se pudo registrar egreso en caja:', e.message);
+      }
 
       res.status(201).json({
         success: true,

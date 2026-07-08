@@ -61,7 +61,7 @@
             <h2 class="panel-title">🛒 Carrito</h2>
 
             <button id="btn-vaciar-carrito" class="btn btn-outline">
-              Vaciar
+              Vaciar <kbd class="kbd-hint">F8</kbd>
             </button>
           </div>
           <div class="tbl-wrap">
@@ -92,17 +92,22 @@
         <!-- Barra inferior: total + botón finalizar -->
         <div class="panel pos-bottom-panel">
           <div class="bottom-bar">
-            <div class="mini-totals">
-              <div class="mini-item">
-                <span class="mini-label">Items</span>
-                <span class="mini-val"><span id="t-items">0</span></span>
+            <!-- Widget último producto (reemplaza mini-totals) -->
+            <div class="ultimo-prod-wrap" id="ultimo-prod-wrap" style="display:none">
+              <div class="ultimo-prod-img" id="ultimo-prod-img">📦</div>
+              <div class="ultimo-prod-info">
+                <div class="ultimo-prod-nombre" id="ultimo-prod-nombre">—</div>
+                <div class="ultimo-prod-detalle">
+                  <span id="ultimo-prod-cant" class="ultimo-prod-cant">×1</span>
+                  <span id="ultimo-prod-precio" class="ultimo-prod-precio">$0,00</span>
+                  <span class="ultimo-prod-badge">Último agregado</span>
+                </div>
               </div>
-              <div class="mini-sep">·</div>
-              <div class="mini-item">
-                <span class="mini-label">Subtotal</span>
-                <span class="mini-val">$<span id="t-subtotal">0,00</span></span>
-              </div>
+              <div class="ultimo-prod-sub" id="ultimo-prod-sub">$0,00</div>
             </div>
+            <!-- Spans ocultos para JS -->
+            <span id="t-items" style="display:none">0</span>
+            <span id="t-subtotal" style="display:none">0,00</span>
 
             <div class="total-y-btn">
               <div class="total-box efectivo">
@@ -150,45 +155,17 @@
           </div>
           <!-- Botón precio libre — nuevo -->
           <button id="btn-precio-libre" class="btn-precio-libre">
-            💰 Agregar por precio
+            💰 Agregar por precio <kbd class="kbd-hint">F4</kbd>
           </button>
           <div id="resultados" class="results-list"></div>
         </div>
 
-        <!-- Clientes -->
-        <div class="panel sidebar-panel">
-          <div class="panel-head">
-            <h2 class="panel-title">👤 Cliente</h2>
-          </div>
-          <div class="search-row">
-            <input
-              id="buscar-cliente"
-              class="search-input"
-              placeholder="Nombre, email o DNI…"
-              autocomplete="off"
-            />
-            <button id="btn-buscar-cliente" class="btn btn-search">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-            </button>
-            <button id="btn-nuevo-cliente" class="btn" title="Nuevo cliente">
-              +
-            </button>
-          </div>
-          <div id="clientes-result" class="results-list"></div>
-          <div id="cliente-seleccionado" class="cliente-sel">
-            Consumidor Final
-          </div>
-        </div>
+        <!-- inputs ocultos para mantener compatibilidad con el JS existente -->
+        <input id="buscar-cliente" style="display:none" autocomplete="off"/>
+        <button id="btn-buscar-cliente" style="display:none"></button>
+        <button id="btn-nuevo-cliente" style="display:none"></button>
+        <div id="clientes-result" style="display:none"></div>
+        <div id="cliente-seleccionado" style="display:none">Consumidor Final</div>
       </aside>
     </main>
 
@@ -343,12 +320,12 @@
 
           <!-- Medio de pago -->
           <div class="pago-metodo-wrap">
-            <span class="field-label">Medio de pago</span>
+            <span class="field-label">Medio de pago <span class="pago-metodo-hint">← →</span></span>
             <div class="pago-metodo-btns">
-              <button class="pago-metodo-btn active" data-metodo="efectivo">💵 Efectivo</button>
-              <button class="pago-metodo-btn" data-metodo="tarjeta">💳 Tarjeta</button>
-              <button class="pago-metodo-btn" data-metodo="transferencia">📲 Transferencia</button>
-              <button class="pago-metodo-btn" data-metodo="cuenta_corriente">📒 Cta. Corriente</button>
+              <button class="pago-metodo-btn active" data-metodo="efectivo">💵 Efectivo <kbd class="kbd-hint">E</kbd></button>
+              <button class="pago-metodo-btn" data-metodo="tarjeta">💳 Tarjeta <kbd class="kbd-hint">T</kbd></button>
+              <button class="pago-metodo-btn" data-metodo="transferencia">📲 Transferencia <kbd class="kbd-hint">R</kbd></button>
+              <button class="pago-metodo-btn" data-metodo="cuenta_corriente">📒 Cta. Corriente <kbd class="kbd-hint">C</kbd></button>
             </div>
             <select id="medio-pago" class="field-input" style="display:none">
               <option value="efectivo">Efectivo</option>
@@ -364,7 +341,6 @@
               <label class="field-label">Interés %</label>
               <input id="interes-pct" class="field-input" type="number" step="0.01" min="0" placeholder="0"/>
             </div>
-
             <div class="field">
               <label class="field-label">Descuento</label>
               <div class="input-group">
@@ -375,10 +351,12 @@
                 <input id="desc-valor" class="field-input" type="number" step="0.01" min="0" placeholder="0"/>
               </div>
             </div>
-
             <div class="field" id="lbl-monto">
               <label class="field-label">Efectivo entregado</label>
-              <input id="monto-pago" class="field-input field-input--highlight" type="number" step="0.01" min="0" placeholder="0,00"/>
+              <div style="display:flex;gap:6px">
+                <input id="monto-pago" class="field-input field-input--highlight" type="number" step="0.01" min="0" placeholder="0,00" style="flex:1"/>
+                <button type="button" id="btn-foco-efectivo" class="btn" style="flex-shrink:0;padding:0 10px;font-size:11px">↵</button>
+              </div>
             </div>
           </div>
 
@@ -388,10 +366,10 @@
             <button class="btn btn-cash qcash" data-cash="5000">$5.000</button>
             <button class="btn btn-cash qcash" data-cash="10000">$10.000</button>
             <button class="btn btn-cash qcash" data-cash="20000">$20.000</button>
-            <button class="btn btn-cash qcash-exacto">Exacto</button>
+            <button class="btn btn-cash qcash-exacto">Exacto <kbd class="kbd-hint">X</kbd></button>
           </div>
 
-          <!-- Resumen grande -->
+          <!-- Resumen -->
           <div class="pago-resumen">
             <div class="pago-linea">
               <span>Subtotal</span>
@@ -422,6 +400,47 @@
             <kbd>F9</kbd>
           </button>
           <button class="btn btn-outline" onclick="document.getElementById('dlg-pago').close()">Cancelar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===== MODAL: Alta rápida de producto ===== -->
+    <dialog id="dlg-rapido" class="dlg">
+      <div class="dlg-card">
+        <div class="dlg-head">
+          <h2>⚡ Producto nuevo rápido</h2>
+          <button id="btn-cerrar-rapido" class="dlg-close" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="form">
+          <div class="rapido-sku-row">
+            <span class="rapido-sku-label">Código de barras</span>
+            <span id="rapido-sku-val" class="rapido-sku-val"></span>
+          </div>
+          <div class="field">
+            <label class="field-label">Nombre del producto *</label>
+            <div class="rapido-nombre-wrap">
+              <input id="rapido-nombre" class="field-input" placeholder="Nombre…" autocomplete="off"/>
+              <span id="rapido-lookup-badge" class="rapido-lookup-badge" style="display:none"></span>
+            </div>
+          </div>
+          <div class="rapido-grid">
+            <div class="field">
+              <label class="field-label">Precio de venta *</label>
+              <input id="rapido-precio" class="field-input field-input--highlight" type="number" step="0.01" min="0" placeholder="0,00"/>
+            </div>
+            <div class="field">
+              <label class="field-label">Costo</label>
+              <input id="rapido-costo" class="field-input" type="number" step="0.01" min="0" placeholder="0,00"/>
+            </div>
+            <div class="field">
+              <label class="field-label">Stock</label>
+              <input id="rapido-stock" class="field-input" type="number" min="0" placeholder="0"/>
+            </div>
+          </div>
+        </div>
+        <div class="dlg-actions">
+          <button id="btn-confirmar-rapido" class="btn btn-finalizar" style="flex:1">⚡ Guardar y agregar</button>
+          <button class="btn btn-outline" onclick="document.getElementById('dlg-rapido').close()">Cancelar</button>
         </div>
       </div>
     </dialog>

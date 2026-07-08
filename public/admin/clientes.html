@@ -22,9 +22,12 @@
       </div>
     </div>
 
-    <!-- Buscador -->
+    <!-- Buscador + filtros -->
     <div class="panel cli-search-panel">
       <input type="text" id="search" class="field-input cli-search-input" placeholder="🔍 Buscar por nombre, email, teléfono o DNI..."/>
+      <button id="btn-solo-deuda" class="btn btn-outline cli-filtro-btn" title="Mostrar solo clientes con saldo pendiente">
+        📒 Solo con deuda
+      </button>
     </div>
 
     <!-- Tabla -->
@@ -38,12 +41,13 @@
               <th>Email</th>
               <th>Teléfono</th>
               <th>DNI</th>
+              <th class="col-saldo">Saldo CC</th>
               <th class="col-acciones">Acciones</th>
             </tr>
           </thead>
           <tbody id="tbodyClientes">
             <tr>
-              <td colspan="6">
+              <td colspan="7">
                 <div class="empty-state">
                   <span class="empty-icon">👥</span>
                   <span>Cargando clientes…</span>

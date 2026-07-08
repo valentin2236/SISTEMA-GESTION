@@ -6,6 +6,9 @@ if (!token) {
 
 const tbody = document.getElementById("tbodyClientes");
 const searchInput = document.getElementById("search");
+const btnSoloDeuda = document.getElementById("btn-solo-deuda");
+
+let soloDeuda = false;
 
 const dlgCliente = document.getElementById("dlg-cliente");
 const btnNuevo = document.getElementById("btnNuevo");
@@ -35,10 +38,11 @@ const cuentaContent = document.getElementById("cuentaContent");
 
 async function cargarClientes(search = "") {
   try {
-    const res = await fetch(`/api/clientes?search=${search}`, {
+    const params = new URLSearchParams({ search });
+    if (soloDeuda) params.set("soloDeuda", "1");
+    const res = await fetch(`/api/clientes?${params}`, {
       headers: { Authorization: "Bearer " + token },
     });
-
     const clientes = await res.json();
     renderClientes(clientes);
   } catch (error) {
@@ -55,16 +59,33 @@ async function cargarClientes(search = "") {
 // RENDER CLIENTES
 // =========================
 
+function money(n) {
+  return (Number(n) || 0).toLocaleString("es-AR", {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  });
+}
+
+function renderSaldoBadge(saldo) {
+  if (saldo > 0) {
+    return `<span class="saldo-badge saldo-badge--deuda">Debe $${money(saldo)}</span>`;
+  }
+  if (saldo < 0) {
+    return `<span class="saldo-badge saldo-badge--favor">A favor $${money(Math.abs(saldo))}</span>`;
+  }
+  return `<span class="saldo-badge saldo-badge--ok">Al día</span>`;
+}
+
 function renderClientes(clientes) {
   tbody.innerHTML = "";
 
   if (!clientes.length) {
+    const msg = soloDeuda ? "Ningún cliente tiene saldo pendiente" : "No se encontraron clientes";
     tbody.innerHTML = `
       <tr>
-        <td colspan="6">
+        <td colspan="7">
           <div class="empty-state">
             <span class="empty-icon">👥</span>
-            <span>No se encontraron clientes</span>
+            <span>${msg}</span>
           </div>
         </td>
       </tr>`;
@@ -72,6 +93,7 @@ function renderClientes(clientes) {
   }
 
   clientes.forEach((cliente) => {
+    const saldo = Number(cliente.saldo_cc || 0);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${cliente.id}</td>
@@ -84,6 +106,7 @@ function renderClientes(clientes) {
       <td class="copy-cell" title="Click para copiar">${cliente.email || "-"}</td>
       <td class="copy-cell" title="Click para copiar">${cliente.telefono || "-"}</td>
       <td class="copy-cell" title="Click para copiar">${cliente.dni || "-"}</td>
+      <td class="col-saldo">${renderSaldoBadge(saldo)}</td>
       <td>
         <div class="cli-actions-row">
           <button class="btn btn-outline btn-sm" data-action="editar" data-id="${cliente.id}" title="Editar cliente">✏️ Editar</button>
@@ -137,6 +160,13 @@ let searchTimeout;
 searchInput.addEventListener("input", (e) => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => cargarClientes(e.target.value), 300);
+});
+
+btnSoloDeuda?.addEventListener("click", () => {
+  soloDeuda = !soloDeuda;
+  btnSoloDeuda.classList.toggle("active", soloDeuda);
+  btnSoloDeuda.textContent = soloDeuda ? "📒 Solo con deuda ✓" : "📒 Solo con deuda";
+  cargarClientes(searchInput.value);
 });
 
 // =========================

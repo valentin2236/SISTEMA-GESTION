@@ -6,6 +6,18 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 
 const router = Router();
 
+// Argentina is UTC-3 with no DST
+function argDate() {
+  return new Date().toLocaleString("sv-SE", {
+    timeZone: "America/Argentina/Buenos_Aires",
+  }).slice(0, 10);
+}
+function argDateDaysAgo(days) {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    .toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" })
+    .slice(0, 10);
+}
+
 // KPIs (ya lo tenías, lo dejo por si falta)
 router.get('/kpis', requireAuth, requireRole('admin','vendedor'), (req, res) => {
   const sql = `
@@ -13,17 +25,17 @@ WITH
 hoy AS (
   SELECT ROUND(IFNULL(SUM(total),0), 2) total, COUNT(*) tickets
   FROM ventas
-  WHERE DATE(fecha)=DATE('now')
+  WHERE DATE(fecha)=DATE(datetime('now', '-3 hours'))
 ),
 sem AS (
   SELECT ROUND(IFNULL(SUM(total),0), 2) total, COUNT(*) tickets
   FROM ventas
-  WHERE DATE(fecha)>=DATE('now','-6 days')
+  WHERE DATE(fecha)>=DATE(datetime('now', '-3 hours'),'-6 days')
 ),
 mes AS (
   SELECT ROUND(IFNULL(SUM(total),0), 2) total, COUNT(*) tickets
   FROM ventas
-  WHERE strftime('%Y-%m',fecha)=strftime('%Y-%m','now')
+  WHERE strftime('%Y-%m',fecha)=strftime('%Y-%m',datetime('now', '-3 hours'))
 )
 
 SELECT
@@ -49,7 +61,7 @@ router.get('/ventas-diarias', requireAuth, requireRole('admin','vendedor'), (req
   const sql = `
     SELECT DATE(fecha) dia, IFNULL(SUM(total),0) total, COUNT(*) tickets
     FROM ventas
-    WHERE DATE(fecha) >= DATE('now','-${dias-1} days')
+    WHERE DATE(fecha) >= DATE(datetime('now', '-3 hours'),'-${dias-1} days')
     GROUP BY DATE(fecha) ORDER BY dia ASC;
   `;
   db.all(sql, [], (err, rows) => err ? res.status(500).json({error:'DB_ERROR', details:err.message}) : res.json(rows));
@@ -66,7 +78,7 @@ router.get('/top-productos', requireAuth, requireRole('admin','vendedor'), (req,
     FROM venta_items vi
     JOIN ventas v ON v.id=vi.venta_id
     JOIN productos p ON p.id=vi.producto_id
-    WHERE DATE(v.fecha) >= DATE('now','-${dias-1} days')
+    WHERE DATE(v.fecha) >= DATE(datetime('now', '-3 hours'),'-${dias-1} days')
     GROUP BY p.id,p.nombre,p.sku
     ORDER BY cant_vendida DESC
     LIMIT ?;
@@ -76,7 +88,7 @@ router.get('/top-productos', requireAuth, requireRole('admin','vendedor'), (req,
 
 // 🔹 Cierre de caja (DÍA)
 router.get('/cierre-caja', requireAuth, requireRole('admin','vendedor'), (req, res) => {
-  const fecha = req.query.fecha || new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  const fecha = req.query.fecha || argDate();
   const sql = `
     SELECT
       medio_pago,
@@ -132,9 +144,8 @@ router.get(
 router.get('/ganancias', requireAuth, requireRole('admin'), (req, res) => {
   const { date_from, date_to } = req.query;
 
-  const desde = date_from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString().slice(0, 10);
-  const hasta = date_to || new Date().toISOString().slice(0, 10);
+  const desde = date_from || argDateDaysAgo(30);
+  const hasta = date_to || argDate();
 
   const sql = `
     SELECT

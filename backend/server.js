@@ -20,6 +20,7 @@ import {
   ensureVentaItemsCosto,
   ensureVentaItemsLibre,
   ensureVentasArcaColumns,
+  ensureCajaTables,
 } from './db.js';
 
 import logger from './utils/logger.js';
@@ -139,6 +140,7 @@ async function ensureAdminUser() {
     await ensureVentaItemsCosto();
     await ensureVentaItemsLibre();
     await ensureVentasArcaColumns();
+    await ensureCajaTables();
 
     if (!process.env.JWT_SECRET) {
       if (process.env.NODE_ENV === 'production') {

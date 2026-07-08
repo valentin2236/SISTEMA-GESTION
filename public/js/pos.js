@@ -81,6 +81,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /* ===================== BARCODE LOOKUP ===================== */
+  async function lookupBarcode(code) {
+    try {
+      const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+      const d = await r.json();
+      if (d.status === 1 && d.product) {
+        const p = d.product;
+        return {
+          nombre: p.product_name_es || p.product_name || p.abbreviated_product_name || "",
+          categoria: (p.categories_tags?.[0] || "").replace(/^[a-z]{2}:/, ""),
+          fuente: "Open Food Facts"
+        };
+      }
+    } catch {}
+    try {
+      const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`);
+      const d = await r.json();
+      if (d.items?.length) {
+        const item = d.items[0];
+        return { nombre: item.title || "", categoria: item.category || "", fuente: "UPC Item DB" };
+      }
+    } catch {}
+    return null;
+  }
+
   /* ===================== DOM refs ===================== */
   const $buscar = document.getElementById("buscar");
   const $btnBuscar = document.getElementById("btn-buscar");
@@ -474,53 +499,78 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       return;
     }
     const data = r.data || [];
-    const exacto = data.find((p) => String(p.sku) === q);
+    const esBarcode = /^\d{6,}$/.test(q);
+    const exacto = data.find((p) => String(p.sku).trim() === q.trim());
     if (exacto) {
       agregarProducto(exacto.id, exacto.nombre, exacto.precio);
       $buscar.value = "";
       $res.innerHTML = "";
       return;
     }
-    $res.innerHTML = data.length
-      ? data
-          .map(
-            (p) => `
-          <div class="card">
-            <div class="name">${p.nombre}</div>
-            <div class="sku">SKU: ${p.sku || ""} ${p.stock != null ? `<span style="margin-left:8px;font-size:11px;${p.stock <= 5 ? 'color:var(--danger);font-weight:700' : 'opacity:.6'}">Stock: ${p.stock}</span>` : ""}</div>
-            <div class="row">
-              <div class="price">$ ${money(p.precio)}</div>
-              <button class="btn" data-add="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" ${p.stock <= 0 ? 'disabled style="opacity:.4"' : ""}>
-                ${p.stock <= 0 ? "Sin stock" : "Agregar"}
-              </button>
-            </div>
-          </div>`,
-          )
-          .join("")
-      : '<div class="card">Sin resultados</div>';
+    // Barcode con un único resultado → auto-agregar sin necesidad de SKU exacto
+    if (esBarcode && data.length === 1) {
+      const p = data[0];
+      if (p.stock > 0) {
+        agregarProducto(p.id, p.nombre, p.precio);
+        $buscar.value = "";
+        $res.innerHTML = "";
+        return;
+      }
+    }
+    if (!data.length) {
+      if (esBarcode) {
+        $res.innerHTML = "";
+        $buscar.value = "";
+        abrirModalRapido(q);
+      } else {
+        $res.innerHTML = '<div class="card">Sin resultados</div>';
+      }
+      return;
+    }
+    $res.innerHTML = data
+      .map(
+        (p) => `
+      <div class="card">
+        <div class="name">${p.nombre}</div>
+        <div class="sku">SKU: ${p.sku || ""} ${p.stock != null ? `<span style="margin-left:8px;font-size:11px;${p.stock <= 5 ? 'color:var(--danger);font-weight:700' : 'opacity:.6'}">Stock: ${p.stock}</span>` : ""}</div>
+        <div class="row">
+          <div class="price">$ ${money(p.precio)}</div>
+          <button class="btn" data-add="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" ${p.stock <= 0 ? 'disabled style="opacity:.4"' : ""}>
+            ${p.stock <= 0 ? "Sin stock" : "Agregar"}
+          </button>
+        </div>
+      </div>`,
+      )
+      .join("");
   }
 
   $btnBuscar?.addEventListener("click", buscarProductos);
+
+  // Live search al tipear
+  let _buscarTimer;
+  $buscar?.addEventListener("input", () => {
+    clearTimeout(_buscarTimer);
+    const q = ($buscar.value || "").trim();
+    if (!q) { if ($res) $res.innerHTML = ""; return; }
+    _buscarTimer = setTimeout(buscarProductos, 220);
+  });
+
   $buscar?.addEventListener("keydown", async (e) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
+    clearTimeout(_buscarTimer);
     const q = ($buscar.value || "").trim();
     if (!q) return;
-    const r = await api(
-      `/api/productos?search=${encodeURIComponent(q)}`,
-      {},
-      { fallbackNoAuth: true },
-    );
-    if (!r.ok) {
-      showStatus("Error buscando producto", "error");
-      return;
-    }
-    const productos = r.data || [];
-    if (productos.length === 1) {
-      const p = productos[0];
-      agregarProducto(p.id, p.nombre, p.precio);
-      $buscar.value = "";
-      return;
+    const esBarcode = /^\d{6,}$/.test(q);
+    // Para barcodes: siempre buscar fresh (ignora resultados anteriores)
+    if (!esBarcode) {
+      const firstBtn = $res?.querySelector("button[data-add]:not([disabled])");
+      if (firstBtn) {
+        firstBtn.click();
+        $buscar.value = "";
+        if ($res) $res.innerHTML = "";
+        return;
+      }
     }
     buscarProductos();
   });
@@ -534,6 +584,30 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       Number(btn.dataset.precio),
     );
   });
+
+  /* ── Widget último producto agregado ── */
+  function actualizarUltimoProd() {
+    const wrap = document.getElementById("ultimo-prod-wrap");
+    if (!wrap) return;
+    if (!state.carrito.length) { wrap.style.display = "none"; return; }
+    const p = state.carrito[state.carrito.length - 1];
+    wrap.style.display = "";
+    document.getElementById("ultimo-prod-nombre").textContent = p.nombre;
+    document.getElementById("ultimo-prod-cant").textContent   = `×${p.cantidad}`;
+    document.getElementById("ultimo-prod-precio").textContent = `$${money(p.precio)}`;
+    document.getElementById("ultimo-prod-sub").textContent    = `$${money(p.precio * p.cantidad)}`;
+    // Imagen si tiene
+    const imgEl = document.getElementById("ultimo-prod-img");
+    if (p.imagen) {
+      imgEl.innerHTML = `<img src="${p.imagen}" style="width:40px;height:40px;object-fit:cover;border-radius:8px">`;
+    } else {
+      imgEl.textContent = "📦";
+    }
+    // Animación flash
+    wrap.classList.remove("ultimo-flash");
+    void wrap.offsetWidth;
+    wrap.classList.add("ultimo-flash");
+  }
 
   async function agregarProducto(id, nombre, precio) {
     const idx = state.carrito.findIndex((i) => i.id === id);
@@ -551,6 +625,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     renderCarrito();
     refreshTotals();
     renderPreview();
+    actualizarUltimoProd();
 
     // Verificar stock disponible
     if (id > 0) {
@@ -883,16 +958,29 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       renderCarrito();
       refreshTotals();
       renderPreview();
+      actualizarUltimoProd();
     });
   });
 
   /* ===================== ABRIR MODAL DE PAGO ===================== */
-  function abrirModalPago() {
+  async function abrirModalPago() {
     if (!state.carrito.length) {
       Swal.fire({
         icon: "warning",
         title: "Carrito vacío",
         text: "Agregá al menos un producto",
+        confirmButtonColor: "#00d875",
+      });
+      return;
+    }
+
+    // Bloquear venta si la caja no está abierta
+    const cajaRes = await api("/api/caja/estado", {}, { fallbackNoAuth: false });
+    if (!cajaRes.ok || !cajaRes.data?.abierta) {
+      Swal.fire({
+        icon: "warning",
+        title: "Caja cerrada",
+        text: "Abrí la caja antes de realizar ventas",
         confirmButtonColor: "#00d875",
       });
       return;
@@ -928,11 +1016,79 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
     $dlgPago?.showModal();
     refreshModalTotals();
-    setTimeout(() => $montoPago?.focus(), 50);
+    setTimeout(() => document.getElementById("monto-pago")?.focus(), 50);
   }
 
   $btnFinalizar?.addEventListener("click", abrirModalPago);
   document.getElementById("btn-cerrar-pago")?.addEventListener("click", () => $dlgPago?.close());
+
+  /* ===================== MODAL ALTA RÁPIDA ===================== */
+  const $dlgRapido = document.getElementById("dlg-rapido");
+  let _rapidoSku = "";
+
+  async function abrirModalRapido(sku) {
+    _rapidoSku = sku;
+    const $skuVal = document.getElementById("rapido-sku-val");
+    const $nombre = document.getElementById("rapido-nombre");
+    const $precio = document.getElementById("rapido-precio");
+    const $costo = document.getElementById("rapido-costo");
+    const $stock = document.getElementById("rapido-stock");
+    const $badge = document.getElementById("rapido-lookup-badge");
+
+    if ($skuVal) $skuVal.textContent = sku;
+    if ($nombre) { $nombre.value = ""; $nombre.placeholder = "Buscando en base de datos…"; }
+    if ($precio) $precio.value = "";
+    if ($costo) $costo.value = "";
+    if ($stock) $stock.value = "";
+    if ($badge) $badge.style.display = "none";
+
+    $dlgRapido?.showModal();
+    setTimeout(() => $nombre?.focus(), 50);
+
+    const info = await lookupBarcode(sku);
+    if (_rapidoSku !== sku) return; // modal fue cerrado/reemplazado mientras buscaba
+    if (info?.nombre && $nombre) {
+      $nombre.value = info.nombre;
+      $nombre.placeholder = "Nombre del producto";
+      if ($badge) {
+        $badge.textContent = `✅ ${info.fuente}`;
+        $badge.style.display = "";
+      }
+      if (document.activeElement === $nombre || !$nombre.value) $precio?.focus();
+    } else if ($nombre) {
+      $nombre.placeholder = "No encontrado — escribí el nombre";
+    }
+  }
+
+  document.getElementById("btn-cerrar-rapido")?.addEventListener("click", () => $dlgRapido?.close());
+
+  document.getElementById("btn-confirmar-rapido")?.addEventListener("click", async () => {
+    const nombre = (document.getElementById("rapido-nombre")?.value || "").trim();
+    const precio = Number(document.getElementById("rapido-precio")?.value || 0);
+    const costo = Number(document.getElementById("rapido-costo")?.value || 0);
+    const stock = Number(document.getElementById("rapido-stock")?.value || 0);
+
+    if (!nombre) { showStatus("Ingresá el nombre del producto", "error"); return; }
+    if (!precio) { showStatus("El precio es obligatorio", "error"); return; }
+
+    const r = await api("/api/productos", {
+      method: "POST",
+      body: JSON.stringify({ nombre, precio, costo, stock, sku: _rapidoSku })
+    });
+    if (!r.ok) { showStatus("Error al guardar el producto", "error"); return; }
+
+    $dlgRapido?.close();
+    agregarProducto(r.data.id, nombre, precio);
+    showStatus(`✅ "${nombre}" creado y agregado al carrito`, "success");
+  });
+
+  $dlgRapido?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target?.tagName !== "BUTTON") {
+      e.preventDefault();
+      document.getElementById("btn-confirmar-rapido")?.click();
+    }
+    if (e.key === "Escape") $dlgRapido?.close();
+  });
 
   /* ===================== BOTONES MÉTODO DE PAGO ===================== */
   document.querySelectorAll(".pago-metodo-btn").forEach(btn => {
@@ -958,6 +1114,10 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
       refreshModalTotals();
       renderPreview();
+      setTimeout(() => {
+        if (isCash) document.getElementById("monto-pago")?.focus();
+        else if (!isCta) $btnConfirmarPago?.focus();
+      }, 50);
     });
   });
 
@@ -991,6 +1151,22 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     if (e.key === "Enter") { e.preventDefault(); buscarClienteEnModal(); }
   });
 
+  // Live search cliente en modal
+  let _cliModalTimer;
+  document.getElementById("pago-buscar-cliente")?.addEventListener("input", () => {
+    clearTimeout(_cliModalTimer);
+    const q = (document.getElementById("pago-buscar-cliente")?.value || "").trim();
+    const $r = document.getElementById("pago-clientes-result");
+    if (!q) { if ($r) $r.innerHTML = ""; return; }
+    _cliModalTimer = setTimeout(buscarClienteEnModal, 220);
+  });
+
+  // Botón para enfocar campo efectivo
+  document.getElementById("btn-foco-efectivo")?.addEventListener("click", () => {
+    $montoPago?.focus();
+    $montoPago?.select();
+  });
+
   async function buscarClienteEnModal() {
     const $input = document.getElementById("pago-buscar-cliente");
     const $result = document.getElementById("pago-clientes-result");
@@ -1002,7 +1178,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     const data = r.data || [];
     $result.innerHTML = data.length
       ? data.slice(0, 5).map(c => `
-          <div class="pago-cli-item" data-cli-id="${c.id}" data-cli-nombre="${c.nombre}">
+          <div class="pago-cli-item cli-result-item" data-cli-id="${c.id}" data-cli-nombre="${c.nombre}">
             <span><strong>${c.nombre}</strong> <span style="opacity:.6;font-size:11px">${c.dni || ""}</span></span>
             <span style="color:var(--accent);font-size:12px;font-weight:600">Seleccionar</span>
           </div>`).join("")
@@ -1059,6 +1235,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
         id: i.id,
         cantidad: i.cantidad,
         precio: i.precio,
+        ...(i.esLibre ? { esLibre: true, nombre: i.nombre } : {}),
       })),
       descuento: {
         tipo: state.descuentoTipo,
@@ -1096,7 +1273,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     state.ventasHoy.push({
       id: r.data.id,
       fecha: new Date().toISOString(),
-      total: calcSubTotal() - Math.min(calcDesc(calcSubTotal()), calcSubTotal()),
+      total: r.data.total,
       medio_pago: state.medioPago,
       cliente_nombre: state.cliente?.nombre || null,
     });
@@ -1131,7 +1308,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
     const tok = localStorage.getItem("token") || "";
     const cfg = localStorage.getItem("cfg") || "{}";
-    const ticketUrl = `/ticket.html?id=${_ventaId}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${encodeURIComponent(btoa(cfg))}`;
+    const ticketUrl = `/ticket.html?id=${_ventaId}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${btoa(unescape(encodeURIComponent(cfg)))}`;
     const cfgObj = JSON.parse(cfg || "{}");
 
     try {
@@ -1166,13 +1343,22 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     const tag = (e.target?.tagName || "").toLowerCase();
     const enInput = ["input", "textarea", "select"].includes(tag);
 
-    // Atajos F1-F9
+    // ── Atajos de teclado POS ──────────────────────────────
+    // F1 → foco búsqueda de productos (o cliente si el modal está abierto en cta. corriente)
     if (e.key === "F1") {
       e.preventDefault();
+      if ($dlgPago?.open) {
+        const cliSection = document.getElementById("pago-cliente-section");
+        if (cliSection && cliSection.style.display !== "none") {
+          document.getElementById("pago-buscar-cliente")?.focus();
+          return;
+        }
+      }
       $buscar?.focus();
       $buscar?.select();
       return;
     }
+    // F2 / F3 → cantidad último ítem
     if (!enInput && (e.key === "F2" || e.key === "F3")) {
       e.preventDefault();
       if (!state.carrito.length) return;
@@ -1183,16 +1369,92 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       renderCarrito();
       refreshTotals();
       renderPreview();
+      actualizarUltimoProd();
       return;
     }
+    // F4 → agregar por precio (no si hay otro modal abierto)
+    if (e.key === "F4") {
+      e.preventDefault();
+      if (!$dlgRapido?.open) document.getElementById("btn-precio-libre")?.click();
+      return;
+    }
+    // F8 → vaciar carrito
+    if (e.key === "F8") {
+      e.preventDefault();
+      if (state.carrito.length > 0) $btnVaciar?.click();
+      return;
+    }
+    // F9 → abrir modal pago / confirmar (no si hay modal secundario abierto)
     if (e.key === "F9") {
       e.preventDefault();
+      if ($dlgRapido?.open || $dlgPrecioLibre?.open) return;
       if ($dlgPago?.open) {
         $btnConfirmarPago?.click();
       } else if (state.carrito.length > 0) {
         abrirModalPago();
       }
       return;
+    }
+    // Del/Supr → eliminar último ítem del carrito
+    if (!enInput && (e.key === "Delete" || e.key === "Backspace")) {
+      if (!state.carrito.length) return;
+      e.preventDefault();
+      state.carrito.splice(state.carrito.length - 1, 1);
+      renderCarrito();
+      refreshTotals();
+      renderPreview();
+      actualizarUltimoProd();
+      return;
+    }
+    // Atajos dentro del modal de pago (métodos + exacto)
+    if ($dlgPago?.open && !enInput) {
+      const map = { e: "efectivo", t: "tarjeta", r: "transferencia", c: "cuenta_corriente" };
+      const metodo = map[e.key.toLowerCase()];
+      if (metodo) {
+        e.preventDefault();
+        const btn = $dlgPago.querySelector(`.pago-metodo-btn[data-metodo="${metodo}"]`);
+        btn?.click();
+        // Si es cuenta corriente, foco automático al buscador de cliente
+        if (metodo === "cuenta_corriente") {
+          setTimeout(() => document.getElementById("pago-buscar-cliente")?.focus(), 80);
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === "x") {
+        e.preventDefault();
+        $dlgPago.querySelector(".qcash-exacto")?.click();
+        return;
+      }
+      // Flechas para navegar métodos de pago (todas las direcciones)
+      // Solo actúa cuando el foco NO está en un input (guard !enInput ya aplicado)
+      if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)) {
+        // Si hay resultados de cliente visibles, ↑↓ los navega
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          const clientItems = [...$dlgPago.querySelectorAll(".pago-clientes-result .cli-result-item")];
+          if (clientItems.length) {
+            e.preventDefault();
+            const focused = $dlgPago.querySelector(".cli-result-item.kb-focus");
+            let idx = focused ? clientItems.indexOf(focused) : -1;
+            focused?.classList.remove("kb-focus");
+            idx = e.key === "ArrowDown" ? (idx + 1) % clientItems.length : (idx - 1 + clientItems.length) % clientItems.length;
+            clientItems[idx].classList.add("kb-focus");
+            clientItems[idx].scrollIntoView({ block: "nearest" });
+            return;
+          }
+        }
+        // Cualquier flecha cicla métodos de pago
+        e.preventDefault();
+        const btns = [...$dlgPago.querySelectorAll(".pago-metodo-btn")];
+        const ci = btns.findIndex(b => b.classList.contains("active"));
+        const forward = e.key === "ArrowRight" || e.key === "ArrowDown";
+        const ni = forward ? (ci + 1) % btns.length : (ci - 1 + btns.length) % btns.length;
+        btns[ni]?.click();
+        return;
+      }
+      if (e.key === "Enter") {
+        const focused = $dlgPago.querySelector(".cli-result-item.kb-focus");
+        if (focused) { e.preventDefault(); focused.click(); return; }
+      }
     }
 
     // Foco automático al escanear: cualquier caracter imprimible
@@ -1282,7 +1544,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
   document
     .getElementById("btn-cerrar-precio-libre")
-    ?.addEventListener("click", () => $dlgPrecioLibre?.close());
+    ?.addEventListener("click", () => { $dlgPrecioLibre?.close(); setTimeout(() => $buscar?.focus(), 50); });
 
   document
     .getElementById("btn-agregar-precio-libre")
@@ -1318,13 +1580,15 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       renderCarrito();
       refreshTotals();
       renderPreview();
+      actualizarUltimoProd();
       $dlgPrecioLibre?.close();
+      setTimeout(() => $buscar?.focus(), 50);
       showStatus(`"${desc}" agregado al carrito`, "info");
     });
 
   // Enter en el dialog precio libre
   $dlgPrecioLibre?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.target?.id !== "btn-agregar-precio-libre") {
+    if (e.key === "Enter" && e.target?.tagName !== "BUTTON") {
       e.preventDefault();
       document.getElementById("btn-agregar-precio-libre")?.click();
     }

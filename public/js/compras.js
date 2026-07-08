@@ -68,6 +68,38 @@ $buscar?.addEventListener("input", (e) => {
   searchTimer = setTimeout(() => buscarProductos(q), 250);
 });
 
+$buscar?.addEventListener("keydown", async (e) => {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  clearTimeout(searchTimer);
+  const q = $buscar.value.trim();
+  if (!q) return;
+
+  try {
+    const res = await apiFetch(`/api/productos?search=${encodeURIComponent(q)}&limit=20`);
+    const data = await res.json();
+    const prods = Array.isArray(data) ? data : [];
+    const esBarcode = /^\d{4,}$/.test(q);
+
+    const exacto = prods.find(p => String(p.sku || "").trim() === q.trim());
+    if (exacto) {
+      agregarProducto(exacto.id, exacto.nombre, exacto.costo || exacto.precio);
+      $buscar.value = "";
+      if ($resultados) $resultados.innerHTML = "";
+      return;
+    }
+    if (esBarcode && prods.length === 1) {
+      agregarProducto(prods[0].id, prods[0].nombre, prods[0].costo || prods[0].precio);
+      $buscar.value = "";
+      if ($resultados) $resultados.innerHTML = "";
+      return;
+    }
+    renderResultados(prods);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
 async function buscarProductos(q) {
   try {
     const res = await apiFetch(
