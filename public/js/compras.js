@@ -262,12 +262,32 @@ $btnGuardar?.addEventListener("click", async () => {
   });
   if (!confirm.isConfirmed) return;
 
+  // Preguntar si registrar egreso en caja
+  let registrarCaja = false;
+  try {
+    const estadoRes = await apiFetch("/api/caja/estado");
+    const estadoData = await estadoRes.json();
+    if (estadoData.abierta) {
+      const cajaConfirm = await Swal.fire({
+        title: "¿Registrar egreso en caja?",
+        html: `¿Querés registrar esta compra como egreso de <b>$${money(total)}</b> en la sesión de caja actual?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, registrar",
+        cancelButtonText: "No",
+        confirmButtonColor: "#00d875",
+      });
+      registrarCaja = cajaConfirm.isConfirmed;
+    }
+  } catch (_) {}
+
   try {
     const res = await apiFetch("/api/compras", {
       method: "POST",
       body: JSON.stringify({
         proveedor_id: $proveedor.value,
         nota: ($nota?.value || "").trim(),
+        registrar_caja: registrarCaja,
         productos: carrito.map((p) => ({
           id: p.id,
           producto_id: p.id,

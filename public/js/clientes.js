@@ -513,6 +513,7 @@ cerrarCuenta.addEventListener("click", () => dlgCuenta.close());
 
 async function registrarMovimiento(clienteId, tipo, clienteNombre) {
   const esPago = tipo === "pago";
+  const fechaHoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" }).slice(0, 10);
   const { value: formValues } = await Swal.fire({
     title: esPago ? "💵 Registrar pago" : "📝 Registrar deuda",
     html: `
@@ -521,6 +522,8 @@ async function registrarMovimiento(clienteId, tipo, clienteNombre) {
         <input id="swal-monto" type="number" class="swal2-input" placeholder="Ej: 5000" min="1" step="0.01" style="margin:0">
         <label style="font-size:13px;font-weight:600">Descripción</label>
         <input id="swal-desc" type="text" class="swal2-input" placeholder="${esPago ? 'Ej: Pago parcial de deuda' : 'Ej: Compra a crédito'}" style="margin:0">
+        <label style="font-size:13px;font-weight:600">Fecha del movimiento</label>
+        <input id="swal-fecha" type="date" class="swal2-input" value="${fechaHoy}" max="${fechaHoy}" style="margin:0">
       </div>`,
     showCancelButton: true,
     confirmButtonText: esPago ? "Registrar pago" : "Registrar deuda",
@@ -529,11 +532,16 @@ async function registrarMovimiento(clienteId, tipo, clienteNombre) {
     preConfirm: () => {
       const monto = document.getElementById("swal-monto").value;
       const descripcion = document.getElementById("swal-desc").value;
+      const fecha = document.getElementById("swal-fecha").value;
       if (!monto || Number(monto) <= 0) {
         Swal.showValidationMessage("Ingresá un monto válido mayor a 0");
         return false;
       }
-      return { monto, descripcion };
+      if (!fecha) {
+        Swal.showValidationMessage("Seleccioná una fecha");
+        return false;
+      }
+      return { monto, descripcion, fecha };
     },
   });
 
@@ -550,6 +558,7 @@ async function registrarMovimiento(clienteId, tipo, clienteNombre) {
         tipo,
         monto: Number(formValues.monto),
         descripcion: formValues.descripcion,
+        fecha: formValues.fecha,
       }),
     });
 

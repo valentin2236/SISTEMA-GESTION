@@ -54,6 +54,11 @@
       <div class="kpi-value red"><span id="stock-bajo-total">0</span></div>
       <div class="kpi-sub">Requieren atención</div>
     </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ganancia hoy</div>
+      <div class="kpi-value green">$<span id="gan-hoy">—</span></div>
+      <div class="kpi-sub" id="gan-margen-sub">margen —%</div>
+    </div>
   </div>
 
   <!-- QUICK ACTIONS -->
@@ -211,6 +216,17 @@ fetch('/api/reportes/kpis', { headers: { Authorization: 'Bearer ' + token } })
     // Ticket promedio
     const prom = k.tickets_hoy > 0 ? (k.total_hoy / k.tickets_hoy) : 0;
     document.getElementById('ticket-prom').textContent = money(prom);
+  }).catch(() => {});
+
+// Ganancia hoy
+const _hoy = new Date().toLocaleString('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires' }).slice(0, 10);
+fetch(`/api/reportes/ganancias?date_from=${_hoy}&date_to=${_hoy}`, { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => { if (!r.ok) return {}; return r.json(); })
+  .then(g => {
+    const el = document.getElementById('gan-hoy');
+    const sub = document.getElementById('gan-margen-sub');
+    if (el) el.textContent = money(g.total_ganancia || 0);
+    if (sub) sub.textContent = `margen ${g.margen_promedio || 0}%`;
   }).catch(() => {});
 
 // Estado caja

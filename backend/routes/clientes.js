@@ -438,8 +438,13 @@ router.post(
     const {
       tipo,
       monto,
-      descripcion
+      descripcion,
+      fecha,
     } = req.body;
+
+    const fechaSql = fecha
+      ? `${fecha} 00:00:00`
+      : new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" });
 
     await run(`
       INSERT INTO cuentas_corrientes (
@@ -447,15 +452,17 @@ router.post(
         tipo,
         monto,
         descripcion,
+        fecha,
         usuario
       )
-      VALUES (?,?,?,?,?)
+      VALUES (?,?,?,?,?,?)
     `,
     [
       id,
       tipo,
       monto,
       descripcion,
+      fechaSql,
       req.user.email
     ]);
 

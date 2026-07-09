@@ -197,6 +197,14 @@ function renderEstado(data) {
   if ($cardTotalVentas)  $cardTotalVentas.textContent  = `$${money(totalVentas)}`;
   if ($cardTotalTickets) $cardTotalTickets.textContent = `${totalTickets} venta${totalTickets !== 1 ? "s" : ""}`;
 
+  const ganancia = Number(data.ganancia_sesion || 0);
+  const ingresos = Number(data.ingresos_sesion || 0);
+  const margen   = ingresos > 0 ? Math.round((ganancia / ingresos) * 100) : 0;
+  const $cardGanancia = document.getElementById("card-ganancia-sesion");
+  const $cardGanMargen = document.getElementById("card-ganancia-margen");
+  if ($cardGanancia)  $cardGanancia.textContent  = `$${money(ganancia)}`;
+  if ($cardGanMargen) $cardGanMargen.textContent = `margen ${margen}%`;
+
   renderMovimientos(data.movimientos || []);
   renderCierrePreview(data);
 }

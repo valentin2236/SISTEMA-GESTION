@@ -1073,6 +1073,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
 
     const r = await api("/api/productos", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nombre, precio, costo, stock, sku: _rapidoSku })
     });
     if (!r.ok) { showStatus("Error al guardar el producto", "error"); return; }

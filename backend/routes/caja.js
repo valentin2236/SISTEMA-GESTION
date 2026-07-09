@@ -154,6 +154,16 @@ router.get(
       const ventasTransferencia = getMet("transferencia");
       const ventasCuenta        = getMet("cuenta_corriente");
 
+      // ganancia de la sesión
+      const gananciaRow = await get(
+        `SELECT ROUND(IFNULL(SUM((vi.precio_unitario - vi.costo_unitario) * vi.cantidad), 0), 2) AS ganancia,
+                ROUND(IFNULL(SUM(vi.precio_unitario * vi.cantidad), 0), 2) AS ingresos
+         FROM ventas v
+         JOIN venta_items vi ON vi.venta_id = v.id
+         WHERE datetime(v.fecha) >= datetime(?)`,
+        [s.fecha_apertura],
+      );
+
       // movimientos
 
       const movs = await all(
@@ -206,6 +216,9 @@ router.get(
         total_egresos:  totalEgr,
 
         efectivo_esperado: efectivoEsperado,
+
+        ganancia_sesion: Number(gananciaRow?.ganancia || 0),
+        ingresos_sesion: Number(gananciaRow?.ingresos || 0),
       });
     } catch (e) {
       console.error(e);
