@@ -155,7 +155,7 @@ router.get(
       const ventasCuenta        = getMet("cuenta_corriente");
 
       // ganancia de la sesión
-      const gananciaRow = await get(
+      const gananciaRow = await getOne(
         `SELECT ROUND(IFNULL(SUM((vi.precio_unitario - vi.costo_unitario) * vi.cantidad), 0), 2) AS ganancia,
                 ROUND(IFNULL(SUM(vi.precio_unitario * vi.cantidad), 0), 2) AS ingresos
          FROM ventas v
