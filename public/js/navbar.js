@@ -78,6 +78,7 @@
         { href: "/admin/proveedores.html",   icon: "🚚", label: "Proveedores", feature: "proveedores" },
         { href: "/admin/compras.html",       icon: "🛒", label: "Compras", feature: "compras" },
         { href: "/admin/ganancias.html",     icon: "📈", label: "Ganancias", feature: "ganancias" },
+        { href: "/admin/promociones.html",   icon: "🏷️", label: "Promociones", feature: null },
         { href: "/admin/usuarios.html",      icon: "🔑", label: "Usuarios", feature: null },
         { href: "/admin/auditoria.html",     icon: "🔍", label: "Auditoría", feature: "auditoria" },
         { href: "/config.html",              icon: "⚙️", label: "Configuración", feature: null },

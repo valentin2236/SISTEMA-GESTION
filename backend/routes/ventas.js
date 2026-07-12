@@ -35,11 +35,11 @@ router.get(
   requireRole("admin", "vendedor"),
   async (req, res) => {
     try {
-      const { date_from, date_to, medio } = req.query;
+      const { date_from, date_to, medio, hora_desde, hora_hasta } = req.query;
 
       const limit = Math.min(
         Math.max(parseInt(req.query.limit ?? "50", 10), 1),
-        200,
+        500,
       );
 
       const offset = Math.max(parseInt(req.query.offset ?? "0", 10), 0);
@@ -59,12 +59,22 @@ router.get(
 
       if (
         medio &&
-        ["efectivo", "tarjeta", "transferencia"].includes(
+        ["efectivo", "tarjeta", "transferencia", "cuenta_corriente"].includes(
           String(medio).toLowerCase(),
         )
       ) {
         where.push(`LOWER(medio_pago) = ?`);
         params.push(String(medio).toLowerCase());
+      }
+
+      if (hora_desde) {
+        where.push(`time(fecha) >= time(?)`);
+        params.push(hora_desde);
+      }
+
+      if (hora_hasta) {
+        where.push(`time(fecha) <= time(?)`);
+        params.push(hora_hasta);
       }
 
       const whereSQL = where.length ? `WHERE ${where.join(" AND ")}` : "";

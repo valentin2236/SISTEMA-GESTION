@@ -609,6 +609,16 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     wrap.classList.add("ultimo-flash");
   }
 
+  // Cache de promos activas: { productoId: { cantidad, precio_promo, nombre } }
+  const _promosCache = {};
+  async function getPromo(productoId) {
+    if (productoId <= 0) return null;
+    if (_promosCache[productoId] !== undefined) return _promosCache[productoId];
+    const r = await api(`/api/promociones/producto/${productoId}`, {}, { fallbackNoAuth: true });
+    _promosCache[productoId] = (r.ok && r.data) ? r.data : null;
+    return _promosCache[productoId];
+  }
+
   async function agregarProducto(id, nombre, precio) {
     const idx = state.carrito.findIndex((i) => i.id === id);
     if (idx >= 0) {
@@ -620,8 +630,31 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
         precio,
         precioOriginal: precio,
         cantidad: 1,
+        promo: null,
       });
     }
+
+    // Verificar si hay promo activa y aplicarla
+    if (id > 0) {
+      const promo = await getPromo(id);
+      const item  = state.carrito.find(i => i.id === id);
+      if (promo && item) {
+        item.promo = promo;
+        const packs        = Math.floor(item.cantidad / promo.cantidad);
+        const resto        = item.cantidad % promo.cantidad;
+        const precioEfect  = packs > 0
+          ? ((packs * promo.precio_promo) + (resto * item.precioOriginal)) / item.cantidad
+          : item.precioOriginal;
+        item.precio = Math.round(precioEfect * 100) / 100;
+        if (packs > 0) {
+          showStatus(`🏷️ Promo "${promo.nombre}" aplicada — ${packs} pack${packs > 1 ? "s" : ""} de ${promo.cantidad}`, "info");
+        }
+      } else if (item) {
+        item.promo  = null;
+        item.precio = item.precioOriginal;
+      }
+    }
+
     renderCarrito();
     refreshTotals();
     renderPreview();
@@ -665,7 +698,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       .map(
         (it, ix) => `
       <tr>
-        <td class="td-nombre">${it.nombre}</td>
+        <td class="td-nombre">${it.nombre}${it.promo && Math.floor(it.cantidad / it.promo.cantidad) > 0 ? ` <span class="promo-cart-badge">🏷️ ${it.promo.nombre}</span>` : ""}</td>
         <td class="td-precio">
           <span
             class="precio-editable"

@@ -49,6 +49,7 @@ import licenciaRoutes from './routes/licencia.js';
 import exportarRoutes from './routes/exportar.js';
 import iaRoutes from './routes/ia.js';
 import arcaRoutes from './routes/arca.js';
+import promocionesRoutes from './routes/promociones.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -171,6 +172,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/licencia', licenciaRoutes);
 app.use('/api/reportes', reportesRoutes);
+app.use('/api/promociones', promocionesRoutes);
 
 // Restringidas por plan
 app.use('/api/inventario', requireFeature('inventario'), inventarioRoutes);

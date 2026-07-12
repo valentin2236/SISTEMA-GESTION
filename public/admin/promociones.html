@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Promociones — Sistema Gestión PRO</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body class="promo-page">
+
+  <script src="../js/auth-guard.js" data-rol="admin"></script>
+  <script src="../js/navbar.js"></script>
+
+  <main class="promo-wrap">
+
+    <div class="promo-topbar">
+      <div>
+        <h1 class="promo-title">🏷️ Promociones</h1>
+        <p class="promo-sub">Gestioná las ofertas y descuentos por cantidad</p>
+      </div>
+      <button id="btn-nueva-promo" class="btn btn-primary">+ Nueva promo</button>
+    </div>
+
+    <!-- Lista de promos -->
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="center">Promo</th>
+              <th class="right">Precio promo</th>
+              <th class="right">Precio normal</th>
+              <th class="right">Ahorro</th>
+              <th class="center">Válida hasta</th>
+              <th class="center">Estado</th>
+              <th style="width:90px"></th>
+            </tr>
+          </thead>
+          <tbody id="promo-tbody">
+            <tr><td colspan="8">
+              <div class="empty-state">
+                <span class="empty-icon">🏷️</span>
+                <span>Cargando...</span>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal nueva promo -->
+  <dialog id="dlg-promo" class="dlg">
+    <div class="dlg-card" style="min-width:420px;max-width:500px">
+      <div class="dlg-head">
+        <h2>🏷️ Nueva promoción</h2>
+        <button id="btn-cerrar-promo" class="dlg-close">✕</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;padding:4px 0">
+
+        <!-- Buscar producto -->
+        <div class="field">
+          <label class="field-label">Producto *</label>
+          <input id="promo-buscar" type="text" class="field-input" placeholder="Buscá por nombre o SKU…" autocomplete="off"/>
+          <div id="promo-resultados" style="position:relative"></div>
+          <input id="promo-producto-id" type="hidden"/>
+          <div id="promo-producto-sel" class="promo-sel-badge" style="display:none"></div>
+        </div>
+
+        <!-- Tipo de promo -->
+        <div class="field">
+          <label class="field-label">Tipo de promoción *</label>
+          <div class="promo-tipos" id="promo-tipos">
+            <button type="button" class="promo-tipo-btn active" data-cant="2" data-pagado="1">2×1</button>
+            <button type="button" class="promo-tipo-btn" data-cant="3" data-pagado="2">3×2</button>
+            <button type="button" class="promo-tipo-btn" data-cant="4" data-pagado="3">4×3</button>
+            <button type="button" class="promo-tipo-btn" data-cant="" data-pagado="">Personalizado</button>
+          </div>
+        </div>
+
+        <!-- Cantidad (visible solo en personalizado) -->
+        <div class="field" id="campo-cantidad" style="display:none">
+          <label class="field-label">Cantidad de unidades *</label>
+          <input id="promo-cantidad" type="number" class="field-input" min="2" step="1" placeholder="Ej: 5"/>
+        </div>
+
+        <!-- Precio sugerido + precio final -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label class="field-label">Precio sugerido</label>
+            <input id="promo-precio-sugerido" type="text" class="field-input" disabled style="opacity:.6"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Precio del pack *</label>
+            <input id="promo-precio" type="number" class="field-input" min="0" step="0.01" placeholder="0,00"/>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label class="field-label">Válida desde</label>
+            <input id="promo-desde" type="date" class="field-input"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Válida hasta</label>
+            <input id="promo-hasta" type="date" class="field-input"/>
+          </div>
+        </div>
+
+        <!-- Nombre personalizado -->
+        <div class="field">
+          <label class="field-label">Nombre (opcional)</label>
+          <input id="promo-nombre" type="text" class="field-input" placeholder="Ej: Oferta de semana"/>
+        </div>
+
+      </div>
+
+      <div class="dlg-actions">
+        <button id="btn-guardar-promo" class="btn btn-primary">Guardar promo</button>
+        <button id="btn-cancelar-promo" class="btn btn-outline">Cancelar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/promociones.js"></script>
+</body>
+</html>

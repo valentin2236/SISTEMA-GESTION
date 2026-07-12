@@ -1,0 +1,105 @@
+// ── Página Promociones ──
+
+.promo-page { padding: $space-4; max-width: 1200px; margin: 0 auto; }
+
+.promo-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-4;
+}
+.promo-title { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.promo-sub   { color: var(--text-muted); margin: 2px 0 0; font-size: .875rem; }
+
+// Tipos de promo
+.promo-tipos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.promo-tipo-btn {
+  padding: 8px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .9rem;
+  transition: all .15s;
+
+  &:hover   { border-color: var(--accent); color: var(--accent); }
+  &.active  { background: var(--accent); border-color: var(--accent); color: #000; }
+}
+
+// Dropdown búsqueda producto
+.promo-dropdown {
+  position: absolute;
+  top: 4px;
+  left: 0; right: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  z-index: 100;
+  overflow: hidden;
+}
+.promo-drop-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: .875rem;
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--surface-3); }
+  &.muted { color: var(--text-muted); cursor: default; }
+}
+
+// Producto seleccionado
+.promo-sel-badge {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: rgba(0,196,112,.12);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  font-size: .875rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+// Badge pack en tabla
+.promo-pack-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--accent);
+  color: #000;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: .8rem;
+}
+
+// Badge en carrito POS
+.promo-cart-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  background: rgba(0,196,112,.18);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  font-size: .72rem;
+  color: var(--accent);
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+// Badges de estado
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .78rem;
+  font-weight: 600;
+
+  &--green  { background: rgba(0,196,112,.15); color: var(--accent); }
+  &--red    { background: rgba(239,68,68,.15);  color: var(--danger); }
+  &--yellow { background: rgba(234,179,8,.15);  color: #ca8a04; }
+}

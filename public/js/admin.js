@@ -3,18 +3,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const token = localStorage.getItem("token");
   if (!token) { location.href = "/admin/login.html"; return; }
 
-  const $desde  = document.getElementById("f-desde");
-  const $hasta  = document.getElementById("f-hasta");
-  const $medio  = document.getElementById("f-medio");
-  const $btn    = document.getElementById("btn-filtrar");
-  const $tbody  = document.getElementById("ventas-tbody");
-  const $excel  = document.getElementById("btnExcel");
+  const $desde     = document.getElementById("f-desde");
+  const $hasta     = document.getElementById("f-hasta");
+  const $horaDes   = document.getElementById("f-hora-desde");
+  const $horaHas   = document.getElementById("f-hora-hasta");
+  const $medio     = document.getElementById("f-medio");
+  const $btn       = document.getElementById("btn-filtrar");
+  const $tbody     = document.getElementById("ventas-tbody");
+  const $excel     = document.getElementById("btnExcel");
 
-  // Fechas por defecto: mes actual
-  const hoy = new Date();
-  const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-  if ($desde) $desde.value = primerDia.toISOString().slice(0, 10);
-  if ($hasta) $hasta.value = hoy.toISOString().slice(0, 10);
+  // Fechas por defecto: mes actual en zona Argentina
+  const argNow = new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" });
+  const argHoy = argNow.slice(0, 10);
+  const argAño = Number(argHoy.slice(0, 4));
+  const argMes = Number(argHoy.slice(5, 7));
+  const primerDiaArg = `${argAño}-${String(argMes).padStart(2, "0")}-01`;
+  if ($desde) $desde.value = primerDiaArg;
+  if ($hasta) $hasta.value = argHoy;
 
   function money(n) {
     return (Number(n) || 0).toLocaleString("es-AR", { minimumFractionDigits: 2 });
@@ -49,10 +54,12 @@ document.addEventListener("DOMContentLoaded", () => {
     $tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">⏳</span><span>Cargando…</span></div></td></tr>`;
 
     const p = new URLSearchParams();
-    if ($desde?.value) p.set("date_from", $desde.value);
-    if ($hasta?.value) p.set("date_to",   $hasta.value);
-    if ($medio?.value) p.set("medio",     $medio.value);
-    p.set("limit", "200");
+    if ($desde?.value)   p.set("date_from",   $desde.value);
+    if ($hasta?.value)   p.set("date_to",     $hasta.value);
+    if ($horaDes?.value) p.set("hora_desde",  $horaDes.value);
+    if ($horaHas?.value) p.set("hora_hasta",  $horaHas.value);
+    if ($medio?.value)   p.set("medio",       $medio.value);
+    p.set("limit", "500");
 
     const res = await api(`/api/ventas?${p.toString()}`);
     if (!res) return;

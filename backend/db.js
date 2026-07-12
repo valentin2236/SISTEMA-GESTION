@@ -395,4 +395,19 @@ export async function ensureCajaTables() {
       FOREIGN KEY (sesion_id) REFERENCES caja_sesiones(id)
     );
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS promociones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      producto_id INTEGER NOT NULL,
+      nombre TEXT NOT NULL,
+      cantidad INTEGER NOT NULL DEFAULT 2,
+      precio_promo REAL NOT NULL,
+      fecha_desde DATE,
+      fecha_hasta DATE,
+      activa INTEGER NOT NULL DEFAULT 1,
+      creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (producto_id) REFERENCES productos(id)
+    );
+  `);
 }
