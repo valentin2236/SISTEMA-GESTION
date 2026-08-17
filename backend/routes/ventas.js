@@ -59,7 +59,7 @@ router.get(
 
       if (
         medio &&
-        ["efectivo", "tarjeta", "transferencia", "cuenta_corriente"].includes(
+        ["efectivo", "tarjeta", "transferencia", "cuenta_corriente", "mercadopago"].includes(
           String(medio).toLowerCase(),
         )
       ) {
@@ -143,6 +143,7 @@ function calcTotals(
     "tarjeta",
     "transferencia",
     "cuenta_corriente",
+    "mercadopago",
   ].includes(String(pago?.medio || "").toLowerCase())
     ? String(pago.medio).toLowerCase()
     : "efectivo";
@@ -200,14 +201,6 @@ router.post(
       // Separar ítems libres (id negativo) de productos reales
       const carritoReal = carrito.filter((i) => Number(i.id) > 0);
       const carritoLibre = carrito.filter((i) => Number(i.id) <= 0);
-
-      // Validar stock solo para productos reales
-      for (const it of carritoReal) {
-        // ... el loop existente de validación de stock
-      }
-
-      // Insertar ítems libres sin tocar stock ni productos
-      // (se guardan como venta_items con producto_id = NULL)
 
       // ===============================
       // VALIDAR STOCK
@@ -501,11 +494,6 @@ router.get(
       }
 
       res.json({ ...venta, items, cliente_nombre });
-
-      res.json({
-        ...venta,
-        items,
-      });
     } catch (e) {
       res.status(500).json({
         error: "DB_ERROR",

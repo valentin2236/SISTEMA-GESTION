@@ -38,6 +38,7 @@
         <button class="cfg-tab" data-tab="licencia">🔐 Licencia</button>
         <button class="cfg-tab" data-tab="ia">🤖 IA</button>
         <button class="cfg-tab" data-tab="arca" id="tab-btn-arca" style="display:none">🧾 ARCA</button>
+        <button class="cfg-tab" data-tab="mercadopago" id="tab-btn-mp" style="display:none">🔵 Mercado Pago</button>
       </div>
 
       <!-- ═══════════════════════════════════════════════════════
@@ -600,6 +601,79 @@
               <li>Generá el certificado digital desde el mismo portal</li>
               <li>Descargá el <strong>.crt</strong> y el <strong>.key</strong>, y pegá su contenido acá</li>
               <li>Registrá un <strong>Punto de Venta</strong> de tipo "Factura electrónica"</li>
+            </ol>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════
+         TAB: MERCADO PAGO
+      ════════════════════════════════════════════════════════ -->
+      <section class="cfg-panel" id="tab-mercadopago" style="display:none">
+
+        <!-- Estado -->
+        <div class="panel" id="mp-estado-panel">
+          <div class="panel-head">
+            <span class="panel-title">Estado de conexión</span>
+            <span class="panel-sub">Verificá que el Access Token sea correcto antes de cobrar</span>
+          </div>
+          <div id="mp-estado" class="arca-estado arca-estado--pendiente">
+            <span class="arca-estado-dot"></span>
+            <span id="mp-estado-txt">Sin configurar — ingresá tu Access Token y presioná "Probar conexión"</span>
+          </div>
+          <div style="margin-top:12px">
+            <button id="btnTestMP" class="btn btn-outline">🔌 Probar conexión con Mercado Pago</button>
+          </div>
+        </div>
+
+        <!-- Access Token -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Credenciales de Mercado Pago</span>
+            <span class="panel-sub">
+              Generá tu token en
+              <a href="https://www.mercadopago.com.ar/developers/panel" target="_blank" class="field-hint">
+                mercadopago.com.ar/developers →
+              </a>
+            </span>
+          </div>
+          <div class="cfg-grid">
+            <div class="field field--full">
+              <label class="field-label">
+                Access Token de producción
+                <span id="mp-token-status" class="arca-key-badge" style="display:none">✅ Configurado</span>
+              </label>
+              <input id="mpAccessToken" class="field-input" type="password"
+                     placeholder="APP_USR-0000000000000000-..." autocomplete="off" spellcheck="false"/>
+              <p class="field-hint">Usá el token de <strong>producción</strong> (no el de pruebas) para cobros reales</p>
+            </div>
+            <div class="field">
+              <label class="field-label">Alias de Mercado Pago</label>
+              <input id="mpAlias" class="field-input" type="text"
+                     placeholder="tu.alias.mp" autocomplete="off" spellcheck="false"/>
+              <p class="field-hint">Se muestra al cajero al seleccionar Transferencia</p>
+            </div>
+            <div class="field">
+              <label class="field-label">CVU</label>
+              <input id="mpCvu" class="field-input" type="text"
+                     placeholder="0000003100099456789123" autocomplete="off" spellcheck="false" maxlength="22"/>
+              <p class="field-hint">22 dígitos — se muestra junto al alias en el POS</p>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <button id="btnGuardarMP" class="btn btn-primary">💾 Guardar Access Token</button>
+          </div>
+
+          <!-- Guía rápida -->
+          <div class="arca-guia" style="margin-top:20px">
+            <p class="arca-guia-title">¿Cómo obtengo el Access Token?</p>
+            <ol class="arca-guia-steps">
+              <li>Entrá a <strong>mercadopago.com.ar/developers/panel</strong></li>
+              <li>Click en <strong>"Crear aplicación"</strong> → Pagos online → Guardar</li>
+              <li>Dentro de la app, ir a <strong>Credenciales de producción</strong></li>
+              <li>Copiá el <strong>Access Token</strong> (empieza con <code>APP_USR-</code>)</li>
+              <li>Pegalo acá y guardá — el dinero va directo a tu cuenta de Mercado Pago</li>
             </ol>
           </div>
         </div>

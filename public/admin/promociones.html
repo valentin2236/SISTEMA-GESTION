@@ -53,7 +53,7 @@
 
   <!-- Modal nueva promo -->
   <dialog id="dlg-promo" class="dlg">
-    <div class="dlg-card" style="min-width:420px;max-width:500px">
+    <div class="dlg-card" style="min-width:460px;max-width:560px">
       <div class="dlg-head">
         <h2>🏷️ Nueva promoción</h2>
         <button id="btn-cerrar-promo" class="dlg-close">✕</button>
@@ -61,13 +61,17 @@
 
       <div style="display:flex;flex-direction:column;gap:16px;padding:4px 0">
 
-        <!-- Buscar producto -->
+        <!-- Buscar producto(s) -->
         <div class="field">
-          <label class="field-label">Producto *</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <label class="field-label" style="margin:0">Producto(s) *</label>
+            <span style="font-size:11px;color:var(--muted)">Agregá varios para promo de grupo</span>
+          </div>
           <input id="promo-buscar" type="text" class="field-input" placeholder="Buscá por nombre o SKU…" autocomplete="off"/>
-          <div id="promo-resultados" style="position:relative"></div>
+          <div id="promo-resultados"></div>
           <input id="promo-producto-id" type="hidden"/>
-          <div id="promo-producto-sel" class="promo-sel-badge" style="display:none"></div>
+          <!-- Lista de productos seleccionados -->
+          <div id="promo-productos-lista" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
         </div>
 
         <!-- Tipo de promo -->

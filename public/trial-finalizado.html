@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Período de prueba finalizado — Sistema Gestión PRO</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+    background: #020c1b;
+    color: #f1f5f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  /* Fondos de luz */
+  body::before {
+    content: '';
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,158,227,.1) 0%, transparent 65%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,230,0,.06) 0%, transparent 65%);
+    bottom: -100px; left: -80px;
+    pointer-events: none;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Brand */
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    justify-content: center; margin-bottom: 36px;
+  }
+  .brand-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #009ee3; box-shadow: 0 0 10px #009ee3;
+  }
+  .brand-name { font-size: 16px; font-weight: 900; color: #fff; }
+  .brand-name em { color: #009ee3; font-style: normal; }
+
+  /* Card principal */
+  .card {
+    background: #0d1f35;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  /* Header de la card */
+  .card-header {
+    background: linear-gradient(135deg, #0a1628 0%, #0d2340 100%);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    padding: 32px;
+    text-align: center;
+    position: relative;
+  }
+  .card-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #009ee3, #FFE600);
+    height: 3px;
+    bottom: auto; top: 0;
+    border-radius: 0;
+  }
+
+  .icon-wrap {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(255,190,0,.1);
+    border: 2px solid rgba(255,190,0,.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 16px;
+  }
+
+  .card-title {
+    font-size: 24px; font-weight: 900;
+    color: #fff; letter-spacing: -.4px;
+    margin-bottom: 8px;
+  }
+  .card-subtitle {
+    font-size: 13.5px; color: rgba(255,255,255,.45);
+    line-height: 1.6; max-width: 340px; margin: 0 auto;
+  }
+  .card-subtitle strong { color: #009ee3; font-weight: 700; }
+
+  /* Planes */
+  .planes-section {
+    padding: 24px 28px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .planes-label {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; color: rgba(255,255,255,.3);
+    margin-bottom: 14px;
+  }
+  .planes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .plan {
+    background: rgba(255,255,255,.04);
+    border: 1.5px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: default;
+    transition: border-color .2s;
+  }
+  .plan.destacado {
+    background: rgba(0,158,227,.08);
+    border-color: rgba(0,158,227,.4);
+    position: relative;
+  }
+  .plan-badge {
+    position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    font-size: 8.5px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; background: #009ee3; color: #fff;
+    padding: 2px 9px; border-radius: 20px; white-space: nowrap;
+  }
+  .plan-nombre {
+    font-size: 13px; font-weight: 900;
+    color: #fff; margin-bottom: 4px;
+  }
+  .plan.destacado .plan-nombre { color: #38bdf8; }
+  .plan-desc {
+    font-size: 10.5px; color: rgba(255,255,255,.35);
+    line-height: 1.4;
+  }
+
+  /* Formulario licencia */
+  .licencia-section {
+    padding: 24px 28px;
+  }
+  .lic-label {
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,.5); margin-bottom: 8px;
+    display: block;
+  }
+  .lic-row {
+    display: flex; gap: 8px;
+  }
+  .lic-input {
+    flex: 1;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 13px; color: #f1f5f9;
+    font-family: 'Courier New', monospace;
+    letter-spacing: .04em;
+    outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  .lic-input:focus {
+    border-color: #009ee3;
+    background: rgba(0,158,227,.06);
+  }
+  .lic-input::placeholder { color: rgba(255,255,255,.2); font-family: inherit; letter-spacing: 0; }
+  .lic-input.error { border-color: #ef4444; }
+  .lic-btn {
+    background: #009ee3; color: #fff;
+    border: none; border-radius: 10px;
+    padding: 11px 20px;
+    font-size: 13px; font-weight: 800;
+    font-family: inherit; cursor: pointer;
+    transition: opacity .15s;
+    white-space: nowrap;
+  }
+  .lic-btn:hover { opacity: .88; }
+  .lic-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  #msg-activacion {
+    margin-top: 10px;
+    font-size: 12.5px;
+    border-radius: 8px;
+    padding: 9px 13px;
+    display: none;
+  }
+  #msg-activacion.ok {
+    background: rgba(0,200,83,.12);
+    border: 1px solid rgba(0,200,83,.3);
+    color: #4ade80;
+  }
+  #msg-activacion.err {
+    background: rgba(239,68,68,.12);
+    border: 1px solid rgba(239,68,68,.25);
+    color: #fca5a5;
+  }
+
+  /* Footer contacto */
+  .card-footer {
+    background: rgba(0,0,0,.2);
+    border-top: 1px solid rgba(255,255,255,.06);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .footer-texto {
+    font-size: 12px; color: rgba(255,255,255,.35);
+    line-height: 1.5;
+  }
+  .footer-texto strong { color: rgba(255,255,255,.55); font-weight: 700; }
+  .footer-contacto {
+    display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+  }
+  .footer-link {
+    font-size: 13px; font-weight: 700; color: #009ee3;
+    text-decoration: none; display: flex; align-items: center; gap: 5px;
+  }
+  .footer-link:hover { color: #38bdf8; }
+
+  /* Success overlay */
+  #success-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: #020c1b;
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .success-icon-big {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(0,200,83,.15);
+    border: 2px solid rgba(0,200,83,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; margin-bottom: 8px;
+  }
+  .success-title-big {
+    font-size: 28px; font-weight: 900; color: #fff;
+    letter-spacing: -.5px; margin-bottom: 8px;
+  }
+  .success-sub-big {
+    font-size: 14px; color: rgba(255,255,255,.4); line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <div class="brand-name">Sistema Gestión <em>PRO</em></div>
+  </div>
+
+  <div class="card">
+
+    <!-- Header -->
+    <div class="card-header">
+      <div class="icon-wrap">⏰</div>
+      <div class="card-title">Tu prueba gratuita finalizó</div>
+      <p class="card-subtitle">
+        Esperamos que hayas disfrutado los <strong>7 días con el Plan Ultra completo</strong>.<br>
+        Para seguir usando el sistema, activá tu licencia o contactanos.
+      </p>
+    </div>
+
+    <!-- Planes -->
+    <div class="planes-section">
+      <div class="planes-label">Elegí tu plan</div>
+      <div class="planes-grid">
+        <div class="plan">
+          <div class="plan-nombre">Básico</div>
+          <div class="plan-desc">POS, stock, clientes y caja</div>
+        </div>
+        <div class="plan destacado">
+          <div class="plan-badge">Más popular</div>
+          <div class="plan-nombre">Pro</div>
+          <div class="plan-desc">Reportes, proveedores y exportación</div>
+        </div>
+        <div class="plan">
+          <div class="plan-nombre">Ultra</div>
+          <div class="plan-desc">QR, IA, auditoría y más</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activar licencia -->
+    <div class="licencia-section">
+      <label class="lic-label">¿Ya tenés tu clave de licencia?</label>
+      <div class="lic-row">
+        <input
+          id="inp-licencia"
+          class="lic-input"
+          type="text"
+          placeholder="SGP-XXXX..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="lic-btn" id="btn-activar">Activar</button>
+      </div>
+      <div id="msg-activacion"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <div class="footer-texto">
+        Para adquirir tu licencia<br>
+        <strong>contactá a Savatek Solutions</strong>
+      </div>
+      <div class="footer-contacto">
+        <a class="footer-link" href="#">📱 3863 562084</a>
+        <a class="footer-link" href="#" style="font-size:11.5px;color:rgba(0,158,227,.6)">✉ valentinarriola04@gmail.com</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Success overlay -->
+<div id="success-overlay">
+  <div class="success-icon-big">✓</div>
+  <div class="success-title-big">¡Licencia activada!</div>
+  <p class="success-sub-big">Redirigiendo al sistema...</p>
+</div>
+
+<script>
+  const btn = document.getElementById('btn-activar');
+  const inp = document.getElementById('inp-licencia');
+  const msg = document.getElementById('msg-activacion');
+
+  async function activar() {
+    const clave = inp.value.trim();
+    if (!clave) { inp.focus(); return; }
+
+    inp.classList.remove('error');
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+
+    try {
+      const r = await fetch('/api/licencia/activar-publico', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clave }),
+      });
+      const data = await r.json();
+
+      if (!r.ok) {
+        inp.classList.add('error');
+        msg.className = 'err';
+        msg.textContent = data.message || 'Clave de licencia inválida.';
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Activar';
+        return;
+      }
+
+      // Éxito
+      const overlay = document.getElementById('success-overlay');
+      overlay.style.display = 'flex';
+      setTimeout(() => { window.location.href = '/admin/login.html'; }, 2200);
+
+    } catch {
+      msg.className = 'err';
+      msg.textContent = 'Error de conexión. Intentá de nuevo.';
+      msg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Activar';
+    }
+  }
+
+  btn.addEventListener('click', activar);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') activar(); });
+</script>
+</body>
+</html>

@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const $buscar     = document.getElementById("promo-buscar");
   const $resultados = document.getElementById("promo-resultados");
   const $prodId     = document.getElementById("promo-producto-id");
-  const $prodSel    = document.getElementById("promo-producto-sel");
+  const $prodLista  = document.getElementById("promo-productos-lista");
   const $tipos      = document.getElementById("promo-tipos");
   const $campoCant  = document.getElementById("campo-cantidad");
   const $cantidad   = document.getElementById("promo-cantidad");
@@ -27,8 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const $hasta      = document.getElementById("promo-hasta");
   const $nombre     = document.getElementById("promo-nombre");
 
-  // Precio normal del producto seleccionado
-  let _precioNormal = 0;
+  // Lista de productos seleccionados: [{ id, nombre, precio }]
+  let _productosSeleccionados = [];
   let _cantActual   = 2;
   let _pagadoActual = 1;
 
@@ -42,19 +42,27 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     $tbody.innerHTML = rows.map(p => {
-      const ahorro   = (p.precio_normal * p.cantidad) - p.precio_promo;
+      const esGrupo = p.es_grupo && p.productos_grupo && p.productos_grupo.length > 1;
+      const nombreProducto = esGrupo
+        ? p.productos_grupo.map(g => g.nombre).join(" / ")
+        : p.producto_nombre;
+      const precioRef = esGrupo
+        ? (p.productos_grupo.reduce((s, g) => s + Number(g.precio), 0) / p.productos_grupo.length)
+        : Number(p.precio_normal);
+      const ahorro   = (precioRef * p.cantidad) - p.precio_promo;
       const vencida  = p.fecha_hasta && p.fecha_hasta < argHoy;
       const estadoBadge = !p.activa
         ? `<span class="badge badge--red">Inactiva</span>`
         : vencida
           ? `<span class="badge badge--yellow">Vencida</span>`
           : `<span class="badge badge--green">Activa</span>`;
+      const grupoBadge = esGrupo ? `<span class="badge badge--blue" style="font-size:10px;margin-left:4px">GRUPO</span>` : "";
       return `
         <tr>
-          <td><b>${p.producto_nombre}</b><br><small class="muted">${p.nombre}</small></td>
+          <td><b>${nombreProducto}</b>${grupoBadge}<br><small class="muted">${p.nombre}</small></td>
           <td class="center"><span class="promo-pack-badge">${p.cantidad}×1</span></td>
           <td class="right"><b>$${money(p.precio_promo)}</b></td>
-          <td class="right muted">$${money(p.precio_normal * p.cantidad)}</td>
+          <td class="right muted">$${money(precioRef * p.cantidad)}</td>
           <td class="right" style="color:var(--accent)">−$${money(ahorro)}</td>
           <td class="center">${p.fecha_hasta || '—'}</td>
           <td class="center">${estadoBadge}</td>
@@ -78,15 +86,37 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-cancelar-promo")?.addEventListener("click", () => $dlg.close());
 
   function resetModal() {
-    $buscar.value = ""; $prodId.value = ""; $prodSel.style.display = "none";
-    $prodSel.textContent = ""; $resultados.innerHTML = "";
-    _precioNormal = 0; _cantActual = 2; _pagadoActual = 1;
+    $buscar.value = "";
+    $prodId.value = "";
+    $resultados.innerHTML = "";
+    _productosSeleccionados = [];
+    renderProductosSeleccionados();
+    _cantActual = 2; _pagadoActual = 1;
     $precio.value = ""; $sugerido.value = ""; $nombre.value = "";
     $desde.value = ""; $hasta.value = "";
     $campoCant.style.display = "none";
     $tipos.querySelectorAll(".promo-tipo-btn").forEach((b, i) => b.classList.toggle("active", i === 0));
-    _cantActual = 2; _pagadoActual = 1;
   }
+
+  // ── Render lista de productos seleccionados ──
+  function renderProductosSeleccionados() {
+    if (!_productosSeleccionados.length) {
+      $prodLista.innerHTML = "";
+      return;
+    }
+    $prodLista.innerHTML = _productosSeleccionados.map((p, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px">
+        <span style="flex:1;font-size:13px;font-weight:600">${p.nombre}</span>
+        <span style="font-size:12px;color:var(--muted)">$${money(p.precio)}</span>
+        <button type="button" onclick="quitarProductoPromo(${i})" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:15px;padding:0 2px" title="Quitar">✕</button>
+      </div>`).join("");
+    calcularSugerido();
+  }
+
+  window.quitarProductoPromo = (idx) => {
+    _productosSeleccionados.splice(idx, 1);
+    renderProductosSeleccionados();
+  };
 
   // ── Búsqueda de producto ──
   let _buscarTimer;
@@ -111,13 +141,21 @@ document.addEventListener("DOMContentLoaded", () => {
   $resultados?.addEventListener("click", e => {
     const item = e.target.closest(".promo-drop-item[data-id]");
     if (!item) return;
-    $prodId.value        = item.dataset.id;
-    _precioNormal        = Number(item.dataset.precio);
-    $buscar.value        = "";
+    const id     = Number(item.dataset.id);
+    const nombre = item.dataset.nombre;
+    const precio = Number(item.dataset.precio);
+    // No agregar duplicados
+    if (_productosSeleccionados.some(p => p.id === id)) {
+      $buscar.value = "";
+      $resultados.innerHTML = "";
+      return;
+    }
+    _productosSeleccionados.push({ id, nombre, precio });
+    $buscar.value = "";
     $resultados.innerHTML = "";
-    $prodSel.textContent = `✓ ${item.dataset.nombre} — $${money(_precioNormal)} c/u`;
-    $prodSel.style.display = "";
-    calcularSugerido();
+    // Backward compat: mantener producto_id como el primero
+    $prodId.value = _productosSeleccionados[0].id;
+    renderProductosSeleccionados();
   });
 
   // ── Tipos de promo ──
@@ -142,34 +180,40 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function calcularSugerido() {
-    if (!_precioNormal) return;
-    const sugerido = _pagadoActual * _precioNormal;
+    if (!_productosSeleccionados.length) return;
+    // Precio promedio de los productos seleccionados
+    const precioPromedio = _productosSeleccionados.reduce((s, p) => s + p.precio, 0) / _productosSeleccionados.length;
+    const sugerido = _pagadoActual * precioPromedio;
     $sugerido.value = `$${money(sugerido)}`;
     if (!$precio.value) $precio.value = sugerido.toFixed(2);
   }
 
-  // Recalcular si cambia el precio normal (por cambio de producto)
   $precio?.addEventListener("focus", () => { if (!$precio.value) calcularSugerido(); });
 
   // ── Guardar ──
   document.getElementById("btn-guardar-promo")?.addEventListener("click", async () => {
-    if (!$prodId.value) { Swal.fire({ icon: "warning", title: "Falta el producto", text: "Buscá y seleccioná un producto", confirmButtonColor: "#00d875" }); return; }
+    if (!_productosSeleccionados.length) {
+      Swal.fire({ icon: "warning", title: "Falta el producto", text: "Buscá y seleccioná al menos un producto", confirmButtonColor: "#00d875" });
+      return;
+    }
     const esPers = $campoCant.style.display !== "none";
     const cant   = esPers ? Number($cantidad.value) : _cantActual;
     const precio = Number($precio.value);
     if (!cant || cant < 2) { Swal.fire({ icon: "warning", title: "Cantidad inválida", text: "Mínimo 2 unidades", confirmButtonColor: "#00d875" }); return; }
     if (!precio || precio <= 0) { Swal.fire({ icon: "warning", title: "Precio inválido", text: "Ingresá el precio del pack", confirmButtonColor: "#00d875" }); return; }
 
-    const tipoBtn = $tipos.querySelector(".promo-tipo-btn.active");
+    const tipoBtn  = $tipos.querySelector(".promo-tipo-btn.active");
     const tipoLabel = tipoBtn?.dataset.cant ? `${tipoBtn.dataset.cant}x${tipoBtn.dataset.pagado}` : `${cant}x1`;
+    const esGrupo  = _productosSeleccionados.length > 1;
 
     const body = {
-      producto_id: Number($prodId.value),
-      nombre:      $nombre.value.trim() || `Promo ${tipoLabel}`,
-      cantidad:    cant,
+      producto_id:  _productosSeleccionados[0].id,
+      productos:    esGrupo ? _productosSeleccionados.map(p => p.id) : undefined,
+      nombre:       $nombre.value.trim() || `Promo ${tipoLabel}${esGrupo ? " (grupo)" : ""}`,
+      cantidad:     cant,
       precio_promo: precio,
-      fecha_desde: $desde.value || null,
-      fecha_hasta: $hasta.value || null,
+      fecha_desde:  $desde.value || null,
+      fecha_hasta:  $hasta.value || null,
     };
 
     const res = await fetch("/api/promociones", { method: "POST", headers, body: JSON.stringify(body) });

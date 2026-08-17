@@ -105,6 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
         data.user?.rol || ""
       );
 
+      // Flag para animación de bienvenida
+      sessionStorage.setItem("welcome_nombre", data.user?.nombre || $email.value.trim());
+
       if ($msg) {
         $msg.textContent = "Acceso correcto. Redirigiendo...";
       }

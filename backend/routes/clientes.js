@@ -432,46 +432,61 @@ router.post(
   requireAuth,
   requireRole("admin","vendedor"),
   async (req,res)=>{
-
     const { id } = req.params;
-
-    const {
-      tipo,
-      monto,
-      descripcion,
-      fecha,
-    } = req.body;
-
+    const { tipo, monto, descripcion, fecha } = req.body;
     const fechaSql = fecha
       ? `${fecha} 00:00:00`
       : new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" });
-
     await run(`
-      INSERT INTO cuentas_corrientes (
-        cliente_id,
-        tipo,
-        monto,
-        descripcion,
-        fecha,
-        usuario
-      )
-      VALUES (?,?,?,?,?,?)
-    `,
-    [
-      id,
-      tipo,
-      monto,
-      descripcion,
-      fechaSql,
-      req.user.email
-    ]);
-
-    res.json({
-      success:true
-    });
-
+      INSERT INTO cuentas_corrientes (cliente_id, tipo, monto, descripcion, fecha, usuario)
+      VALUES (?,?,?,?,?,?)`,
+      [id, tipo, monto, descripcion, fechaSql, req.user.email]);
+    res.json({ success: true });
   }
 );
 
+// Editar movimiento de cuenta corriente
+router.put(
+  "/:id/cuenta-corriente/:movId",
+  requireAuth,
+  requireRole("admin","vendedor"),
+  async (req, res) => {
+    try {
+      const { id, movId } = req.params;
+      const { tipo, monto, descripcion, fecha } = req.body;
+      if (!monto || Number(monto) <= 0) return res.status(400).json({ error: 'MONTO_INVALIDO' });
+      const fechaSql = fecha
+        ? `${fecha} 00:00:00`
+        : new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" });
+      const mov = await get(`SELECT id FROM cuentas_corrientes WHERE id = ? AND cliente_id = ?`, [movId, id]);
+      if (!mov) return res.status(404).json({ error: 'NOT_FOUND' });
+      await run(`UPDATE cuentas_corrientes SET tipo=?, monto=?, descripcion=?, fecha=? WHERE id=?`,
+        [tipo, Number(monto), descripcion || '', fechaSql, movId]);
+      registrarAuditoria(req.user.email, 'EDITAR_MOV_CC', `Movimiento #${movId} Cliente #${id}`);
+      res.json({ success: true });
+    } catch(e) {
+      res.status(500).json({ error: 'DB_ERROR', details: e.message });
+    }
+  }
+);
+
+// Eliminar movimiento de cuenta corriente
+router.delete(
+  "/:id/cuenta-corriente/:movId",
+  requireAuth,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const { id, movId } = req.params;
+      const mov = await get(`SELECT id FROM cuentas_corrientes WHERE id = ? AND cliente_id = ?`, [movId, id]);
+      if (!mov) return res.status(404).json({ error: 'NOT_FOUND' });
+      await run(`DELETE FROM cuentas_corrientes WHERE id = ?`, [movId]);
+      registrarAuditoria(req.user.email, 'ELIMINAR_MOV_CC', `Movimiento #${movId} Cliente #${id}`);
+      res.json({ success: true });
+    } catch(e) {
+      res.status(500).json({ error: 'DB_ERROR', details: e.message });
+    }
+  }
+);
 
 export default router;

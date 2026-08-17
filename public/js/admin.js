@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tarjeta:          "💳 Tarjeta",
     transferencia:    "📲 Transferencia",
     cuenta_corriente: "📒 Cta. Corriente",
+    mercadopago:      "📲 QR",
   };
 
   async function api(path) {

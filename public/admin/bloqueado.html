@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Activar Licencia — Savatek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:  #0d1b2a;
+      --blue:  #1e8fff;
+      --lblue: #38b6ff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      background: var(--navy);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════════════════
+       FONDO ANIMADO
+    ══════════════════════════════════════════ */
+    .bg-layer {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+
+    /* Dot grid */
+    .bg-layer::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(30,143,255,.2) 1px, transparent 1px);
+      background-size: 28px 28px;
+      animation: bgDrift 28s linear infinite;
+    }
+    @keyframes bgDrift {
+      0%   { background-position: 0 0; }
+      100% { background-position: 28px 28px; }
+    }
+
+    /* Scan line */
+    .bg-layer::after {
+      content: '';
+      position: absolute; left: 0; right: 0;
+      height: 120px;
+      background: linear-gradient(180deg, transparent, rgba(30,143,255,.06), transparent);
+      animation: scanLine 7s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes scanLine {
+      0%   { top: -120px; }
+      100% { top: 100%; }
+    }
+
+    /* Blobs */
+    .blob { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+    .blob-1 { width: 500px; height: 500px; top: -150px; left: -120px; background: rgba(30,143,255,.1);  animation: floatB 20s ease-in-out infinite; }
+    .blob-2 { width: 350px; height: 350px; bottom: -100px; right: -80px; background: rgba(56,182,255,.07); animation: floatB 26s ease-in-out infinite reverse; }
+    .blob-3 { width: 250px; height: 250px; top: 40%; right: 20%; background: rgba(30,143,255,.05); animation: floatB 18s ease-in-out 4s infinite; }
+    @keyframes floatB {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%      { transform: translate(30px,20px) scale(1.06); }
+    }
+
+    /* Partículas ascendentes */
+    .particle {
+      position: fixed; width: 2px; border-radius: 9px; pointer-events: none; z-index: 0;
+      background: linear-gradient(to top, transparent, var(--blue));
+      animation: particleRise linear infinite;
+    }
+    @keyframes particleRise {
+      0%   { transform: translateY(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: .4; }
+      100% { transform: translateY(-100vh); opacity: 0; }
+    }
+
+    /* ══════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════ */
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px 24px 64px;
+    }
+
+    /* ── Header Savatek ── */
+    .savatek-header {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      margin-bottom: 36px;
+      animation: fadeUp .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    .savatek-logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .savatek-dot {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--blue), var(--lblue));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 900; color: #fff;
+      box-shadow: 0 0 18px rgba(30,143,255,.5);
+      animation: dotGlow 2.5s ease-in-out infinite;
+    }
+    @keyframes dotGlow {
+      0%,100% { box-shadow: 0 0 12px rgba(30,143,255,.5); }
+      50%      { box-shadow: 0 0 24px rgba(30,143,255,.8), 0 0 40px rgba(30,143,255,.3); }
+    }
+    .savatek-name { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: .08em; text-transform: uppercase; }
+    .savatek-tag  { font-size: 11px; color: var(--lblue); letter-spacing: .06em; }
+
+    /* ── Título principal ── */
+    .main-title {
+      text-align: center; margin-bottom: 10px;
+      animation: fadeUp .5s .08s cubic-bezier(.22,1,.36,1) both;
+    }
+    .lock-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: 99px;
+      font-size: 12px; font-weight: 700; color: #f87171;
+      margin-bottom: 16px;
+      animation: lockBadgePulse 2s ease-in-out infinite;
+    }
+    @keyframes lockBadgePulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.25); }
+      50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    }
+    h1 {
+      font-size: 2rem; font-weight: 900; color: #fff;
+      text-shadow: 0 0 40px rgba(30,143,255,.25);
+    }
+    .main-sub {
+      font-size: .9rem; color: rgba(255,255,255,.45);
+      margin-top: 8px; line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════
+       TARJETAS DE PLAN
+    ══════════════════════════════════════════ */
+    .plans-row {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      margin: 40px 0; width: 100%; max-width: 900px;
+    }
+
+    .plan-card {
+      flex: 1; min-width: 220px; max-width: 270px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px;
+      padding: 28px 24px;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      cursor: default;
+    }
+    .plan-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(30,143,255,.4);
+      box-shadow: 0 20px 50px rgba(0,0,0,.4), 0 0 0 1px rgba(30,143,255,.1);
+    }
+
+    /* Animación de entrada escalonada */
+    .plan-card:nth-child(1) { animation: fadeUp .5s .15s cubic-bezier(.22,1,.36,1) both; }
+    .plan-card:nth-child(2) { animation: fadeUp .5s .22s cubic-bezier(.22,1,.36,1) both; }
+    .plan-card:nth-child(3) { animation: fadeUp .5s .29s cubic-bezier(.22,1,.36,1) both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Línea top animada */
+    .plan-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      border-radius: 18px 18px 0 0;
+      background: linear-gradient(90deg, transparent, var(--card-color, var(--blue)), transparent);
+      background-size: 200% 100%;
+      animation: borderScan 3s linear infinite;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .plan-card:hover::before { opacity: 1; }
+    @keyframes borderScan {
+      0%   { background-position: -100% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Card PRO — destacada */
+    .plan-card.highlighted {
+      background: rgba(30,143,255,.07);
+      border-color: rgba(30,143,255,.35);
+      box-shadow: 0 0 0 1px rgba(30,143,255,.12), 0 20px 50px rgba(0,0,0,.35);
+    }
+    .plan-card.highlighted::before { opacity: 1; }
+    .plan-card.highlighted:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(30,143,255,.25), 0 0 40px rgba(30,143,255,.08);
+    }
+
+    .plan-badge {
+      position: absolute; top: -1px; right: 20px;
+      padding: 4px 14px;
+      background: linear-gradient(135deg, var(--blue), var(--lblue));
+      border-radius: 0 0 10px 10px;
+      font-size: 10px; font-weight: 800; color: #fff; letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .plan-icon { font-size: 28px; margin-bottom: 14px; }
+    .plan-name {
+      font-size: 1.1rem; font-weight: 800; color: #fff;
+      margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .plan-desc { font-size: .78rem; color: rgba(255,255,255,.4); margin-bottom: 20px; }
+
+    .plan-price {
+      font-size: 1.5rem; font-weight: 900; color: #fff;
+      margin-bottom: 4px; line-height: 1;
+    }
+    .plan-price span { font-size: .8rem; font-weight: 500; color: rgba(255,255,255,.4); }
+    .plan-price-note { font-size: .72rem; color: rgba(255,255,255,.3); margin-bottom: 20px; }
+
+    .plan-divider {
+      height: 1px; background: rgba(255,255,255,.07);
+      margin-bottom: 16px;
+    }
+
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .plan-features li {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .8rem; color: rgba(255,255,255,.65);
+    }
+    .plan-features li .check { color: var(--lblue); font-size: 12px; flex-shrink: 0; }
+    .plan-features li .check.plus { color: #a78bfa; }
+    .plan-features li .check.star { color: #34d399; }
+
+    /* ══════════════════════════════════════════
+       SECCIÓN ACTIVACIÓN
+    ══════════════════════════════════════════ */
+    .activation-section {
+      width: 100%; max-width: 520px;
+      animation: fadeUp .5s .36s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .activation-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(30,143,255,.2);
+      border-radius: 20px;
+      padding: 32px 36px;
+      position: relative; overflow: hidden;
+    }
+    .activation-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      border-radius: 20px 20px 0 0;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--lblue), transparent);
+      background-size: 200% 100%;
+      animation: borderScan 3.5s linear infinite;
+    }
+
+    .activation-title {
+      font-size: 1rem; font-weight: 800; color: #fff;
+      margin-bottom: 6px;
+    }
+    .activation-sub {
+      font-size: .8rem; color: rgba(255,255,255,.4);
+      margin-bottom: 24px; line-height: 1.5;
+    }
+
+    /* Machine ID */
+    .machine-box {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .machine-left { min-width: 0; }
+    .machine-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: rgba(255,255,255,.35); margin-bottom: 4px;
+    }
+    .machine-id {
+      font-size: 13px; font-weight: 700; color: var(--lblue);
+      letter-spacing: .08em; font-family: monospace;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      background: rgba(56,182,255,.08); border: 1px solid rgba(56,182,255,.2);
+      border-radius: 8px; cursor: pointer;
+      color: var(--lblue); font-size: 14px; padding: 6px 10px;
+      transition: background .15s, transform .1s;
+      white-space: nowrap; font-size: 12px; font-weight: 600;
+    }
+    .copy-btn:hover { background: rgba(56,182,255,.15); transform: scale(1.04); }
+    .copy-btn:active { transform: scale(.96); }
+
+    /* Input */
+    .field-label {
+      display: block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: rgba(255,255,255,.4); margin-bottom: 8px;
+    }
+    .field-input {
+      width: 100%; padding: 14px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      color: #fff; font-size: 13px; font-family: monospace; letter-spacing: .04em;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 14px;
+    }
+    .field-input::placeholder { color: rgba(255,255,255,.2); font-family: 'Inter', sans-serif; letter-spacing: 0; }
+    .field-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(30,143,255,.18);
+    }
+
+    .btn-activar {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--blue) 0%, #0a6fd4 100%);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: opacity .2s, box-shadow .2s, transform .15s;
+    }
+    .btn-activar::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.12) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2.5s linear infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .btn-activar:hover:not(:disabled) {
+      opacity: .92;
+      box-shadow: 0 6px 24px rgba(30,143,255,.45);
+      transform: translateY(-1px);
+    }
+    .btn-activar:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .status-msg {
+      margin-top: 12px; padding: 11px 14px;
+      border-radius: 9px; font-size: 13px; font-weight: 600; text-align: center;
+      display: none;
+    }
+    .status-msg.error   { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.25);  color: #f87171; display: block; }
+    .status-msg.success { background: rgba(52,211,153,.08); border: 1px solid rgba(52,211,153,.25); color: #34d399; display: block; }
+
+    /* ── Contacto ── */
+    .contact {
+      margin-top: 24px; padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      text-align: center;
+    }
+    .contact p { font-size: 12px; color: rgba(255,255,255,.3); margin-bottom: 12px; }
+    .contact-links { display: flex; gap: 10px; justify-content: center; }
+    .contact-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 9px; color: rgba(255,255,255,.55);
+      text-decoration: none; font-size: 12px; font-weight: 600;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .contact-link:hover { border-color: var(--blue); color: var(--lblue); background: rgba(30,143,255,.07); }
+  </style>
+</head>
+<body>
+
+<!-- Partículas -->
+<script>
+  (function(){
+    const positions = [5,12,22,33,44,55,65,73,83,92];
+    const heights   = [60,100,80,110,70,90,120,75,95,65];
+    const delays    = [0,2.5,5,1.2,7,3.5,9,0.7,4.8,6.3];
+    const durations = [12,16,14,18,11,15,13,17,10,19];
+    positions.forEach(function(left, i){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.cssText = [
+        'left:'+left+'%',
+        'height:'+heights[i]+'px',
+        'bottom:0',
+        'opacity:0',
+        'animation-duration:'+durations[i]+'s',
+        'animation-delay:'+delays[i]+'s',
+      ].join(';');
+      document.body.appendChild(p);
+    });
+  })();
+</script>
+
+<div class="bg-layer"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="savatek-header">
+    <div class="savatek-logo">
+      <div class="savatek-dot">S</div>
+      <span class="savatek-name">Savatek</span>
+    </div>
+    <span class="savatek-tag">Sistema de Gestión PRO</span>
+  </div>
+
+  <!-- Título -->
+  <div class="main-title">
+    <div class="lock-badge">🔒 Período de prueba finalizado</div>
+    <h1>Elegí tu plan y continuá</h1>
+    <p class="main-sub">Tu prueba gratuita de 7 días ha concluido.<br>Seleccioná un plan, contactá a Savatek y recibí tu código de activación.</p>
+  </div>
+
+  <!-- Planes -->
+  <div class="plans-row">
+
+    <!-- BÁSICO -->
+    <div class="plan-card">
+      <div class="plan-icon">📦</div>
+      <div class="plan-name">Básico</div>
+      <div class="plan-desc">Para negocios que empiezan</div>
+      <div class="plan-price">Consultá <span>precio</span></div>
+      <div class="plan-price-note">Pago único o mensual</div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Punto de Venta (POS)</li>
+        <li><span class="check">✓</span> Gestión de productos</li>
+        <li><span class="check">✓</span> Caja y cierre diario</li>
+        <li><span class="check">✓</span> Clientes</li>
+        <li><span class="check">✓</span> Inventario y movimientos</li>
+        <li><span class="check">✓</span> Backups automáticos</li>
+      </ul>
+    </div>
+
+    <!-- PRO — destacado -->
+    <div class="plan-card highlighted">
+      <div class="plan-badge">Más popular</div>
+      <div class="plan-icon">⭐</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-desc">Para negocios en crecimiento</div>
+      <div class="plan-price">Consultá <span>precio</span></div>
+      <div class="plan-price-note">Pago único o mensual</div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Todo lo de Básico</li>
+        <li><span class="check plus">✓</span> Compras y proveedores</li>
+        <li><span class="check plus">✓</span> Informe de ganancias</li>
+        <li><span class="check plus">✓</span> Reportes detallados</li>
+        <li><span class="check plus">✓</span> Exportar datos (Excel)</li>
+        <li><span class="check plus">✓</span> Promociones</li>
+      </ul>
+    </div>
+
+    <!-- ULTRA -->
+    <div class="plan-card">
+      <div class="plan-icon">🚀</div>
+      <div class="plan-name">Ultra</div>
+      <div class="plan-desc">Para operaciones avanzadas</div>
+      <div class="plan-price">Consultá <span>precio</span></div>
+      <div class="plan-price-note">Pago único o mensual</div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Todo lo de Pro</li>
+        <li><span class="check star">✓</span> Auditoría completa</li>
+        <li><span class="check star">✓</span> Asistente con IA</li>
+        <li><span class="check star">✓</span> Multi-usuario</li>
+        <li><span class="check star">✓</span> Soporte prioritario</li>
+        <li><span class="check star">✓</span> Actualizaciones incluidas</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Activación -->
+  <div class="activation-section">
+    <div class="activation-card">
+
+      <div class="activation-title">Activar licencia</div>
+      <div class="activation-sub">
+        Enviá tu ID de máquina a Savatek junto con el plan elegido y recibirás tu código de activación.
+      </div>
+
+      <div class="machine-box">
+        <div class="machine-left">
+          <div class="machine-label">Tu ID de máquina</div>
+          <div class="machine-id" id="machine-id-text">Cargando...</div>
+        </div>
+        <button class="copy-btn" id="btn-copy">📋 Copiar</button>
+      </div>
+
+      <label class="field-label" for="input-clave">Código de activación</label>
+      <input class="field-input" id="input-clave" type="text"
+             placeholder="SGP-eyJ..." autocomplete="off" spellcheck="false"/>
+      <button class="btn-activar" id="btn-activar">Activar y continuar →</button>
+      <div class="status-msg" id="status-msg"></div>
+
+      <div class="contact">
+        <p>Contactá a Savatek para obtener tu código</p>
+        <div class="contact-links">
+          <a class="contact-link" href="mailto:valentinarriola04@gmail.com">✉️ Email</a>
+          <a class="contact-link" href="https://wa.me/5493516108488" target="_blank">💬 WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+(async function () {
+  // ── Cargar estado
+  try {
+    const r = await fetch('/api/licencia/estado-publico');
+    const d = await r.json();
+    if (d.activa || (!d.trialExpired && !d.trial)) {
+      location.replace('/admin/login.html');
+      return;
+    }
+    if (d.machineId) {
+      document.getElementById('machine-id-text').textContent = d.machineId;
+    }
+  } catch {
+    document.getElementById('machine-id-text').textContent = 'No disponible';
+  }
+
+  // ── Copiar Machine ID
+  document.getElementById('btn-copy').addEventListener('click', () => {
+    const text = document.getElementById('machine-id-text').textContent;
+    if (text === 'No disponible' || text === 'Cargando...') return;
+    navigator.clipboard?.writeText(text).then(() => {
+      const btn = document.getElementById('btn-copy');
+      const orig = btn.textContent;
+      btn.textContent = '✅ Copiado';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  });
+
+  // ── Activar licencia
+  async function activar() {
+    const clave = document.getElementById('input-clave').value.trim();
+    const msg   = document.getElementById('status-msg');
+    const btn   = document.getElementById('btn-activar');
+
+    msg.className = 'status-msg';
+    msg.textContent = '';
+
+    if (!clave) {
+      msg.className = 'status-msg error';
+      msg.textContent = 'Ingresá el código de activación recibido.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+
+    try {
+      const r = await fetch('/api/licencia/activar-publico', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clave }),
+      });
+      const d = await r.json();
+
+      if (r.ok && d.ok) {
+        const planLabels = { basico: 'Básico', pro: 'Pro', ultra: 'Ultra', trial: 'Trial' };
+        msg.className = 'status-msg success';
+        msg.textContent = '✅ Licencia activada — Plan ' + (planLabels[d.plan] || d.plan) + '. Redirigiendo...';
+        setTimeout(() => location.replace('/admin/login.html'), 1800);
+      } else {
+        msg.className = 'status-msg error';
+        msg.textContent = d.message || 'Código inválido o expirado. Verificá e intentá de nuevo.';
+        btn.disabled = false;
+        btn.textContent = 'Activar y continuar →';
+      }
+    } catch {
+      msg.className = 'status-msg error';
+      msg.textContent = 'Error de conexión. Verificá que el sistema esté activo.';
+      btn.disabled = false;
+      btn.textContent = 'Activar y continuar →';
+    }
+  }
+
+  document.getElementById('btn-activar').addEventListener('click', activar);
+  document.getElementById('input-clave').addEventListener('keydown', e => {
+    if (e.key === 'Enter') activar();
+  });
+})();
+</script>
+</body>
+</html>

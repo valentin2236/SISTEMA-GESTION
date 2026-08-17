@@ -268,6 +268,54 @@
   }
 
   // ================================================================
+  // ANIMACIÓN BIENVENIDA
+  // ================================================================
+  function showWelcome(nombre) {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes wcIn  { from { opacity:0; transform:scale(.88) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
+      @keyframes wcOut { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(1.04); } }
+      @keyframes wcPop { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+      @keyframes wcPulse { 0%,100%{box-shadow:0 0 0 0 rgba(30,143,255,.5)} 50%{box-shadow:0 0 0 18px rgba(30,143,255,0)} }
+      #welcome-overlay { position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(6,15,24,.92);backdrop-filter:blur(10px); }
+      .wc-card { background:linear-gradient(145deg,#0d1b2a,#0a1628);border:1px solid rgba(30,143,255,.3);border-radius:24px;padding:48px 56px;text-align:center;max-width:380px;width:90%;animation:wcIn .45s cubic-bezier(.34,1.56,.64,1) both;box-shadow:0 32px 80px rgba(0,0,0,.5); }
+      .wc-avatar { width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1e6fff,#0a4fc9);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;margin:0 auto 20px;animation:wcPop .5s .2s cubic-bezier(.34,1.56,.64,1) both,wcPulse 2s 1s ease-in-out infinite; }
+      .wc-hola { font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(56,182,255,.7);margin-bottom:6px; }
+      .wc-nombre { font-size:28px;font-weight:900;color:#fff;letter-spacing:-.02em;margin-bottom:8px; }
+      .wc-sub { font-size:13px;color:rgba(255,255,255,.38); }
+      .wc-bar { height:3px;border-radius:2px;background:rgba(30,143,255,.2);margin-top:28px;overflow:hidden; }
+      .wc-bar-fill { height:100%;width:0;background:linear-gradient(90deg,#1e6fff,#38b6ff);border-radius:2px;transition:width 2.2s linear; }
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'welcome-overlay';
+    const inicial = (nombre || 'U').charAt(0).toUpperCase();
+    overlay.innerHTML = `
+      <div class="wc-card">
+        <div class="wc-avatar">${inicial}</div>
+        <div class="wc-hola">¡Bienvenido/a!</div>
+        <div class="wc-nombre">${nombre}</div>
+        <div class="wc-sub">Todo listo para empezar</div>
+        <div class="wc-bar"><div class="wc-bar-fill" id="wc-bar-fill"></div></div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      const fill = document.getElementById('wc-bar-fill');
+      if (fill) fill.style.width = '100%';
+    });
+
+    setTimeout(() => {
+      const card = overlay.querySelector('.wc-card');
+      if (card) card.style.animation = 'wcOut .35s ease forwards';
+      overlay.style.transition = 'opacity .35s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 380);
+    }, 2500);
+  }
+
+  // ================================================================
   // INIT
   // ================================================================
   document.addEventListener("DOMContentLoaded", () => {
@@ -300,6 +348,13 @@
 
     // Fade in de entrada
     initFadeIn();
+
+    // ---- ANIMACIÓN DE BIENVENIDA ----
+    const welcomeNombre = sessionStorage.getItem('welcome_nombre');
+    if (welcomeNombre) {
+      sessionStorage.removeItem('welcome_nombre');
+      showWelcome(welcomeNombre);
+    }
 
     // Interceptar navegación
     initPageTransitions(sidebarNav);
@@ -382,6 +437,46 @@
       }
     });
 
+    // ---- CAMBIAR IP (solo Electron modo Caja) ----
+    if (window.electronAPI?.getMode) {
+      window.electronAPI.getMode().then(cfg => {
+        if (!cfg || cfg.modo !== 'cliente') return;
+        const footer = document.querySelector('.sidebar-footer');
+        const logoutBtn = document.getElementById('sidebar-logout');
+        if (!footer || !logoutBtn) return;
+        const btnIp = document.createElement('button');
+        btnIp.className = 'btn btn-ghost btn-sm w-full';
+        btnIp.style.cssText = 'justify-content:flex-start;gap:8px';
+        btnIp.innerHTML = '🌐 Cambiar IP del servidor';
+        btnIp.addEventListener('click', async () => {
+          if (typeof Swal === 'undefined') {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+            document.head.appendChild(s);
+            await new Promise(r => s.onload = r);
+          }
+          const { value: newIp } = await Swal.fire({
+            title: '🌐 IP del servidor',
+            html: `<div style="text-align:left;margin-bottom:8px;font-size:13px;color:var(--muted)">IP actual: <b style="color:var(--accent)">${cfg.ip || '–'}</b></div>
+                   <input id="swal-ip-input" class="swal2-input" placeholder="192.168.1.10" value="${cfg.ip || ''}" maxlength="15"/>`,
+            showCancelButton: true,
+            confirmButtonText: 'Guardar y reconectar',
+            cancelButtonText: 'Cancelar',
+            focusConfirm: false,
+            preConfirm: () => {
+              const v = document.getElementById('swal-ip-input').value.trim();
+              const valid = /^(\d{1,3}\.){3}\d{1,3}$/.test(v) && v.split('.').every(n => Number(n) <= 255);
+              if (!valid) { Swal.showValidationMessage('IP inválida — ejemplo: 192.168.1.10'); return false; }
+              return v;
+            }
+          });
+          if (!newIp) return;
+          await window.electronAPI.setMode('cliente', newIp);
+        });
+        footer.insertBefore(btnIp, logoutBtn);
+      }).catch(() => {});
+    }
+
     // ---- LOGOUT ----
     document.getElementById("sidebar-logout")?.addEventListener("click", () => {
       localStorage.removeItem("token");
@@ -460,6 +555,40 @@
         })
         .catch(() => {});
     }
+
+    // ---- TRIAL GUARD ----
+    (async () => {
+      try {
+        const r = await fetch('/api/licencia/estado-publico');
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.trialExpired && !d.activa) {
+          location.replace('/admin/bloqueado.html');
+          return;
+        }
+        // Banner cuando quedan 3 días o menos
+        if (d.trial && !d.trialExpired && d.diasRestantes <= 3) {
+          const urgente = d.diasRestantes <= 1;
+          const banner = document.createElement('div');
+          banner.id = 'trial-banner';
+          banner.style.cssText = [
+            'position:fixed;top:0;left:0;right:0;z-index:9998',
+            'padding:8px 20px;text-align:center;font-size:12px;font-weight:600',
+            'background:' + (urgente ? '#dc2626' : '#d97706'),
+            'color:#fff;letter-spacing:.03em;cursor:default',
+          ].join(';');
+          banner.textContent = d.diasRestantes === 0
+            ? '⚠️ Tu período de prueba vence HOY — contactá a Savatek para activar tu licencia.'
+            : `⏳ Te quedan ${d.diasRestantes} día${d.diasRestantes === 1 ? '' : 's'} de prueba — contactá a Savatek para continuar.`;
+          document.body.insertBefore(banner, document.body.firstChild);
+          // empujar contenido para que el banner no tape nada
+          const mc = document.querySelector('.main-content');
+          const sb = document.getElementById('sidebar');
+          if (mc) mc.style.paddingTop = '36px';
+          if (sb) sb.style.paddingTop = '36px';
+        }
+      } catch {}
+    })();
 
     // ---- NOTIFICACIONES SYSTEM-WIDE ----
     if (token) {

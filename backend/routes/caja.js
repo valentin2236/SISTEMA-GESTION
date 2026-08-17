@@ -3,6 +3,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { requireFeature } from "../middleware/licencia.js";
 import { registrarAuditoria } from "../utils/auditoria.js";
 
 const router = Router();
@@ -41,13 +42,19 @@ function run(sql, params = []) {
 // SESIÓN ABIERTA
 // =====================================
 
-async function getSesionAbierta() {
+async function getSesionAbierta(usuarioEmail) {
+  if (usuarioEmail) {
+    return await getOne(`
+      SELECT * FROM caja_sesiones
+      WHERE fecha_cierre IS NULL AND usuario_email = ?
+      ORDER BY id DESC LIMIT 1
+    `, [usuarioEmail]);
+  }
+  // Sin filtro: retorna cualquier sesión abierta (solo para admin global)
   return await getOne(`
-    SELECT *
-    FROM caja_sesiones
+    SELECT * FROM caja_sesiones
     WHERE fecha_cierre IS NULL
-    ORDER BY id DESC
-    LIMIT 1
+    ORDER BY id DESC LIMIT 1
   `);
 }
 
@@ -62,7 +69,8 @@ router.post(
   requireRole("admin", "vendedor"),
   async (req, res) => {
     try {
-      const abierta = await getSesionAbierta();
+      const email = req.user?.email || '';
+      const abierta = await getSesionAbierta(email);
 
       if (abierta) {
         return res.status(400).json({
@@ -78,15 +86,9 @@ router.post(
       const fecha = nowSql();
 
       const result = await run(
-        `
-        INSERT INTO caja_sesiones (
-          usuario_apertura,
-          fecha_apertura,
-          monto_inicial
-        )
-        VALUES (?, ?, ?)
-      `,
-        [user, fecha, Math.max(0, Number(monto_inicial || 0))],
+        `INSERT INTO caja_sesiones (usuario_apertura, usuario_email, fecha_apertura, monto_inicial)
+         VALUES (?, ?, ?, ?)`,
+        [user, email, fecha, Math.max(0, Number(monto_inicial || 0))],
       );
 
       registrarAuditoria(
@@ -123,7 +125,8 @@ router.get(
   requireRole("admin", "vendedor"),
   async (req, res) => {
     try {
-      const s = await getSesionAbierta();
+      const email = req.user?.email || '';
+      const s = await getSesionAbierta(email);
 
       if (!s) {
         return res.json({
@@ -131,19 +134,19 @@ router.get(
         });
       }
 
-      // ventas agrupadas por método de pago
+      // ventas agrupadas por método de pago — solo las de este cajero
+      const filtroUsuario = s.usuario_email ? `AND usuario = ?` : '';
+      const paramsFiltro  = s.usuario_email ? [s.fecha_apertura, s.usuario_email] : [s.fecha_apertura];
 
       const ventasPorMetodo = await all(
-        `
-        SELECT
+        `SELECT
           IFNULL(medio_pago, 'efectivo') AS medio_pago,
           IFNULL(SUM(total), 0)          AS total,
           COUNT(*)                        AS tickets
-        FROM ventas
-        WHERE datetime(fecha) >= datetime(?)
-        GROUP BY IFNULL(medio_pago, 'efectivo')
-      `,
-        [s.fecha_apertura],
+         FROM ventas
+         WHERE datetime(fecha) >= datetime(?) ${filtroUsuario}
+         GROUP BY IFNULL(medio_pago, 'efectivo')`,
+        paramsFiltro,
       );
 
       const getMet = (m) =>
@@ -154,14 +157,16 @@ router.get(
       const ventasTransferencia = getMet("transferencia");
       const ventasCuenta        = getMet("cuenta_corriente");
 
-      // ganancia de la sesión
+      // ganancia de la sesión (filtrada por cajero)
+      const gananciaFiltro = s.usuario_email ? `AND v.usuario = ?` : '';
+      const gananciaParams = s.usuario_email ? [s.fecha_apertura, s.usuario_email] : [s.fecha_apertura];
       const gananciaRow = await getOne(
         `SELECT ROUND(IFNULL(SUM((vi.precio_unitario - vi.costo_unitario) * vi.cantidad), 0), 2) AS ganancia,
                 ROUND(IFNULL(SUM(vi.precio_unitario * vi.cantidad), 0), 2) AS ingresos
          FROM ventas v
          JOIN venta_items vi ON vi.venta_id = v.id
-         WHERE datetime(v.fecha) >= datetime(?)`,
-        [s.fecha_apertura],
+         WHERE datetime(v.fecha) >= datetime(?) ${gananciaFiltro}`,
+        gananciaParams,
       );
 
       // movimientos
@@ -242,7 +247,8 @@ router.post(
   requireRole("admin", "vendedor"),
   async (req, res) => {
     try {
-      const s = await getSesionAbierta();
+      const email = req.user?.email || '';
+      const s = await getSesionAbierta(email);
 
       if (!s) {
         return res.status(400).json({
@@ -312,7 +318,17 @@ router.post(
   requireRole("admin", "vendedor"),
   async (req, res) => {
     try {
-      const s = await getSesionAbierta();
+      const email = req.user?.email || '';
+      const isAdmin = req.user?.rol === 'admin';
+      const { conteo_efectivo = null, observacion = "", sesion_id } = req.body;
+
+      let s;
+      if (isAdmin && sesion_id) {
+        // Admin cerrando una sesión específica de otro cajero
+        s = await getOne(`SELECT * FROM caja_sesiones WHERE id = ? AND fecha_cierre IS NULL`, [sesion_id]);
+      } else {
+        s = await getSesionAbierta(email);
+      }
 
       if (!s) {
         return res.status(400).json({
@@ -322,19 +338,18 @@ router.post(
 
       const user = req.user?.nombre || "admin";
 
-      const { conteo_efectivo = null, observacion = "" } = req.body;
-
-      // ventas efectivo
+      // ventas efectivo de esta sesión (filtradas por cajero)
+      const filtroUsuario = s.usuario_email ? `AND usuario = ?` : '';
+      const paramsFiltroVentas = s.usuario_email
+        ? [s.fecha_apertura, s.usuario_email]
+        : [s.fecha_apertura];
 
       const ventas = await getOne(
-        `
-        SELECT
-          IFNULL(SUM(total),0) AS total
-        FROM ventas
-        WHERE medio_pago = 'efectivo'
-          AND datetime(fecha) >= datetime(?)
-      `,
-        [s.fecha_apertura],
+        `SELECT IFNULL(SUM(total),0) AS total
+         FROM ventas
+         WHERE medio_pago = 'efectivo'
+           AND datetime(fecha) >= datetime(?) ${filtroUsuario}`,
+        paramsFiltroVentas,
       );
 
       // movimientos
@@ -496,6 +511,53 @@ router.get(
         error: "DB_ERROR",
         details: e.message,
       });
+    }
+  },
+);
+
+// =====================================
+// SESIONES ABIERTAS (MULTICAJERO)
+// GET /api/caja/sesiones
+// =====================================
+
+router.get(
+  "/sesiones",
+  requireAuth,
+  requireRole("admin"),
+  requireFeature("multicajero"),
+  async (req, res) => {
+    try {
+      const sesiones = await all(`
+        SELECT id, usuario_apertura, usuario_email, fecha_apertura, monto_inicial
+        FROM caja_sesiones
+        WHERE fecha_cierre IS NULL
+        ORDER BY id ASC
+      `);
+
+      // Para cada sesión abierta calcular totales
+      const result = await Promise.all(sesiones.map(async (s) => {
+        const filtroUsuario = s.usuario_email ? `AND usuario = ?` : '';
+        const params = s.usuario_email ? [s.fecha_apertura, s.usuario_email] : [s.fecha_apertura];
+
+        const totales = await getOne(
+          `SELECT
+             COUNT(*) AS tickets,
+             IFNULL(SUM(total), 0) AS total_ventas,
+             IFNULL(SUM(CASE WHEN medio_pago='efectivo' THEN total ELSE 0 END), 0) AS efectivo,
+             IFNULL(SUM(CASE WHEN medio_pago='tarjeta' THEN total ELSE 0 END), 0) AS tarjeta,
+             IFNULL(SUM(CASE WHEN medio_pago='transferencia' THEN total ELSE 0 END), 0) AS transferencia
+           FROM ventas
+           WHERE datetime(fecha) >= datetime(?) ${filtroUsuario}`,
+          params,
+        );
+
+        return { ...s, ...totales };
+      }));
+
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "DB_ERROR", details: e.message });
     }
   },
 );

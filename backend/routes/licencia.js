@@ -6,10 +6,38 @@ import {
   saveLicenseToFile,
   getLicenseStatus,
   getFeatures,
+  generateMachineId,
 } from '../utils/licencia.js';
 import logger from '../utils/logger.js';
 
 const router = Router();
+
+// GET /api/licencia/estado-publico — sin auth, para pantalla de bloqueo
+router.get('/estado-publico', async (req, res) => {
+  try {
+    const status = getLicenseStatus();
+    res.json({ ...status, machineId: generateMachineId() });
+  } catch (e) {
+    logger.error('Error estado-publico', { error: e.message });
+    res.status(500).json({ error: 'LICENCIA_ERROR' });
+  }
+});
+
+// POST /api/licencia/activar-publico — sin auth, para activar desde pantalla bloqueada
+router.post('/activar-publico', async (req, res) => {
+  try {
+    const clave = (req.body?.clave || '').trim();
+    if (!clave) return res.status(400).json({ error: 'CLAVE_REQUERIDA' });
+    const result = validateLicenseKey(clave);
+    if (!result.valid) return res.status(400).json({ error: 'LICENCIA_INVALIDA', message: result.error });
+    saveLicenseToFile(clave);
+    logger.info('Licencia activada desde pantalla pública', { plan: result.plan });
+    res.json({ ok: true, plan: result.plan, expiry: result.expiry, diasRestantes: result.diasRestantes });
+  } catch (e) {
+    logger.error('Error activando licencia pública', { error: e.message });
+    res.status(500).json({ error: 'LICENCIA_ERROR', message: e.message });
+  }
+});
 
 // GET /api/licencia — estado actual
 router.get('/', requireAuth, async (req, res) => {

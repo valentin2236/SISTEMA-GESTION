@@ -291,6 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tarjeta: "💳 Tarjeta",
       transferencia: "📲 Transferencia",
       cuenta_corriente: "📒 Cuenta Corriente",
+      mercadopago: "📲 QR",
     };
 
     panel.innerHTML = `
@@ -609,7 +610,7 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     wrap.classList.add("ultimo-flash");
   }
 
-  // Cache de promos activas: { productoId: { cantidad, precio_promo, nombre } }
+  // Cache de promos activas: { productoId: promoObj | null }
   const _promosCache = {};
   async function getPromo(productoId) {
     if (productoId <= 0) return null;
@@ -617,6 +618,32 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     const r = await api(`/api/promociones/producto/${productoId}`, {}, { fallbackNoAuth: true });
     _promosCache[productoId] = (r.ok && r.data) ? r.data : null;
     return _promosCache[productoId];
+  }
+
+  // Recalcula precios de todos los items de un grupo de promo
+  function aplicarPromoGrupo(promo) {
+    const grupoIds = new Set(promo.productos_grupo);
+    const grupoItems = state.carrito.filter(i => grupoIds.has(i.id));
+    const totalQty = grupoItems.reduce((s, i) => s + i.cantidad, 0);
+    const packs = Math.floor(totalQty / promo.cantidad);
+    const cubiertos = packs * promo.cantidad;
+    const precioUnitPromo = promo.precio_promo / promo.cantidad;
+
+    for (const item of grupoItems) {
+      item.promo = promo;
+      if (packs > 0) {
+        // Proporción de unidades de este item cubiertas por la promo
+        const fraccion = (item.cantidad / totalQty) * cubiertos;
+        const precioEfect = (fraccion * precioUnitPromo + (item.cantidad - fraccion) * item.precioOriginal) / item.cantidad;
+        item.precio = Math.round(precioEfect * 100) / 100;
+      } else {
+        item.precio = item.precioOriginal;
+      }
+    }
+
+    if (packs > 0) {
+      showStatus(`🏷️ Promo "${promo.nombre}" aplicada — ${packs} pack${packs > 1 ? "s" : ""} de ${promo.cantidad} (grupo)`, "info");
+    }
   }
 
   async function agregarProducto(id, nombre, precio) {
@@ -638,16 +665,23 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     if (id > 0) {
       const promo = await getPromo(id);
       const item  = state.carrito.find(i => i.id === id);
+
       if (promo && item) {
-        item.promo = promo;
-        const packs        = Math.floor(item.cantidad / promo.cantidad);
-        const resto        = item.cantidad % promo.cantidad;
-        const precioEfect  = packs > 0
-          ? ((packs * promo.precio_promo) + (resto * item.precioOriginal)) / item.cantidad
-          : item.precioOriginal;
-        item.precio = Math.round(precioEfect * 100) / 100;
-        if (packs > 0) {
-          showStatus(`🏷️ Promo "${promo.nombre}" aplicada — ${packs} pack${packs > 1 ? "s" : ""} de ${promo.cantidad}`, "info");
+        if (promo.es_grupo && Array.isArray(promo.productos_grupo)) {
+          // Promo de grupo: recalcular todos los items del grupo en el carrito
+          aplicarPromoGrupo(promo);
+        } else {
+          // Promo individual (comportamiento original)
+          item.promo = promo;
+          const packs       = Math.floor(item.cantidad / promo.cantidad);
+          const resto       = item.cantidad % promo.cantidad;
+          const precioEfect = packs > 0
+            ? ((packs * promo.precio_promo) + (resto * item.precioOriginal)) / item.cantidad
+            : item.precioOriginal;
+          item.precio = Math.round(precioEfect * 100) / 100;
+          if (packs > 0) {
+            showStatus(`🏷️ Promo "${promo.nombre}" aplicada — ${packs} pack${packs > 1 ? "s" : ""} de ${promo.cantidad}`, "info");
+          }
         }
       } else if (item) {
         item.promo  = null;
@@ -1038,6 +1072,10 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       b.classList.toggle("active", b.dataset.metodo === "efectivo");
     });
 
+    // Ocultar bloque transferencia al abrir siempre en efectivo
+    const $transfInfo = document.getElementById("lbl-transferencia-info");
+    if ($transfInfo) $transfInfo.style.display = "none";
+
     // Cliente section
     const $cliSection = document.getElementById("pago-cliente-section");
     if ($cliSection) $cliSection.style.display = "none";
@@ -1146,6 +1184,12 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
       const $cliSection = document.getElementById("pago-cliente-section");
       if ($cliSection) $cliSection.style.display = isCta ? "" : "none";
 
+      // Bloque de info transferencia (alias, CVU, botón QR)
+      const isTransf = metodo === "transferencia";
+      const $transfInfo = document.getElementById("lbl-transferencia-info");
+      if ($transfInfo) $transfInfo.style.display = isTransf ? "" : "none";
+      if (isTransf) cargarDatosTransferencia();
+
       refreshModalTotals();
       renderPreview();
       setTimeout(() => {
@@ -1227,6 +1271,321 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
         if ($input) $input.value = "";
       });
     });
+  }
+
+  /* ===================== TRANSFERENCIA — ALIAS / CVU / QR ===================== */
+  let _mpConfigCache = null;
+
+  async function cargarDatosTransferencia() {
+    if (_mpConfigCache !== null) {
+      renderDatosTransferencia(_mpConfigCache);
+      return;
+    }
+    try {
+      const r = await api("/api/mercadopago/config-estado", {}, { expectJSON: true });
+      _mpConfigCache = r.ok ? r.data : {};
+    } catch {
+      _mpConfigCache = {};
+    }
+    renderDatosTransferencia(_mpConfigCache);
+  }
+
+  function renderDatosTransferencia(cfg) {
+    const $contenedor = document.getElementById("lbl-transferencia-info");
+    const $aliasRow   = document.getElementById("transf-row-alias");
+    const $cvuRow     = document.getElementById("transf-row-cvu");
+    const $sinDatos   = document.getElementById("transf-sin-datos");
+    const $aliasVal   = document.getElementById("transf-alias-val");
+    const $cvuVal     = document.getElementById("transf-cvu-val");
+    const $btnQR      = document.getElementById("btn-generar-qr-mp");
+
+    const tieneAlias = !!(cfg?.alias);
+    const tieneCvu   = !!(cfg?.cvu);
+    const tieneQR    = !!(cfg?.configurado);
+
+    // Si no hay nada configurado → ocultar todo, transferencia queda igual que antes
+    if (!tieneAlias && !tieneCvu && !tieneQR) {
+      if ($contenedor) $contenedor.style.display = "none";
+      return;
+    }
+
+    if ($contenedor) $contenedor.style.display = "";
+    if ($aliasRow)   $aliasRow.style.display   = tieneAlias ? "" : "none";
+    if ($cvuRow)     $cvuRow.style.display     = tieneCvu   ? "" : "none";
+    if ($sinDatos)   $sinDatos.style.display   = "none";
+    if ($aliasVal)   $aliasVal.textContent     = cfg?.alias || "";
+    if ($cvuVal)     $cvuVal.textContent       = cfg?.cvu   || "";
+    if ($btnQR)      $btnQR.style.display      = tieneQR    ? "" : "none";
+  }
+
+  // Botones de copiar alias/CVU
+  document.querySelectorAll(".transf-copy-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.target;
+      const val = document.getElementById(targetId)?.textContent;
+      if (val && val !== "—") {
+        navigator.clipboard?.writeText(val).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = "✅";
+          setTimeout(() => btn.textContent = orig, 1500);
+        });
+      }
+    });
+  });
+
+  // Botón "Generar QR con Mercado Pago"
+  document.getElementById("btn-generar-qr-mp")?.addEventListener("click", async () => {
+    const sub   = calcSubTotal();
+    const desc  = Math.min(calcDesc(sub), sub);
+    const total = Math.max(0, sub - desc);
+    $dlgPago?.close();
+    const resultado = await iniciarCobroMP(total);
+    if (!resultado.pagado) {
+      state.medioPago = "transferencia";
+      if ($medioPago) $medioPago.value = "transferencia";
+      $dlgPago?.showModal();
+      refreshModalTotals();
+      return;
+    }
+
+    // Pago confirmado vía MP → registrar directamente sin pasar por el modal
+    const body = {
+      carrito: state.carrito.map((i) => ({
+        id: i.id,
+        cantidad: i.cantidad,
+        precio: i.precio,
+        ...(i.esLibre ? { esLibre: true, nombre: i.nombre } : {}),
+      })),
+      descuento: { tipo: state.descuentoTipo, valor: Number(state.descuentoValor || 0) },
+      pago: { medio: "mercadopago", monto: null, interes_porcentaje: 0 },
+      usuario: localStorage.getItem("user_email") || null,
+      cliente_id: state.cliente?.id || null,
+      nota: "",
+    };
+
+    const r = await api(
+      "/api/ventas",
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
+      { expectJSON: true },
+    );
+
+    if (!r.ok) {
+      await Swal.fire({ icon: "error", title: "Error al registrar venta", text: r.data?.error || "Problema con el servidor", confirmButtonColor: "#ff5c5c" });
+      return;
+    }
+
+    if (!state.ventasHoy) state.ventasHoy = [];
+    state.ventasHoy.push({
+      id: r.data.id,
+      fecha: new Date().toISOString(),
+      total: r.data.total,
+      medio_pago: "mercadopago",
+      cliente_nombre: state.cliente?.nombre || null,
+    });
+    incrementarContador();
+    renderHistorial();
+
+    const posWrap = document.querySelector(".pos-wrap");
+    if (posWrap) {
+      posWrap.style.transition = "box-shadow .3s ease";
+      posWrap.style.boxShadow = "inset 0 0 80px rgba(0,216,117,.15)";
+      setTimeout(() => { posWrap.style.boxShadow = "none"; }, 1200);
+    }
+
+    state.carrito = [];
+    state.cliente = null;
+    state.medioPago = "efectivo";
+    state.montoPago = 0;
+    state.descuentoValor = 0;
+    state.interesPct = 0;
+    if ($montoPago) $montoPago.value = "";
+    if ($medioPago) $medioPago.value = "efectivo";
+    renderCarrito();
+    renderCliente();
+    refreshTotals();
+    renderPreview();
+    const topCliente = document.getElementById("cliente-top");
+    if (topCliente) topCliente.textContent = "Consumidor Final";
+    const topMetodo = document.getElementById("metodo-top");
+    if (topMetodo) topMetodo.textContent = "💵 Efectivo";
+    updateTotalColor();
+
+    const _ventaId    = r.data.id;
+    const _ventaTotal = r.data.total;
+    const tok = localStorage.getItem("token") || "";
+    const cfg = localStorage.getItem("cfg") || "{}";
+    const ticketUrl = `/ticket.html?id=${_ventaId}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${btoa(unescape(encodeURIComponent(cfg)))}`;
+    const cfgObj = JSON.parse(cfg || "{}");
+
+    const toastVenta = Swal.mixin({ toast: false, position: "center", showConfirmButton: false, timer: 2500, timerProgressBar: true });
+    try {
+      if (window.electronAPI?.printTicket && cfgObj.autoPrint !== "off") {
+        await window.electronAPI.printTicket(ticketUrl, { deviceName: cfgObj.printerName, silent: true, margins: "none", landscape: false });
+        toastVenta.fire({ icon: "success", title: "Venta exitosa", text: "Ticket enviado" });
+      } else {
+        window.open(ticketUrl, "_blank");
+        toastVenta.fire({ icon: "success", title: "Venta exitosa", text: "Ticket abierto para imprimir" });
+      }
+    } catch (e) {
+      console.error("Print error:", e);
+      toastVenta.fire({ icon: "warning", title: "Venta registrada", text: "No se pudo imprimir el ticket" });
+    }
+
+    if ($buscar) { $buscar.value = ""; $buscar.focus(); }
+    if (state.arcaHabilitado) setTimeout(() => abrirModalArca(_ventaId, _ventaTotal), 400);
+  });
+
+  /* ===================== MERCADO PAGO QR ===================== */
+  let _mpPollTimer = null;
+
+  async function iniciarCobroMP(totalVenta) {
+    const $dlgMP = document.getElementById("dlg-mp-qr");
+    const $loading = document.getElementById("mp-qr-loading");
+    const $content = document.getElementById("mp-qr-content");
+    const $error = document.getElementById("mp-qr-error");
+    const $img = document.getElementById("mp-qr-img");
+    const $monto = document.getElementById("mp-qr-monto");
+    const $statusTxt = document.getElementById("mp-status-txt");
+    const $statusDot = document.getElementById("mp-status-dot");
+
+    // Resetear estado visual (incluyendo restos de pago anterior)
+    $loading.style.display = "";
+    $content.style.display = "none";
+    $error.style.display = "none";
+    const $confirmadoReset = document.getElementById("mp-qr-confirmado");
+    const $instruccionReset = document.getElementById("mp-qr-instruccion");
+    const $cancelarReset    = document.getElementById("btn-mp-cancelar");
+    const $countdownReset   = document.getElementById("mp-qr-countdown");
+    if ($confirmadoReset) $confirmadoReset.style.display = "none";
+    if ($instruccionReset) $instruccionReset.style.display = "";
+    if ($cancelarReset)    $cancelarReset.style.display    = "";
+    if ($countdownReset)   $countdownReset.style.display   = "none";
+    $dlgMP.showModal();
+
+    const externalRef = `sgp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const sub = calcSubTotal();
+    const desc = Math.min(calcDesc(sub), sub);
+    const base = Math.max(0, sub - desc);
+
+    try {
+      const r = await api("/api/mercadopago/preferencia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monto: totalVenta, descripcion: "Venta", referencia: externalRef }),
+      }, { expectJSON: true });
+
+      if (!r.ok || !r.data?.qr) {
+        $loading.style.display = "none";
+        $error.style.display = "";
+        document.getElementById("mp-error-txt").textContent = r.data?.message || "No se pudo generar el QR. Verificá la configuración de Mercado Pago.";
+        return { pagado: false };
+      }
+
+      $monto.textContent = totalVenta.toLocaleString("es-AR", { minimumFractionDigits: 2 });
+      $img.src = r.data.qr;
+      $loading.style.display = "none";
+      $content.style.display = "";
+
+      // Mostrar aviso si cayó al modo fallback (solo MP app)
+      const $modoAviso = document.getElementById("mp-modo-aviso");
+      if ($modoAviso) {
+        if (r.data.modo === "wallet") {
+          $modoAviso.style.display = "";
+          $modoAviso.title = r.data.instoreError || "";
+        } else {
+          $modoAviso.style.display = "none";
+        }
+      }
+
+      // Countdown informativo (solo modo instore) mientras se propaga a otras billeteras
+      if (r.data.modo === "instore") {
+        const $cd = document.getElementById("mp-qr-countdown");
+        const $cdNum = document.getElementById("mp-countdown-num");
+        const $instruccion = document.getElementById("mp-qr-instruccion");
+        if ($cd && $cdNum && $instruccion) {
+          $instruccion.style.display = "none";
+          $cd.style.display = "";
+          let n = 2;
+          $cdNum.textContent = n;
+          const cdTimer = setInterval(() => {
+            n--;
+            if (n <= 0) {
+              clearInterval(cdTimer);
+              $cd.style.display = "none";
+              $instruccion.style.display = "";
+            } else {
+              $cdNum.textContent = n;
+            }
+          }, 1000);
+        }
+      }
+
+      // Polling cada 3s hasta confirmar o cancelar
+      return new Promise((resolve) => {
+        let cancelado = false;
+        let pagoConfirmado = false;
+        let _confirmTimer = null;
+
+        function confirmarYCerrar() {
+          if (_confirmTimer) { clearTimeout(_confirmTimer); _confirmTimer = null; }
+          $dlgMP.close();
+          resolve({ pagado: true, externalRef });
+        }
+
+        function cerrar() {
+          if (pagoConfirmado) { confirmarYCerrar(); return; }
+          cancelado = true;
+          clearInterval(_mpPollTimer);
+          if (_confirmTimer) { clearTimeout(_confirmTimer); _confirmTimer = null; }
+          api("/api/mercadopago/cancelar", { method: "DELETE" }).catch(() => {});
+          $dlgMP.close();
+          resolve({ pagado: false });
+        }
+
+        document.getElementById("btn-cerrar-mp-qr").onclick = cerrar;
+        document.getElementById("btn-mp-cancelar").onclick = cerrar;
+        $dlgMP.onclose = () => {
+          if (pagoConfirmado) {
+            if (_confirmTimer) { clearTimeout(_confirmTimer); _confirmTimer = null; }
+            resolve({ pagado: true, externalRef });
+            return;
+          }
+          if (!cancelado) { cancelado = true; clearInterval(_mpPollTimer); resolve({ pagado: false }); }
+        };
+
+        _mpPollTimer = setInterval(async () => {
+          if (cancelado) return;
+          try {
+            const check = await api(`/api/mercadopago/estado/${encodeURIComponent(externalRef)}`, {}, { expectJSON: true });
+            if (check.data?.pagado) {
+              clearInterval(_mpPollTimer);
+              cancelado = true;
+              pagoConfirmado = true;
+
+              // Mostrar confirmación debajo del QR (QR permanece visible)
+              const $confirmado = document.getElementById("mp-qr-confirmado");
+              const $confMonto  = document.getElementById("mp-conf-monto");
+              const $confHora   = document.getElementById("mp-conf-hora");
+              document.getElementById("mp-qr-instruccion")?.style.setProperty("display", "none");
+              document.getElementById("mp-qr-countdown")?.style.setProperty("display", "none");
+              document.getElementById("btn-mp-cancelar")?.style.setProperty("display", "none");
+              if ($confMonto) $confMonto.textContent = totalVenta.toLocaleString("es-AR", { minimumFractionDigits: 2 });
+              if ($confHora) $confHora.textContent = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+              if ($confirmado) $confirmado.style.display = "";
+
+              // Cerrar automáticamente después de 1.5 segundos
+              _confirmTimer = setTimeout(confirmarYCerrar, 5000);
+            }
+          } catch {}
+        }, 3000);
+      });
+    } catch (e) {
+      $loading.style.display = "none";
+      $error.style.display = "";
+      document.getElementById("mp-error-txt").textContent = "Error de conexión con el servidor.";
+      return { pagado: false };
+    }
   }
 
   /* ===================== CONFIRMAR VENTA (desde modal) ===================== */
@@ -1345,17 +1704,18 @@ ${cfg.empresaCuit ? `<div class="ticket-dato">CUIT: ${cfg.empresaCuit}</div>` : 
     const ticketUrl = `/ticket.html?id=${_ventaId}&auto=1&tok=${encodeURIComponent(tok)}&cfg=${btoa(unescape(encodeURIComponent(cfg)))}`;
     const cfgObj = JSON.parse(cfg || "{}");
 
+    const toastVenta = Swal.mixin({ toast: false, position: "center", showConfirmButton: false, timer: 2500, timerProgressBar: true });
     try {
       if (window.electronAPI?.printTicket && cfgObj.autoPrint !== "off") {
         await window.electronAPI.printTicket(ticketUrl, { deviceName: cfgObj.printerName, silent: true, margins: "none", landscape: false });
-        Swal.fire({ icon: "success", title: "Venta exitosa", text: "Ticket enviado", timer: 1800, showConfirmButton: false });
+        toastVenta.fire({ icon: "success", title: "Venta exitosa", text: "Ticket enviado" });
       } else {
         window.open(ticketUrl, "_blank");
-        Swal.fire({ icon: "success", title: "Venta exitosa", text: "Ticket abierto para imprimir", timer: 1800, showConfirmButton: false });
+        toastVenta.fire({ icon: "success", title: "Venta exitosa", text: "Ticket abierto para imprimir" });
       }
     } catch (e) {
       console.error("Print error:", e);
-      Swal.fire({ icon: "warning", title: "Venta registrada", text: "No se pudo imprimir el ticket", timer: 2200, showConfirmButton: false });
+      toastVenta.fire({ icon: "warning", title: "Venta registrada", text: "No se pudo imprimir el ticket" });
     }
 
     if ($buscar) { $buscar.value = ""; $buscar.focus(); }

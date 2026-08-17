@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuración inicial — Sistema Gestión PRO</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+    background: #020817;
+    color: #f1f5f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* Header */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    justify-content: center;
+  }
+  .brand-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #009ee3;
+    box-shadow: 0 0 10px #009ee3;
+  }
+  .brand-name {
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -.3px;
+  }
+  .brand-name em { color: #009ee3; font-style: normal; }
+
+  .welcome-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -.5px;
+    margin-bottom: 6px;
+  }
+  .welcome-sub {
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255,255,255,.45);
+    margin-bottom: 32px;
+  }
+
+  /* Card */
+  .card {
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  /* Section */
+  .section {
+    padding: 28px 32px;
+  }
+  .section + .section {
+    border-top: 1px solid rgba(255,255,255,.07);
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #009ee3;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .full { grid-column: 1 / -1; }
+
+  /* Field */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: rgba(255,255,255,.55);
+    letter-spacing: .03em;
+  }
+  .field input {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #f1f5f9;
+    font-family: inherit;
+    transition: border-color .15s, background .15s;
+    outline: none;
+  }
+  .field input:focus {
+    border-color: #009ee3;
+    background: rgba(0,158,227,.06);
+  }
+  .field input::placeholder { color: rgba(255,255,255,.2); }
+  .field input.error { border-color: #ef4444; }
+  .field-hint {
+    font-size: 11px;
+    color: rgba(255,255,255,.3);
+    margin-top: -2px;
+  }
+
+  /* Error banner */
+  #error-banner {
+    display: none;
+    background: rgba(239,68,68,.15);
+    border: 1px solid rgba(239,68,68,.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #fca5a5;
+    margin: 0 32px 24px;
+  }
+
+  /* Footer */
+  .card-footer {
+    padding: 20px 32px 28px;
+    border-top: 1px solid rgba(255,255,255,.07);
+  }
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: #009ee3;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+    letter-spacing: .01em;
+  }
+  .btn-submit:hover { opacity: .9; }
+  .btn-submit:active { transform: scale(.99); }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Success */
+  #success-wrap {
+    display: none;
+    text-align: center;
+    padding: 48px 32px;
+  }
+  .success-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: #00c853;
+    font-size: 2rem;
+    line-height: 64px;
+    margin: 0 auto 16px;
+  }
+  .success-title {
+    font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 6px;
+  }
+  .success-sub {
+    font-size: 13px; color: rgba(255,255,255,.45);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <div class="brand-name">Sistema Gestión <em>PRO</em></div>
+  </div>
+
+  <h1 class="welcome-title">¡Bienvenido!</h1>
+  <p class="welcome-sub">Completá los datos de tu negocio para comenzar a usar el sistema.</p>
+
+  <div class="card" id="setup-card">
+
+    <!-- Sección 1: Negocio -->
+    <div class="section">
+      <div class="section-title">🏪 Tu negocio</div>
+      <div class="grid-2">
+        <div class="field full">
+          <label>Nombre del negocio *</label>
+          <input id="empresa_nombre" type="text" placeholder="Ej: Despensa La Esquina" autocomplete="off" />
+        </div>
+        <div class="field full">
+          <label>Dirección</label>
+          <input id="empresa_direccion" type="text" placeholder="Ej: San Martín 123, Tucumán" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>CUIT / CUIL</label>
+          <input id="empresa_cuit" type="text" placeholder="Ej: 20-12345678-9" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input id="empresa_telefono" type="text" placeholder="Ej: 381 123-4567" autocomplete="off" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Admin -->
+    <div class="section">
+      <div class="section-title">👤 Tu cuenta de administrador</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Tu nombre</label>
+          <input id="admin_nombre" type="text" placeholder="Ej: María García" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Email de acceso *</label>
+          <input id="admin_email" type="email" placeholder="Ej: maria@minegocio.com" autocomplete="off" />
+        </div>
+        <div class="field full">
+          <label>Contraseña *</label>
+          <input id="admin_password" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+          <span class="field-hint">Con este email y contraseña vas a ingresar al sistema.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="error-banner"></div>
+
+    <div class="card-footer">
+      <button class="btn-submit" id="btn-setup">Guardar y comenzar →</button>
+    </div>
+
+    <!-- Success -->
+    <div id="success-wrap">
+      <div class="success-icon">✓</div>
+      <div class="success-title">¡Todo listo!</div>
+      <p class="success-sub">Redirigiendo al inicio de sesión...</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('btn-setup').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-setup');
+    const errBanner = document.getElementById('error-banner');
+    errBanner.style.display = 'none';
+
+    const empresa_nombre    = document.getElementById('empresa_nombre').value.trim();
+    const empresa_direccion = document.getElementById('empresa_direccion').value.trim();
+    const empresa_cuit      = document.getElementById('empresa_cuit').value.trim();
+    const empresa_telefono  = document.getElementById('empresa_telefono').value.trim();
+    const admin_nombre      = document.getElementById('admin_nombre').value.trim();
+    const admin_email       = document.getElementById('admin_email').value.trim();
+    const admin_password    = document.getElementById('admin_password').value;
+
+    if (!empresa_nombre) {
+      showError('El nombre del negocio es obligatorio.');
+      document.getElementById('empresa_nombre').focus();
+      return;
+    }
+    if (!admin_email) {
+      showError('El email de acceso es obligatorio.');
+      document.getElementById('admin_email').focus();
+      return;
+    }
+    if (admin_password.length < 6) {
+      showError('La contraseña debe tener al menos 6 caracteres.');
+      document.getElementById('admin_password').focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      const r = await fetch('/api/sistema/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empresa_nombre, empresa_direccion, empresa_cuit, empresa_telefono, admin_nombre, admin_email, admin_password }),
+      });
+      const data = await r.json();
+
+      if (!r.ok) {
+        showError(data.message || 'Ocurrió un error. Intentá de nuevo.');
+        btn.disabled = false;
+        btn.textContent = 'Guardar y comenzar →';
+        return;
+      }
+
+      // Éxito
+      document.querySelectorAll('.section, .card-footer, #error-banner').forEach(el => el.style.display = 'none');
+      document.getElementById('success-wrap').style.display = 'block';
+      setTimeout(() => { window.location.href = '/admin/login.html'; }, 2000);
+
+    } catch (e) {
+      showError('Error de conexión con el servidor.');
+      btn.disabled = false;
+      btn.textContent = 'Guardar y comenzar →';
+    }
+  });
+
+  function showError(msg) {
+    const b = document.getElementById('error-banner');
+    b.textContent = msg;
+    b.style.display = 'block';
+  }
+
+  // Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-setup').click();
+  });
+</script>
+</body>
+</html>

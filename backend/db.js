@@ -406,8 +406,23 @@ export async function ensureCajaTables() {
       fecha_desde DATE,
       fecha_hasta DATE,
       activa INTEGER NOT NULL DEFAULT 1,
+      es_grupo INTEGER NOT NULL DEFAULT 0,
       creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (producto_id) REFERENCES productos(id)
     );
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS promocion_productos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      promocion_id INTEGER NOT NULL,
+      producto_id INTEGER NOT NULL,
+      FOREIGN KEY (promocion_id) REFERENCES promociones(id) ON DELETE CASCADE,
+      FOREIGN KEY (producto_id) REFERENCES productos(id)
+    );
+  `);
+
+  // Migraciones para DBs existentes
+  db.run(`ALTER TABLE promociones ADD COLUMN es_grupo INTEGER NOT NULL DEFAULT 0`, () => {});
+  db.run(`ALTER TABLE caja_sesiones ADD COLUMN usuario_email TEXT NOT NULL DEFAULT ''`, () => {});
 }

@@ -869,4 +869,25 @@ router.post(
   },
 );
 
+// PATCH /api/productos/:id/precio  (actualizar precio/costo individual)
+router.patch("/:id/precio", requireAuth, requireRole("admin", "vendedor"), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const precio = Number(req.body.precio);
+    const costo  = req.body.costo !== undefined ? Number(req.body.costo) : null;
+    if (isNaN(precio) || precio < 0) return res.status(400).json({ error: 'PRECIO_INVALIDO' });
+    const prod = await get(`SELECT id, nombre, sku FROM productos WHERE id = ?`, [id]);
+    if (!prod) return res.status(404).json({ error: 'NOT_FOUND' });
+    if (costo !== null && !isNaN(costo)) {
+      await run(`UPDATE productos SET precio = ?, costo = ? WHERE id = ?`, [precio, costo, id]);
+    } else {
+      await run(`UPDATE productos SET precio = ? WHERE id = ?`, [precio, id]);
+    }
+    registrarAuditoria(req.user.email, 'ACTUALIZAR_PRECIO', `${prod.nombre} (SKU: ${prod.sku}) → $${precio}`);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: 'DB_ERROR', details: e.message });
+  }
+});
+
 export default router;

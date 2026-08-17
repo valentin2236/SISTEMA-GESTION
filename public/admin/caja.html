@@ -31,6 +31,7 @@
         🔒 Cierre
       </button>
       <button class="caja-tab" data-tab="historial">📅 Historial</button>
+      <button class="caja-tab" data-tab="cajeros" id="tab-btn-cajeros" style="display:none">🖥️ Cajeros</button>
     </div>
 
     <!-- ══════════════════════════════════════
@@ -261,6 +262,58 @@
               </td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: CAJEROS (admin only)
+    ══════════════════════════════════════ -->
+    <div id="tab-cajeros" class="caja-tab-panel" style="display:none">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">🖥️ Cajeros activos</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="cajeros-stat" class="hist-stat">–</span>
+            <button id="btn-reload-cajeros" class="btn btn-outline btn-sm" onclick="loadCajeros()">↺ Actualizar</button>
+          </div>
+        </div>
+        <div id="cajeros-body">
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cajero</th>
+                  <th>Usuario</th>
+                  <th>Apertura</th>
+                  <th class="right">Inicial</th>
+                  <th class="right">Tickets</th>
+                  <th class="right">Efectivo</th>
+                  <th class="right">Tarjeta</th>
+                  <th class="right">Transfer.</th>
+                  <th class="right">Total ventas</th>
+                  <th class="center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="cajeros-tbody">
+                <tr><td colspan="11">
+                  <div class="empty-state"><span class="empty-icon">⏳</span><span>Cargando…</span></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="cajeros-global" style="display:none;margin-top:16px">
+            <div class="panel" style="padding:16px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-weight:700;font-size:14px">Total global</div>
+                  <div id="cajeros-total-label" style="font-size:12px;opacity:.6"></div>
+                </div>
+                <div style="font-size:22px;font-weight:800" id="cajeros-total-val">$0,00</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 {
   "name": "sistema-gestion-pro",
-  "version": "2.4.11",
+  "version": "2.8.0",
   "description": "Sistema de Gestión Comercial PRO — versión con backend + Electron",
   "author": "Valentin Arriola <valentinarriola04@gmail.com>",
   "type": "module",
@@ -27,10 +27,12 @@
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^2.7.0",
     "node-forge": "^1.4.0",
+    "qrcode": "^1.5.4",
     "sqlite3": "^5.1.7",
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "concurrently": "^9.1.2",
     "electron": "^39.0.0",
     "electron-builder": "^26.0.12",
@@ -54,7 +56,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/logo-sistemaGestion.png"
+      "icon": "public/img/icono_1024.png"
     },
     "nsis": {
       "oneClick": false,

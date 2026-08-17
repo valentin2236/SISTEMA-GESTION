@@ -99,7 +99,11 @@ let filtros = {
   precioMin: null,
   precioMax: null,
   stock: "",
+  stockExacto: null,
 };
+
+const POR_PAGINA = 50;
+let paginaActual = 1;
 
 /* ===================== CARGAR PRODUCTOS ===================== */
 async function cargarProductos(search = "") {
@@ -188,9 +192,67 @@ function aplicarFiltros() {
   if (filtros.stock === "out")
     resultado = resultado.filter((p) => Number(p.stock) <= 0);
 
+  if (filtros.stockExacto !== null)
+    resultado = resultado.filter((p) => Number(p.stock) === filtros.stockExacto);
+
   productosFiltrados = resultado;
-  renderProductos(resultado);
+  paginaActual = 1;
+  renderPagina(1);
   actualizarStats(resultado);
+}
+
+/* ── Paginación ── */
+function renderPagina(pagina) {
+  const total = productosFiltrados.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+  paginaActual = Math.min(Math.max(1, pagina), totalPaginas);
+  const inicio = (paginaActual - 1) * POR_PAGINA;
+  renderProductos(productosFiltrados.slice(inicio, inicio + POR_PAGINA));
+  renderPaginacion(totalPaginas);
+}
+
+function renderPaginacion(totalPaginas) {
+  let $pag = document.getElementById('paginacion-productos');
+  if (!$pag) {
+    $pag = document.createElement('div');
+    $pag.id = 'paginacion-productos';
+    $pag.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;flex-wrap:wrap';
+    const tblWrap = $tbody?.closest('.tbl-wrap') || $tbody?.parentElement;
+    tblWrap?.insertAdjacentElement('afterend', $pag);
+  }
+
+  if (totalPaginas <= 1) { $pag.innerHTML = ''; return; }
+
+  const btn = (label, page, active = false, disabled = false) =>
+    `<button onclick="renderPagina(${page})" ${disabled ? 'disabled' : ''}
+      style="padding:5px 11px;border-radius:8px;border:1px solid var(--border, #ddd);
+      background:${active ? 'var(--accent, #1e6fff)' : 'var(--bg-card, #fff)'};
+      color:${active ? '#fff' : 'var(--text, #333)'};cursor:${disabled ? 'default' : 'pointer'};
+      font-size:13px;font-weight:${active ? '700' : '400'};opacity:${disabled ? '.4' : '1'};
+      transition:opacity .15s">${label}</button>`;
+
+  const total = productosFiltrados.length;
+  const inicio = (paginaActual - 1) * POR_PAGINA + 1;
+  const fin = Math.min(paginaActual * POR_PAGINA, total);
+
+  // Páginas visibles: siempre primera, última y hasta 3 alrededor de la actual
+  const visibles = new Set([1, totalPaginas]);
+  for (let p = Math.max(1, paginaActual - 1); p <= Math.min(totalPaginas, paginaActual + 1); p++) visibles.add(p);
+  const paginas = [...visibles].sort((a, b) => a - b);
+
+  let btnsPaginas = '';
+  let prev = 0;
+  for (const p of paginas) {
+    if (p - prev > 1) btnsPaginas += `<span style="color:var(--muted,#888);font-size:13px">…</span>`;
+    btnsPaginas += btn(p, p, p === paginaActual);
+    prev = p;
+  }
+
+  $pag.innerHTML =
+    btn('‹', paginaActual - 1, false, paginaActual === 1) +
+    btnsPaginas +
+    btn('›', paginaActual + 1, false, paginaActual === totalPaginas) +
+    `<span style="font-size:12px;color:var(--muted,#888);margin-left:4px">${inicio}–${fin} de ${total}</span>`;
 }
 
 /* ===================== IMPRIMIR CÓDIGOS DE BARRAS ===================== */
@@ -271,12 +333,19 @@ document.getElementById("filtro-stock")?.addEventListener("change", (e) => {
   aplicarFiltros();
 });
 
+document.getElementById("filtro-stock-exacto")?.addEventListener("input", (e) => {
+  const v = e.target.value.trim();
+  filtros.stockExacto = v !== "" ? Number(v) : null;
+  aplicarFiltros();
+});
+
 document
   .getElementById("btn-limpiar-filtros")
   ?.addEventListener("click", () => {
     filtros = {
       texto: "",
       categoria: "",
+      stockExacto: null,
       precioMin: null,
       precioMax: null,
       stock: "",
@@ -290,6 +359,8 @@ document
     if (fx) fx.value = "";
     const fs = document.getElementById("filtro-stock");
     if (fs) fs.value = "";
+    const fse = document.getElementById("filtro-stock-exacto");
+    if (fse) fse.value = "";
     aplicarFiltros();
   });
 
@@ -314,7 +385,7 @@ function renderProductos(productos) {
         p.stock <= 0 ? "stock-out" : p.stock <= 5 ? "stock-low" : "stock-ok";
 
       const imgEl = p.imagen
-        ? `<img src="${p.imagen}" class="prod-img" onclick="verImagen('${p.imagen}')" alt="${p.nombre}"/>`
+        ? `<img src="${p.imagen}" class="prod-img" loading="lazy" onclick="verImagen('${p.imagen}')" alt="${p.nombre}"/>`
         : `<div class="prod-img-placeholder">📦</div>`;
 
       const chkCol = window._modoSeleccion?.()
@@ -334,7 +405,7 @@ function renderProductos(productos) {
           ${
             p.sku
               ? `<img src="/api/barcode/${encodeURIComponent(p.sku)}"
-            class="prod-barcode" alt="barcode"
+            class="prod-barcode" alt="barcode" loading="lazy"
             onclick="verImagen(this.src)"
             onerror="this.style.display='none'"/>`
               : ""

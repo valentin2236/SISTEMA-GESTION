@@ -49,7 +49,9 @@ import licenciaRoutes from './routes/licencia.js';
 import exportarRoutes from './routes/exportar.js';
 import iaRoutes from './routes/ia.js';
 import arcaRoutes from './routes/arca.js';
+import mercadopagoRoutes from './routes/mercadopago.js';
 import promocionesRoutes from './routes/promociones.js';
+import sistemaRoutes from './routes/sistema.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,20 +63,8 @@ const PORT = process.env.PORT || 3847;
 app.use(helmetMiddleware);
 app.use(globalLimiter);
 
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3847,http://127.0.0.1:3847,http://localhost:3000,http://127.0.0.1:3000')
-  .split(',')
-  .map(s => s.trim());
-
-app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Origen no permitido por CORS'));
-    }
-  },
-  credentials: true,
-}));
+// Acepta cualquier origen en red local (app de escritorio en LAN, el JWT es la capa de seguridad)
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeBody);
@@ -171,6 +161,7 @@ app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/licencia', licenciaRoutes);
+app.use('/api/sistema', sistemaRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/promociones', promocionesRoutes);
 
@@ -184,6 +175,7 @@ app.use('/api/exportar', requireFeature('exportar'), exportarRoutes);
 app.use('/api/pdf-import', requireFeature('ia'), pdfImportRoutes);
 app.use('/api/ia', requireFeature('ia'), iaRoutes);
 app.use('/api/arca', requireFeature('ia'), arcaRoutes);
+app.use('/api/mercadopago', requireFeature('mercadopago'), mercadopagoRoutes);
 
 // ---------- Static & Home ----------
 app.use(express.static(path.join(__dirname, '../public')));
@@ -212,13 +204,41 @@ process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled Rejection', { error: String(reason) });
 });
 
+// GET /api/sistema/server-ip — devuelve la IP local del servidor para compartir con cajeros
+import os from 'os';
+app.get('/api/sistema/server-ip', (_req, res) => {
+  const nets = os.networkInterfaces();
+  const ips = [];
+  for (const ifaces of Object.values(nets)) {
+    for (const iface of ifaces) {
+      if (iface.family === 'IPv4' && !iface.internal) ips.push(iface.address);
+    }
+  }
+  res.json({ ips, port: PORT });
+});
+
 const server = app.listen(PORT, () => {
   logger.info(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    logger.warn(`Puerto ${PORT} ocupado — otro servidor ya está corriendo. Usando el existente.`);
+    logger.warn(`Puerto ${PORT} ocupado — liberando proceso anterior...`);
+    import('child_process').then(({ execSync }) => {
+      try {
+        const out = execSync(`netstat -ano | findstr ":${PORT} "`, { encoding: 'utf8', shell: true, timeout: 5000 });
+        const pids = new Set();
+        for (const line of out.trim().split('\n')) {
+          const parts = line.trim().split(/\s+/);
+          const pid = parts[parts.length - 1];
+          if (pid && !isNaN(pid) && pid !== '0') pids.add(pid);
+        }
+        for (const pid of pids) {
+          try { execSync(`taskkill /F /PID ${pid}`, { shell: true, timeout: 3000 }); } catch {}
+        }
+      } catch {}
+      setTimeout(() => server.listen(PORT), 1500);
+    }).catch(() => process.exit(1));
   } else {
     logger.error('Error del servidor', { error: err.message });
     process.exit(1);

@@ -53,6 +53,31 @@ body.ventas-page {
     height: 36px;
   }
 
+  .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+  .field-input {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: .15s;
+    height: 36px;
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,216,117,.15);
+    }
+  }
+
   // Tabla
   .ven-table-panel {
     padding: 0;

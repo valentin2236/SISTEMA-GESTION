@@ -61,6 +61,7 @@ function switchTab(tabId) {
   if (panel) panel.style.display = "";
 
   if (tabId === "historial") loadHistorial();
+  if (tabId === "cajeros")   loadCajeros();
 }
 
 function setTabsEstado(abierta) {
@@ -619,6 +620,108 @@ $btnCerrar?.addEventListener("click", async () => {
     Swal.fire({ icon: "error", title: "Error de conexión" });
   }
 });
+
+/* ── Cajeros activos (admin) ── */
+async function loadCajeros() {
+  const $tbody = document.getElementById("cajeros-tbody");
+  const $stat  = document.getElementById("cajeros-stat");
+  const $global = document.getElementById("cajeros-global");
+  const $totalVal = document.getElementById("cajeros-total-val");
+  const $totalLabel = document.getElementById("cajeros-total-label");
+  if (!$tbody) return;
+
+  $tbody.innerHTML = `<tr><td colspan="11">
+    <div class="empty-state"><span class="empty-icon">⏳</span><span>Cargando…</span></div>
+  </td></tr>`;
+
+  try {
+    const res = await api("/api/caja/sesiones");
+    if (!res.ok) throw new Error("error");
+    const rows = await res.json();
+
+    if ($stat) $stat.textContent = `${rows.length} cajero${rows.length !== 1 ? "s" : ""} activo${rows.length !== 1 ? "s" : ""}`;
+
+    if (!rows.length) {
+      $tbody.innerHTML = `<tr><td colspan="11">
+        <div class="empty-state"><span class="empty-icon">🖥️</span><span>No hay cajeros con sesión abierta</span></div>
+      </td></tr>`;
+      if ($global) $global.style.display = "none";
+      return;
+    }
+
+    $tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td class="hc-id">#${r.id}</td>
+        <td>${r.usuario_apertura || "–"}</td>
+        <td style="font-size:11px;opacity:.7">${r.usuario_email || "–"}</td>
+        <td>${fechaHora(r.fecha_apertura)}</td>
+        <td class="right">$${money(r.monto_inicial)}</td>
+        <td class="right">${r.tickets || 0}</td>
+        <td class="right text-green">$${money(r.efectivo)}</td>
+        <td class="right">$${money(r.tarjeta)}</td>
+        <td class="right">$${money(r.transferencia)}</td>
+        <td class="right"><b>$${money(r.total_ventas)}</b></td>
+        <td class="center">
+          <button class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444"
+            onclick="forzarCierreCajero(${r.id}, '${(r.usuario_apertura || '').replace(/'/g, "\\'")}')">
+            🔒 Cerrar
+          </button>
+        </td>
+      </tr>`).join("");
+
+    const totalGlobal = rows.reduce((a, r) => a + Number(r.total_ventas || 0), 0);
+    const totalTickets = rows.reduce((a, r) => a + Number(r.tickets || 0), 0);
+    if ($global) $global.style.display = "";
+    if ($totalVal) $totalVal.textContent = `$${money(totalGlobal)}`;
+    if ($totalLabel) $totalLabel.textContent = `${totalTickets} venta${totalTickets !== 1 ? "s" : ""} entre ${rows.length} cajero${rows.length !== 1 ? "s" : ""}`;
+  } catch (e) {
+    console.error(e);
+    $tbody.innerHTML = `<tr><td colspan="11">
+      <div class="empty-state"><span class="empty-icon">⚠️</span><span>Error al cargar cajeros</span></div>
+    </td></tr>`;
+  }
+}
+
+window.forzarCierreCajero = async function(sesionId, nombreCajero) {
+  const confirm = await Swal.fire({
+    title: `¿Cerrar sesión de ${nombreCajero}?`,
+    text: "Se cerrará la sesión de este cajero sin conteo de efectivo.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "🔒 Cerrar sesión",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#ef4444",
+  });
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const res = await api("/api/caja/cerrar", {
+      method: "POST",
+      body: JSON.stringify({ sesion_id: sesionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      Swal.fire({ icon: "error", title: "Error", text: data.error || "No se pudo cerrar la sesión" });
+      return;
+    }
+    await Swal.fire({ icon: "success", title: "Sesión cerrada", timer: 1400, showConfirmButton: false });
+    loadCajeros();
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: "error", title: "Error de conexión" });
+  }
+};
+
+/* ── Rol admin: mostrar tab cajeros ── */
+function getJwtPayload() {
+  try { return JSON.parse(atob(token.split('.')[1])); } catch { return {}; }
+}
+
+const userRol = getJwtPayload().rol;
+if (userRol === 'admin') {
+  const tabBtn = document.getElementById("tab-btn-cajeros");
+  if (tabBtn) tabBtn.style.display = "";
+}
 
 /* ── Init ── */
 switchTab("estado");

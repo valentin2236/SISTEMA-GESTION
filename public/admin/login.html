@@ -1,528 +1,895 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sistema Gestión PRO</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/main.css" />
-    <style>
-      /* ── Reset & base ─────────────────────────────── */
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sistema Gestión PRO — Savatek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <script>
+    // Redirigir a bloqueado si el trial venció
+    fetch('/api/licencia/estado-publico').then(function(r){ return r.json(); }).then(function(d){
+      if (d.trialExpired && !d.activa) location.replace('/admin/bloqueado.html');
+    }).catch(function(){});
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      body.login-page {
-        font-family: 'Inter', system-ui, sans-serif;
-        min-height: 100vh;
-        background: var(--bg);
-        color: var(--text);
-      }
+    body.login-page {
+      font-family: 'Inter', system-ui, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      background: #0d1b2a;
+      color: #fff;
+    }
 
-      /* ── Layout ───────────────────────────────────── */
-      .login-layout {
-        display: grid;
-        grid-template-columns: 1fr 460px;
-        min-height: 100vh;
-      }
+    .login-layout {
+      display: grid;
+      grid-template-columns: 1fr 460px;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-      /* ══════════════════════════════════════════════
+    /* ════════════════════════════════════════════
+       PALETA SAVATEK
+       #0d1b2a  fondo dark navy (del logo)
+       #1e8fff  azul eléctrico (borde ícono)
+       #38b6ff  azul claro (tagline)
+    ════════════════════════════════════════════ */
+
+    /* PANEL IZQUIERDO — Savatek dark navy */
+    .login-brand {
+      position: relative;
+      overflow: hidden;
+      background: #0d1b2a;
+      border-right: 1px solid rgba(255,255,255,.06);
+    }
+
+    /* Dot grid azul */
+    .lb-grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(30,143,255,.2) 1px, transparent 1px);
+      background-size: 28px 28px;
+      animation: gridDrift 28s linear infinite;
+    }
+    @keyframes gridDrift {
+      from { background-position: 0 0; }
+      to   { background-position: 56px 56px; }
+    }
+
+    /* Blobs azules */
+    .lb-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .lb-blob--1 {
+      width: 420px; height: 420px;
+      background: rgba(30,143,255,.12);
+      top: -140px; left: -140px;
+      animation: floatBlob 13s ease-in-out infinite;
+    }
+    .lb-blob--2 {
+      width: 320px; height: 320px;
+      background: rgba(56,182,255,.08);
+      bottom: -110px; right: -110px;
+      animation: floatBlob 13s ease-in-out infinite reverse;
+      animation-delay: -6s;
+    }
+    @keyframes floatBlob {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%      { transform: translate(25px,-25px) scale(1.04); }
+    }
+
+    /* Línea de scan azul */
+    .lb-scan {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(30,143,255,.0) 15%,
+        rgba(30,143,255,.8) 50%,
+        rgba(30,143,255,.0) 85%,
+        transparent 100%
+      );
+      animation: scanDown 7s ease-in-out infinite;
+      z-index: 1;
+    }
+    @keyframes scanDown {
+      0%   { top: -4px;  opacity: 0; }
+      6%   { opacity: 1; }
+      88%  { opacity: .8; }
+      100% { top: 100%;  opacity: 0; }
+    }
+
+    /* Partículas azules ascendentes */
+    .lb-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .lb-particle {
+      position: absolute;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: #38b6ff;
+      opacity: 0;
+      animation: particleRise linear infinite;
+    }
+    .lb-particle:nth-child(1)  { left:7%;  bottom:-8px; animation-duration:9s;  animation-delay:.2s;  width:2px;height:2px; }
+    .lb-particle:nth-child(2)  { left:17%; bottom:-8px; animation-duration:12s; animation-delay:2.1s; }
+    .lb-particle:nth-child(3)  { left:27%; bottom:-8px; animation-duration:8s;  animation-delay:.7s;  width:2px;height:2px; }
+    .lb-particle:nth-child(4)  { left:40%; bottom:-8px; animation-duration:13s; animation-delay:3s; }
+    .lb-particle:nth-child(5)  { left:52%; bottom:-8px; animation-duration:7.5s;animation-delay:.4s;  width:2px;height:2px; }
+    .lb-particle:nth-child(6)  { left:63%; bottom:-8px; animation-duration:11s; animation-delay:1.3s; }
+    .lb-particle:nth-child(7)  { left:74%; bottom:-8px; animation-duration:9.5s;animation-delay:2.8s; width:4px;height:4px; }
+    .lb-particle:nth-child(8)  { left:84%; bottom:-8px; animation-duration:10s; animation-delay:.6s; }
+    .lb-particle:nth-child(9)  { left:91%; bottom:-8px; animation-duration:12s; animation-delay:1.9s; width:2px;height:2px; }
+    .lb-particle:nth-child(10) { left:34%; bottom:-8px; animation-duration:7s;  animation-delay:1.5s; }
+    @keyframes particleRise {
+      0%   { transform: translateY(0) scale(1);      opacity: 0; }
+      8%   { opacity: .85; }
+      75%  { opacity: .3; }
+      100% { transform: translateY(-105vh) scale(.2); opacity: 0; }
+    }
+
+    /* Esquinas decorativas azules */
+    .lb-corner {
+      position: absolute;
+      width: 28px; height: 28px;
+      z-index: 3;
+      animation: cornerPulse 4s ease-in-out infinite;
+    }
+    .lb-corner::before, .lb-corner::after {
+      content: '';
+      position: absolute;
+      background: #1e8fff;
+      opacity: .5;
+    }
+    .lb-corner--tl { top:18px; left:18px; }
+    .lb-corner--tl::before { top:0;left:0; width:2px;height:100%; }
+    .lb-corner--tl::after  { top:0;left:0; width:100%;height:2px; }
+    .lb-corner--tr { top:18px; right:18px; }
+    .lb-corner--tr::before { top:0;right:0; width:2px;height:100%; }
+    .lb-corner--tr::after  { top:0;right:0; width:100%;height:2px; }
+    .lb-corner--bl { bottom:18px; left:18px; }
+    .lb-corner--bl::before { bottom:0;left:0; width:2px;height:100%; }
+    .lb-corner--bl::after  { bottom:0;left:0; width:100%;height:2px; }
+    .lb-corner--br { bottom:18px; right:18px; }
+    .lb-corner--br::before { bottom:0;right:0; width:2px;height:100%; }
+    .lb-corner--br::after  { bottom:0;right:0; width:100%;height:2px; }
+    @keyframes cornerPulse {
+      0%,100% { opacity:.4; }
+      50%      { opacity:1; }
+    }
+
+    /* Layout interno */
+    .lb-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 32px 46px;
+    }
+
+    /* ── Header Savatek ── */
+    .lb-header {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;
+    }
+    .lb-savatek-logo {
+      width: 44px; height: 44px;
+      object-fit: contain;
+      border-radius: 11px;
+      background: rgba(255,255,255,.05);
+      padding: 3px;
+    }
+    .lb-savatek-name {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -.01em;
+      line-height: 1.2;
+    }
+    .lb-savatek-tag {
+      font-size: .66rem;
+      color: #38b6ff;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .lb-ver-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(30,143,255,.35);
+      background: rgba(30,143,255,.12);
+      color: #38b6ff;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      white-space: nowrap;
+      animation: badgePulse 3s ease-in-out infinite;
+    }
+    @keyframes badgePulse {
+      0%,100% { box-shadow: none; }
+      50%      { box-shadow: 0 0 10px 2px rgba(30,143,255,.25); }
+    }
+
+    /* ── Main ── */
+    .lb-main {
+      flex: 1;
+      min-height: 0;       /* permite que flexbox lo encoja si hay poco espacio */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px 0;
+      overflow: hidden;
+    }
+
+    /* App block */
+    .lb-app-block {
+      position: relative;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 26px 24px;
+      overflow: hidden;
+    }
+
+    /* Borde animado azul */
+    .lb-app-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -120%; width: 120%; height: 2px;
+      background: linear-gradient(90deg, transparent, #1e8fff 40%, #38b6ff 70%, transparent);
+      animation: borderSlide 3.5s ease-in-out infinite;
+    }
+    @keyframes borderSlide {
+      0%   { left: -120%; opacity: 0; }
+      25%  { opacity: 1; }
+      75%  { opacity: 1; }
+      100% { left: 120%;  opacity: 0; }
+    }
+
+    /* Ícono con anillos azules */
+    .lb-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      margin-bottom: 18px;
+    }
+    .lb-app-icon {
+      width: 76px; height: 76px;
+      object-fit: contain;
+      border-radius: 18px;
+      position: relative;
+      z-index: 1;
+      animation: iconGlow 3.5s ease-in-out infinite;
+    }
+    @keyframes iconGlow {
+      0%,100% { filter: drop-shadow(0 0 6px  rgba(30,143,255,.3)); }
+      50%      { filter: drop-shadow(0 0 20px rgba(30,143,255,.65)); }
+    }
+    .lb-icon-ring {
+      position: absolute;
+      inset: -7px;
+      border: 1.5px solid rgba(30,143,255,.35);
+      border-radius: 25px;
+      animation: ringPulse 2.8s ease-in-out infinite;
+    }
+    .lb-icon-ring-2 {
+      position: absolute;
+      inset: -14px;
+      border: 1px solid rgba(30,143,255,.14);
+      border-radius: 30px;
+      animation: ringPulse 2.8s ease-in-out infinite;
+      animation-delay: .6s;
+    }
+    @keyframes ringPulse {
+      0%,100% { transform: scale(1);    opacity: .4; }
+      50%      { transform: scale(1.06); opacity: .9; }
+    }
+    .lb-icon-placeholder {
+      width: 76px; height: 76px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #1e8fff, #0a60cc);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      position: relative;
+      z-index: 1;
+    }
+
+    .lb-app-name {
+      font-size: 1.9rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: -.025em;
+    }
+    .lb-app-name .accent { color: #38b6ff; }
+
+    .lb-biz-name {
+      margin-top: 5px;
+      font-size: .9rem;
+      color: rgba(255,255,255,.7);
+      font-weight: 600;
+      display: none;
+    }
+    .lb-app-tagline {
+      margin-top: 6px;
+      font-size: .85rem;
+      color: rgba(255,255,255,.42);
+      line-height: 1.5;
+    }
+
+    /* Chips azules */
+    .lb-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 18px;
+    }
+    .lb-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(30,143,255,.1);
+      border: 1px solid rgba(30,143,255,.22);
+      font-size: .7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,.7);
+      letter-spacing: .02em;
+      transition: all .2s;
+      cursor: default;
+    }
+    .lb-chip:hover {
+      background: rgba(30,143,255,.2);
+      border-color: rgba(30,143,255,.5);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .lb-chip-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #38b6ff;
+      animation: dotBlink 2s ease-in-out infinite;
+    }
+    @keyframes dotBlink {
+      0%,100% { opacity:1; }
+      50%      { opacity:.35; }
+    }
+
+    /* Typewriter azul */
+    .lb-tw { margin-top: 28px; }
+    .lb-tw-label {
+      font-size: .66rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: rgba(255,255,255,.28);
+      margin-bottom: 10px;
+    }
+    .rotating-message {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #38b6ff;
+      min-height: 52px;
+      line-height: 1.5;
+      text-shadow: 0 0 16px rgba(30,143,255,.4);
+    }
+    .typewriter-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: #38b6ff;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink .7s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity:1; }
+      50%      { opacity:0; }
+    }
+
+    /* Footer */
+    .lb-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.07);
+      flex-shrink: 0;
+    }
+    .lb-footer-logo {
+      width: 34px; height: 34px;
+      object-fit: contain;
+      border-radius: 9px;
+      opacity: .65;
+      transition: opacity .2s, transform .2s;
+    }
+    .lb-footer-logo:hover { opacity: 1; transform: translateY(-2px); }
+    .lb-footer-text {
+      font-size: .68rem;
+      color: rgba(255,255,255,.28);
+      line-height: 1.6;
+    }
+    .lb-footer-text strong {
+      color: rgba(255,255,255,.55);
+      display: block;
+      font-size: .74rem;
+    }
+
+    /* ════════════════════════════════════════════
+       PANEL DERECHO — formulario dark Savatek
+    ════════════════════════════════════════════ */
+    .login-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 46px;
+      background: #060f18;
+      border-left: 2px solid rgba(30,143,255,.3);
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    /* Grid de puntos muy sutil en el fondo del formulario */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(30,143,255,.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      animation: gridDrift 40s linear infinite;
+    }
+
+    /* Línea de scan azul tenue (más lenta que la del left) */
+    .login-card::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(30,143,255,.0) 20%,
+        rgba(30,143,255,.35) 50%,
+        rgba(30,143,255,.0) 80%,
+        transparent 100%
+      );
+      animation: scanDown 11s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Contenido del formulario entra con fade-slide */
+    .login-card > * {
+      position: relative;
+      z-index: 1;
+      animation: fadeSlideIn .5s ease-out both;
+    }
+    .login-card > *:nth-child(1) { animation-delay: .05s; }
+    .login-card > *:nth-child(2) { animation-delay: .12s; }
+    .login-card > *:nth-child(3) { animation-delay: .18s; }
+    .login-card > *:nth-child(4) { animation-delay: .24s; }
+    .login-card > *:nth-child(5) { animation-delay: .30s; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Línea decorativa animada sobre el título */
+    .login-header::before {
+      content: '';
+      display: block;
+      height: 3px;
+      width: 48px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #1e8fff, #38b6ff);
+      margin-bottom: 14px;
+      animation: lineExpand 3s ease-in-out infinite;
+    }
+    @keyframes lineExpand {
+      0%,100% { width: 48px; box-shadow: 0 0 8px  rgba(30,143,255,.4); }
+      50%      { width: 72px; box-shadow: 0 0 18px rgba(30,143,255,.8); }
+    }
+
+    /* Badge Savatek */
+    .lc-badge {
+      position: absolute;
+      top: 22px; right: 22px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px 4px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05);
+      opacity: .8;
+      transition: opacity .2s;
+    }
+    .lc-badge:hover { opacity: 1; }
+    .lc-badge img { width: 16px; height: 16px; object-fit: contain; border-radius: 4px; }
+    .lc-badge span { font-size: .66rem; font-weight: 700; color: rgba(255,255,255,.5); letter-spacing: .05em; }
+
+    .login-header { margin-bottom: 32px; }
+    .login-header h2 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -.025em;
+    }
+    .login-header p { margin-top: 6px; font-size: .875rem; color: rgba(255,255,255,.42); }
+
+    /* Formulario */
+    .login-form { display: flex; flex-direction: column; gap: 16px; }
+
+    .lf-field { display: flex; flex-direction: column; gap: 6px; }
+    .lf-label {
+      font-size: .7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,.6);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+    .lf-input {
+      height: 46px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      font-family: inherit;
+      font-size: .92rem;
+      transition: border-color .15s, box-shadow .15s;
+      width: 100%;
+    }
+    .lf-input::placeholder { color: rgba(255,255,255,.25); }
+    .lf-input:focus {
+      outline: none;
+      border-color: #1e8fff;
+      box-shadow: 0 0 0 3px rgba(30,143,255,.15);
+    }
+    .lf-pass-wrap { position: relative; }
+    .lf-pass-wrap .lf-input { padding-right: 48px; }
+    .lf-toggle-pass {
+      position: absolute;
+      right: 13px; top: 50%;
+      transform: translateY(-50%);
+      border: none; background: transparent;
+      cursor: pointer; color: rgba(255,255,255,.4);
+      font-size: .95rem; padding: 0; line-height: 1;
+    }
+    .lf-remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .82rem;
+      color: rgba(255,255,255,.42);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Botón azul Savatek con shimmer */
+    .btn-login {
+      height: 48px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1e8fff 0%, #0a6fd4 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: box-shadow .2s, transform .1s, opacity .15s;
+      letter-spacing: .02em;
+      margin-top: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -80%; width: 55%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0%   { left: -80%; }
+      100% { left: 180%; }
+    }
+    .btn-login:hover  { box-shadow: 0 6px 24px rgba(30,143,255,.45); }
+    .btn-login:active { transform: scale(.99); }
+    .btn-login:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+    .btn-login:disabled::after { animation: none; }
+
+    .login-msg {
+      min-height: 18px;
+      font-size: .82rem;
+      margin-top: 4px;
+      color: #f87171;
+      font-weight: 500;
+    }
+    .login-msg.ok { color: #38b6ff; }
+
+    .session-box {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .session-box span { font-size: .8rem; color: rgba(255,255,255,.4); }
+    .btn-logout {
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.7);
+      font-family: inherit;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.1); }
+
+    .login-footer { margin-top: 22px; font-size: .7rem; color: rgba(255,255,255,.25); }
+
+    /* Logo del negocio — bordes redondeados automáticos */
+    .lb-app-icon {
+      border-radius: 16px !important;
+      object-fit: cover;
+    }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .login-layout { grid-template-columns: 1fr; height: auto; overflow: auto; }
+      body.login-page { height: auto; overflow: auto; }
+      .login-brand  { display: none; }
+      .login-card   { max-width: 480px; width: 100%; margin: auto; min-height: 100vh; height: auto; }
+    }
+    @media (max-width: 520px) {
+      .login-card { padding: 36px 22px; }
+    }
+  </style>
+</head>
+
+<body class="login-page">
+  <div class="login-layout">
+
+    <!-- ═══════════════════════════════
          PANEL IZQUIERDO
-      ══════════════════════════════════════════════ */
-      .login-brand {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 48px 56px;
-        overflow: hidden;
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-      }
+    ═══════════════════════════════ -->
+    <aside class="login-brand">
 
-      /* Blobs animados de fondo */
-      .login-brand::before,
-      .login-brand::after {
-        content: "";
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(100px);
-        pointer-events: none;
-        animation: floatBlob 14s ease-in-out infinite;
-      }
-      .login-brand::before {
-        width: 500px; height: 500px;
-        background: rgba(0, 214, 117, .10);
-        top: -180px; left: -180px;
-      }
-      .login-brand::after {
-        width: 400px; height: 400px;
-        background: rgba(0, 140, 255, .09);
-        bottom: -160px; right: -160px;
-        animation-delay: -7s;
-      }
-      @keyframes floatBlob {
-        0%, 100% { transform: translate(0, 0); }
-        50%       { transform: translate(40px, -40px); }
-      }
+      <!-- Fondos animados -->
+      <div class="lb-grid"></div>
+      <div class="lb-blob lb-blob--1"></div>
+      <div class="lb-blob lb-blob--2"></div>
+      <div class="lb-scan"></div>
 
-      /* Contenido sobre los blobs */
-      .brand-inner {
-        position: relative;
-        z-index: 2;
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        height: 100%;
-      }
+      <!-- Partículas ascendentes -->
+      <div class="lb-particles">
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+        <div class="lb-particle"></div>
+      </div>
 
-      /* ── Bloque del negocio ── */
-      .brand-negocio {
-        background: rgba(255,255,255,.04);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 28px 32px;
-        backdrop-filter: blur(12px);
-      }
-      .brand-logo {
-        width: 72px;
-        height: 72px;
-        border-radius: 14px;
-        object-fit: contain;
-        margin-bottom: 16px;
-        display: none; /* se muestra si hay logo */
-      }
-      .brand-logo-placeholder {
-        width: 56px;
-        height: 56px;
-        border-radius: 14px;
-        background: var(--accent);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: 900;
-        color: #000;
-        margin-bottom: 16px;
-      }
-      .brand-negocio-nombre {
-        font-size: 2.4rem;
-        font-weight: 900;
-        line-height: 1.1;
-        color: var(--text);
-        letter-spacing: -0.02em;
-      }
-      .brand-negocio-desc {
-        margin-top: 10px;
-        font-size: 0.95rem;
-        color: var(--muted);
-        line-height: 1.6;
-      }
+      <!-- Esquinas decorativas -->
+      <div class="lb-corner lb-corner--tl"></div>
+      <div class="lb-corner lb-corner--tr"></div>
+      <div class="lb-corner lb-corner--bl"></div>
+      <div class="lb-corner lb-corner--br"></div>
 
-      /* ── Mensajes rotativos ── */
-      .brand-messages {
-        padding-top: 48px;
-        align-self: start;
-      }
-      .brand-messages-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted);
-        margin-bottom: 14px;
-      }
-      .rotating-message {
-        font-size: 1.1rem;
-        font-weight: 700;
-        line-height: 1.5;
-        color: var(--accent);
-        height: 60px;
-        overflow: hidden;
-      }
-      .typewriter-cursor {
-        display: inline-block;
-        width: 3px;
-        height: 1.2em;
-        background: var(--accent);
-        margin-left: 2px;
-        vertical-align: text-bottom;
-        animation: cursorBlink 0.7s infinite;
-      }
-      @keyframes cursorBlink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
-      }
+      <div class="lb-inner">
 
-      /* ── Footer del brand ── */
-      .brand-footer {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding-top: 32px;
-        border-top: 1px solid var(--border);
-      }
-      .brand-footer-logos {
-        display: flex;
-        gap: 10px;
-      }
-      .brand-footer-logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        object-fit: contain;
-        opacity: 0.85;
-        transition: opacity 0.2s, transform 0.2s;
-      }
-      .brand-footer-logo:hover {
-        opacity: 1;
-        transform: translateY(-3px);
-      }
-      .brand-footer-text {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      .brand-footer-text strong {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--text);
-      }
-      .brand-footer-text span {
-        font-size: 0.75rem;
-        color: var(--muted);
-      }
-
-      /* ══════════════════════════════════════════════
-         PANEL DERECHO — FORMULARIO
-      ══════════════════════════════════════════════ */
-      .login-card {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 48px 44px;
-        background: var(--bg);
-        border-left: 1px solid var(--border);
-      }
-
-      .login-header {
-        margin-bottom: 36px;
-      }
-      .login-header h2 {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: var(--text);
-        letter-spacing: -0.02em;
-      }
-      .login-header p {
-        margin-top: 6px;
-        font-size: 0.875rem;
-        color: var(--muted);
-      }
-
-      /* ── Formulario ── */
-      .login-form {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-      .lf-field {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .lf-label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text);
-        letter-spacing: 0.02em;
-      }
-      .lf-input {
-        height: 46px;
-        padding: 0 14px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text);
-        font-family: inherit;
-        font-size: 0.9rem;
-        transition: border-color 0.15s, box-shadow 0.15s;
-        width: 100%;
-      }
-      .lf-input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(0, 214, 117, .12);
-      }
-      .lf-pass-wrap {
-        position: relative;
-      }
-      .lf-pass-wrap .lf-input {
-        padding-right: 46px;
-      }
-      .lf-toggle-pass {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        color: var(--muted);
-        font-size: 1rem;
-        padding: 0;
-        line-height: 1;
-      }
-
-      .lf-remember {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.82rem;
-        color: var(--muted);
-        cursor: pointer;
-      }
-
-      .btn-login {
-        height: 48px;
-        border: none;
-        border-radius: 10px;
-        background: var(--accent);
-        color: #000;
-        font-family: inherit;
-        font-size: 0.9rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: opacity 0.15s, transform 0.1s;
-        letter-spacing: 0.01em;
-        margin-top: 4px;
-      }
-      .btn-login:hover  { opacity: 0.88; }
-      .btn-login:active { transform: scale(0.99); }
-      .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
-
-      /* ── Mensaje de error/info ── */
-      .login-msg {
-        min-height: 20px;
-        font-size: 0.82rem;
-        margin-top: 4px;
-        color: var(--danger, #ef4444);
-        font-weight: 500;
-      }
-      .login-msg.ok { color: var(--accent); }
-
-      /* ── Sesión activa ── */
-      .session-box {
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .session-box span {
-        font-size: 0.8rem;
-        color: var(--muted);
-      }
-      .btn-logout {
-        height: 40px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text);
-        font-family: inherit;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: background 0.15s;
-      }
-      .btn-logout:hover { background: var(--surface2); }
-
-      /* ── Footer versión ── */
-      .login-footer {
-        margin-top: 28px;
-        font-size: 0.75rem;
-        color: var(--muted);
-      }
-
-      /* ══════════════════════════════════════════════
-         RESPONSIVE
-      ══════════════════════════════════════════════ */
-      @media (max-width: 900px) {
-        .login-layout { grid-template-columns: 1fr; }
-        .login-brand  { display: none; }
-        .login-card   { max-width: 480px; width: 100%; margin: auto; min-height: 100vh; }
-      }
-      @media (max-width: 520px) {
-        .login-card { padding: 36px 24px; }
-      }
-    </style>
-  </head>
-
-  <body class="login-page">
-    <div class="login-layout">
-
-      <!-- ══ PANEL IZQUIERDO ══ -->
-      <aside class="login-brand">
-        <div class="brand-inner">
-
-          <!-- Negocio -->
-          <div class="brand-negocio">
-            <img id="brand-logo-img" class="brand-logo" alt="Logo" />
-            <div id="brand-logo-placeholder" class="brand-logo-placeholder">G</div>
-            <div id="brand-nombre" class="brand-negocio-nombre">Sistema de Gestión</div>
-            <p class="brand-negocio-desc">Gestión inteligente para negocios modernos</p>
+        <!-- Header Savatek -->
+        <header class="lb-header">
+          <img src="/img/logo-savatek.png" class="lb-savatek-logo" alt="Savatek"
+               onerror="this.style.display='none'"/>
+          <div style="flex:1">
+            <div class="lb-savatek-name">Savatek Solutions</div>
+            <div class="lb-savatek-tag">Software a medida</div>
           </div>
+          <div class="lb-ver-badge" id="lb-version">v—</div>
+        </header>
 
-          <!-- Mensajes rotativos -->
-          <div class="brand-messages">
-            <div class="brand-messages-label">Por qué elegirnos</div>
-            <div id="rotating-message" class="rotating-message"></div>
-          </div>
-
-          <!-- Footer Savatek -->
-          <div class="brand-footer">
-            <div class="brand-footer-logos">
-              <img src="/img/logochiquito.png" alt="Savatek" class="brand-footer-logo"
-                   onerror="this.style.display='none'" />
-              <img src="/img/logo-ValentinArriola.ico" alt="Valentin Arriola" class="brand-footer-logo"
-                   onerror="this.style.display='none'" />
+        <!-- Bloque del sistema -->
+        <div class="lb-main">
+          <div class="lb-app-block">
+            <div class="lb-icon-wrap">
+              <img id="brand-logo-img" src="/img/icono_1024.png" class="lb-app-icon" alt="Sistema"
+                   onerror="this.style.display='none';document.querySelector('.lb-icon-placeholder').style.display='flex'"/>
+              <div class="lb-icon-ring"></div>
+              <div class="lb-icon-ring-2"></div>
+              <div class="lb-icon-placeholder">S</div>
             </div>
-            <div class="brand-footer-text">
-              <strong>Savatek Solutions</strong>
-              <span>Desarrollado por Valentin Arriola</span>
+            <div class="lb-app-name">
+              Sistema<br><span class="accent">Gestión PRO</span>
+            </div>
+            <div id="brand-nombre" class="lb-biz-name"></div>
+            <p class="lb-app-tagline" id="brand-tagline">Gestión inteligente para negocios modernos</p>
+            <div class="lb-chips">
+              <div class="lb-chip"><span class="lb-chip-dot"></span>POS Rápido</div>
+              <div class="lb-chip"><span class="lb-chip-dot"></span>Control de Stock</div>
+              <div class="lb-chip"><span class="lb-chip-dot"></span>Caja</div>
+              <div class="lb-chip"><span class="lb-chip-dot"></span>Clientes</div>
+              <div class="lb-chip"><span class="lb-chip-dot"></span>Reportes</div>
+              <div class="lb-chip"><span class="lb-chip-dot"></span>Promos</div>
             </div>
           </div>
 
-        </div>
-      </aside>
-
-      <!-- ══ PANEL DERECHO ══ -->
-      <main class="login-card">
-
-        <div class="login-header">
-          <h2>Iniciar sesión</h2>
-          <p>Ingresá tus credenciales para continuar</p>
-        </div>
-
-        <form id="frm" class="login-form" autocomplete="on">
-          <div class="lf-field">
-            <label class="lf-label" for="email">Email</label>
-            <input id="email" class="lf-input" type="email" required
-                   placeholder="admin@empresa.com" autocomplete="email" />
-          </div>
-
-          <div class="lf-field">
-            <label class="lf-label" for="pass">Contraseña</label>
-            <div class="lf-pass-wrap">
-              <input id="pass" class="lf-input" type="password" required
-                     placeholder="••••••••" autocomplete="current-password" />
-              <button type="button" id="toggle-pass" class="lf-toggle-pass"
-                      title="Mostrar contraseña">👁</button>
+          <!-- Typewriter -->
+          <div class="lb-tw">
+            <div class="lb-tw-label">¿Por qué elegirnos?</div>
+            <div id="rotating-message" class="rotating-message">
+              <span class="typewriter-cursor"></span>
             </div>
           </div>
-
-          <label class="lf-remember">
-            <input type="checkbox" id="remember" />
-            Recordar sesión
-          </label>
-
-          <button class="btn-login" type="submit" id="btn-submit">
-            Ingresar
-          </button>
-        </form>
-
-        <div id="msg" class="login-msg"></div>
-
-        <div class="session-box" id="session-box" style="display:none">
-          <span id="who"></span>
-          <button id="btn-logout" class="btn-logout" type="button">
-            Cerrar sesión activa
-          </button>
         </div>
 
-        <div class="login-footer" id="login-version">Savatek Solutions</div>
+        <!-- Footer Savatek -->
+        <footer class="lb-footer">
+          <img src="/img/logochiquito.png" class="lb-footer-logo" alt="Savatek"
+               onerror="this.style.display='none'"/>
+          <div class="lb-footer-text">
+            <strong>Savatek Solutions</strong>
+            Desarrollado por Valentín Arriola
+          </div>
+        </footer>
 
-      </main>
-    </div>
+      </div>
+    </aside>
 
-    <script>
-      // ── Cargar branding del negocio desde config ──
-      (function () {
-        try {
-          const cfg = JSON.parse(localStorage.getItem('cfg') || '{}');
-          const logo      = cfg.empresaLogoData || cfg.empresaLogo || '';
-          const nombre    = cfg.empresaNombre || '';
-          const $logoImg  = document.getElementById('brand-logo-img');
-          const $logoPlc  = document.getElementById('brand-logo-placeholder');
-          const $nombre   = document.getElementById('brand-nombre');
+    <!-- ═══════════════════════════════
+         PANEL DERECHO — login
+    ═══════════════════════════════ -->
+    <main class="login-card">
 
-          if (nombre) {
-            $nombre.textContent = nombre;
-            $logoPlc.textContent = nombre.charAt(0).toUpperCase();
-          }
-          if (logo) {
-            $logoImg.src = logo;
-            $logoImg.style.display = 'block';
-            $logoPlc.style.display = 'none';
-          }
-        } catch {}
-      })();
+      <!-- Badge Savatek flotante -->
+      <div class="lc-badge">
+        <img src="/img/logochiquito.png" alt="Savatek" onerror="this.style.display='none'"/>
+        <span>Savatek</span>
+      </div>
 
-      // ── Typewriter ──
-      (function () {
-        const mensajes = [
-          "Control total de tu negocio en un solo lugar.",
-          "Vendé más rápido con el POS optimizado.",
-          "Stock siempre actualizado en tiempo real.",
-          "Reportes claros para tomar mejores decisiones.",
-          "Gestioná clientes, proveedores y compras fácilmente.",
-        ];
-        const $el = document.getElementById('rotating-message');
-        let msgIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-        let timeout;
+      <div class="login-header">
+        <h2>Iniciar sesión</h2>
+        <p>Ingresá tus credenciales para continuar</p>
+      </div>
 
-        function tick() {
-          const current = mensajes[msgIndex];
-          if (!isDeleting) {
-            charIndex++;
-            $el.innerHTML = current.slice(0, charIndex) + '<span class="typewriter-cursor"></span>';
-            if (charIndex === current.length) {
-              isDeleting = false;
-              timeout = setTimeout(() => { isDeleting = true; tick(); }, 2000);
-              return;
-            }
-            timeout = setTimeout(tick, 45);
-          } else {
-            charIndex--;
-            $el.innerHTML = current.slice(0, charIndex) + '<span class="typewriter-cursor"></span>';
-            if (charIndex === 0) {
-              isDeleting = false;
-              msgIndex = (msgIndex + 1) % mensajes.length;
-              timeout = setTimeout(tick, 400);
-              return;
-            }
-            timeout = setTimeout(tick, 25);
-          }
+      <form id="frm" class="login-form" autocomplete="on">
+        <div class="lf-field">
+          <label class="lf-label" for="email">Email</label>
+          <input id="email" class="lf-input" type="email" required
+                 placeholder="admin@empresa.com" autocomplete="email"/>
+        </div>
+        <div class="lf-field">
+          <label class="lf-label" for="pass">Contraseña</label>
+          <div class="lf-pass-wrap">
+            <input id="pass" class="lf-input" type="password" required
+                   placeholder="••••••••" autocomplete="current-password"/>
+            <button type="button" id="toggle-pass" class="lf-toggle-pass"
+                    title="Ver contraseña">👁</button>
+          </div>
+        </div>
+        <label class="lf-remember">
+          <input type="checkbox" id="remember"/>
+          Recordar sesión
+        </label>
+        <button class="btn-login" type="submit" id="btn-submit">
+          Ingresar al sistema
+        </button>
+      </form>
+
+      <div id="msg" class="login-msg"></div>
+
+      <div class="session-box" id="session-box" style="display:none">
+        <span id="who"></span>
+        <button id="btn-logout" class="btn-logout" type="button">Cerrar sesión activa</button>
+      </div>
+
+      <div class="login-footer" id="login-version">Savatek Solutions</div>
+
+    </main>
+  </div>
+
+  <script>
+    // Branding desde configuración guardada
+    (function () {
+      try {
+        const cfg    = JSON.parse(localStorage.getItem('cfg') || '{}');
+        const nombre = cfg.empresaNombre || '';
+        const logo   = cfg.empresaLogoData || cfg.empresaLogo || '';
+        const $biz   = document.getElementById('brand-nombre');
+        const $tag   = document.getElementById('brand-tagline');
+        const $icon  = document.getElementById('brand-logo-img');
+        const $plc   = document.querySelector('.lb-icon-placeholder');
+
+        if (nombre) {
+          $biz.textContent   = '📍 ' + nombre;
+          $biz.style.display = 'block';
+          $tag.style.display = 'none';
+          if ($plc) $plc.textContent = nombre.charAt(0).toUpperCase();
         }
-        tick();
-      })();
+        if (logo) {
+          $icon.src           = logo;
+          $icon.style.display = 'block';
+          if ($plc) $plc.style.display = 'none';
+        }
+      } catch {}
+    })();
 
-      // ── Toggle password ──
-      document.getElementById('toggle-pass')?.addEventListener('click', () => {
-        const inp = document.getElementById('pass');
-        const btn = document.getElementById('toggle-pass');
-        inp.type = inp.type === 'password' ? 'text' : 'password';
-        btn.textContent = inp.type === 'password' ? '👁' : '🙈';
-      });
-    </script>
+    // Typewriter
+    (function () {
+      const msgs = [
+        "Control total de tu negocio en un solo lugar.",
+        "Vendé más rápido con el POS optimizado.",
+        "Stock siempre actualizado en tiempo real.",
+        "Reportes claros para tomar mejores decisiones.",
+        "Gestioná clientes, proveedores y compras fácilmente.",
+        "Promos y descuentos automáticos en el POS.",
+      ];
+      const $el = document.getElementById('rotating-message');
+      let mi = 0, ci = 0, del = false;
+      function tick() {
+        const cur = msgs[mi];
+        if (!del) {
+          ci++;
+          $el.innerHTML = cur.slice(0, ci) + '<span class="typewriter-cursor"></span>';
+          if (ci === cur.length) { setTimeout(() => { del = true; tick(); }, 2400); return; }
+          setTimeout(tick, 44);
+        } else {
+          ci--;
+          $el.innerHTML = cur.slice(0, ci) + '<span class="typewriter-cursor"></span>';
+          if (ci === 0) { del = false; mi = (mi + 1) % msgs.length; setTimeout(tick, 380); return; }
+          setTimeout(tick, 20);
+        }
+      }
+      tick();
+    })();
 
-    <script>
-      fetch('/health').then(r=>r.json()).then(d=>{
-        const el=document.getElementById('login-version');
-        if(el) el.textContent='v'+d.version+' · Savatek Solutions';
-      }).catch(()=>{});
-    </script>
-    <script src="/js/login.js"></script>
-  </body>
+    // Toggle contraseña
+    document.getElementById('toggle-pass')?.addEventListener('click', () => {
+      const inp = document.getElementById('pass');
+      const btn = document.getElementById('toggle-pass');
+      inp.type        = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    });
+  </script>
+
+  <script>
+    fetch('/health').then(r => r.json()).then(d => {
+      const v      = 'v' + d.version;
+      const elFoot = document.getElementById('login-version');
+      const elVer  = document.getElementById('lb-version');
+      if (elFoot) elFoot.textContent = v + ' · Savatek Solutions';
+      if (elVer)  elVer.textContent  = v;
+    }).catch(() => {});
+  </script>
+  <script src="/js/login.js"></script>
+</body>
 </html>

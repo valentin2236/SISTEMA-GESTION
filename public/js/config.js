@@ -899,6 +899,7 @@ function setArcaEstado(tipo, msg) {
 }
 
 // Mostrar tab ARCA solo en plan Ultra (feature 'ia')
+// Mostrar tab Mercado Pago solo en plan Ultra (feature 'mercadopago')
 (async () => {
   try {
     const token = localStorage.getItem('token') || '';
@@ -906,11 +907,105 @@ function setArcaEstado(tipo, msg) {
       headers: { Authorization: 'Bearer ' + token }
     });
     const data = await r.json();
-    const tieneIA = Array.isArray(data.features) && data.features.includes('ia');
+    const features = Array.isArray(data.features) ? data.features : [];
+
+    const tieneIA = features.includes('ia');
     const tabArca = document.getElementById('tab-btn-arca');
     if (tabArca) tabArca.style.display = tieneIA ? '' : 'none';
     if (tieneIA) cargarConfigArca();
+
+    const tieneMP = features.includes('mercadopago');
+    const tabMP = document.getElementById('tab-btn-mp');
+    if (tabMP) tabMP.style.display = tieneMP ? '' : 'none';
+    if (tieneMP) initMercadoPago();
   } catch { /* ignora si falla */ }
 })();
+
+// ── Mercado Pago ──────────────────────────────────────────
+function initMercadoPago() {
+  const token = localStorage.getItem('token') || '';
+  const headers = { Authorization: 'Bearer ' + token };
+
+  const $mpEstado    = document.getElementById('mp-estado');
+  const $mpEstadoTxt = document.getElementById('mp-estado-txt');
+  const $mpTokenInput = document.getElementById('mpAccessToken');
+  const $mpTokenStatus = document.getElementById('mp-token-status');
+  const $btnGuardar  = document.getElementById('btnGuardarMP');
+  const $btnTest     = document.getElementById('btnTestMP');
+
+  function setMPEstado(tipo, msg) {
+    if (!$mpEstado || !$mpEstadoTxt) return;
+    $mpEstado.className = `arca-estado arca-estado--${tipo}`;
+    $mpEstadoTxt.textContent = msg;
+  }
+
+  const $mpAlias = document.getElementById('mpAlias');
+  const $mpCvu   = document.getElementById('mpCvu');
+
+  // Verificar si ya tiene token configurado y cargar alias/CVU
+  fetch('/api/mercadopago/config-estado', { headers })
+    .then(r => r.json())
+    .then(d => {
+      if (d.configurado) {
+        setMPEstado('ok', '✅ Access Token configurado correctamente');
+        if ($mpTokenStatus) $mpTokenStatus.style.display = '';
+      }
+      if (d.alias && $mpAlias) $mpAlias.value = d.alias;
+      if (d.cvu   && $mpCvu)   $mpCvu.value   = d.cvu;
+    }).catch(() => {});
+
+  // Guardar token + alias + CVU
+  $btnGuardar?.addEventListener('click', async () => {
+    const accessToken = $mpTokenInput?.value.trim();
+    const alias = $mpAlias?.value.trim();
+    const cvu   = $mpCvu?.value.trim();
+    if (!accessToken) { toast('Ingresá el Access Token', 'error'); return; }
+    $btnGuardar.disabled = true;
+    $btnGuardar.textContent = 'Guardando...';
+    try {
+      const r = await fetch('/api/mercadopago/config', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken, alias, cvu }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        setMPEstado('ok', '✅ Access Token guardado y verificado correctamente');
+        if ($mpTokenStatus) $mpTokenStatus.style.display = '';
+        if ($mpTokenInput) $mpTokenInput.value = '';
+        toast('Mercado Pago configurado', 'success');
+      } else {
+        setMPEstado('error', '❌ ' + (d.message || 'Token inválido'));
+        toast(d.message || 'Token inválido', 'error');
+      }
+    } catch {
+      toast('Error de conexión', 'error');
+    } finally {
+      $btnGuardar.disabled = false;
+      $btnGuardar.textContent = '💾 Guardar Access Token';
+    }
+  });
+
+  // Probar conexión
+  $btnTest?.addEventListener('click', async () => {
+    $btnTest.disabled = true;
+    $btnTest.textContent = 'Probando...';
+    setMPEstado('pendiente', '⏳ Verificando conexión con Mercado Pago...');
+    try {
+      const r = await fetch('/api/mercadopago/config-estado', { headers });
+      const d = await r.json();
+      if (d.configurado) {
+        setMPEstado('ok', '✅ Conexión con Mercado Pago verificada');
+      } else {
+        setMPEstado('error', '❌ Sin configurar — ingresá tu Access Token primero');
+      }
+    } catch {
+      setMPEstado('error', '❌ No se pudo conectar con el servidor');
+    } finally {
+      $btnTest.disabled = false;
+      $btnTest.textContent = '🔌 Probar conexión con Mercado Pago';
+    }
+  });
+}
 
 })();

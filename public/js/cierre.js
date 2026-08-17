@@ -27,6 +27,7 @@ const medioIconos = {
   tarjeta:          "💳",
   transferencia:    "📲",
   cuenta_corriente: "📒",
+  mercadopago:      "📲",
 };
 
 const medioLabels = {
@@ -34,6 +35,7 @@ const medioLabels = {
   tarjeta:          "Tarjeta",
   transferencia:    "Transferencia",
   cuenta_corriente: "Cuenta Corriente",
+  mercadopago:      "QR",
 };
 
 /* ── Datos actuales (para exportar) ── */

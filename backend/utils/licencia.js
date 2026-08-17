@@ -20,6 +20,35 @@ function getLicensePath() {
 
 const LICENSE_FILE = getLicensePath();
 const SECRET = 'SGP-2024-LICENCIA-SECRETA';
+const TRIAL_DAYS = 7;
+
+function getTrialPath() {
+  if (process.versions.electron && process.type !== undefined) {
+    const userDataPath = process.env.APPDATA || path.join(process.env.HOME || '', '.config');
+    const appDir = path.join(userDataPath, 'sistema-gestion-pro');
+    if (!fs.existsSync(appDir)) fs.mkdirSync(appDir, { recursive: true });
+    return path.join(appDir, 'trial.json');
+  }
+  return path.join(__dirname, '..', '..', 'trial.json');
+}
+
+export function getTrialInfo() {
+  const trialPath = getTrialPath();
+  try {
+    let data;
+    if (!fs.existsSync(trialPath)) {
+      data = { startDate: new Date().toISOString() };
+      fs.writeFileSync(trialPath, JSON.stringify(data), 'utf8');
+    } else {
+      data = JSON.parse(fs.readFileSync(trialPath, 'utf8'));
+    }
+    const elapsed = Math.floor((Date.now() - new Date(data.startDate).getTime()) / 86400000);
+    const remaining = Math.max(0, TRIAL_DAYS - elapsed);
+    return { startDate: data.startDate, daysElapsed: elapsed, daysRemaining: remaining, expired: elapsed >= TRIAL_DAYS };
+  } catch {
+    return { startDate: new Date().toISOString(), daysElapsed: 0, daysRemaining: TRIAL_DAYS, expired: false };
+  }
+}
 
 export function generateMachineId() {
   const data = [
@@ -75,6 +104,15 @@ export function validateLicenseKey(key) {
     }
 
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+
+    // Verificar que la licencia corresponde a esta PC
+    if (payload.machineId) {
+      const currentId = generateMachineId();
+      if (payload.machineId !== currentId) {
+        return { valid: false, error: 'Esta licencia fue generada para otra PC.' };
+      }
+    }
+
     const expiry = new Date(payload.expiry);
 
     if (expiry < new Date()) {
@@ -114,16 +152,24 @@ export function saveLicenseToFile(key) {
 export function getLicenseStatus() {
   const key = getLicenseFromFile();
   if (!key) {
+    const trial = getTrialInfo();
     return {
       activa: false,
       plan: 'trial',
-      mensaje: 'Sin licencia. Funcionando en modo de prueba.',
+      trial: true,
+      trialExpired: trial.expired,
+      diasRestantes: trial.daysRemaining,
+      mensaje: trial.expired
+        ? 'El período de prueba de 7 días ha vencido.'
+        : `Modo de prueba. Quedan ${trial.daysRemaining} día(s).`,
     };
   }
   const result = validateLicenseKey(key);
   return {
     activa: result.valid,
     plan: result.plan || 'trial',
+    trial: false,
+    trialExpired: false,
     expiry: result.expiry,
     diasRestantes: result.diasRestantes,
     error: result.error,
@@ -177,18 +223,47 @@ const PLAN_FEATURES = {
     'auditoria',
     'ia',
     'multi_usuario',
+    'mercadopago',
+    'multicajero',
   ],
 };
 
 export function getFeatures() {
   const status = getLicenseStatus();
-  const plan = status.activa ? status.plan : 'trial';
+
+  // Licencia activa → plan contratado
+  if (status.activa) {
+    return {
+      plan: status.plan,
+      activa: true,
+      trial: false,
+      trialExpired: false,
+      expiry: status.expiry,
+      diasRestantes: status.diasRestantes,
+      features: PLAN_FEATURES[status.plan] || PLAN_FEATURES.basico,
+    };
+  }
+
+  // Trial activo (no expirado) → Ultra completo
+  if (status.trial && !status.trialExpired) {
+    return {
+      plan: 'ultra',
+      activa: false,
+      trial: true,
+      trialExpired: false,
+      diasRestantes: status.diasRestantes,
+      features: PLAN_FEATURES.ultra,
+    };
+  }
+
+  // Trial expirado → sin acceso
   return {
-    plan,
-    activa: status.activa,
-    expiry: status.expiry,
-    diasRestantes: status.diasRestantes,
-    features: PLAN_FEATURES[plan] || PLAN_FEATURES.trial,
+    plan: 'trial',
+    activa: false,
+    trial: true,
+    trialExpired: true,
+    diasRestantes: 0,
+    features: [],
   };
 }
 

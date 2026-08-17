@@ -18,50 +18,71 @@
   flex-wrap: wrap;
 }
 .promo-tipo-btn {
-  padding: 8px 18px;
+  padding: 10px 20px;
   border: 1.5px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  font-weight: 600;
-  font-size: .9rem;
+  font-weight: 700;
+  font-size: 1rem;
   transition: all .15s;
 
   &:hover   { border-color: var(--accent); color: var(--accent); }
   &.active  { background: var(--accent); border-color: var(--accent); color: #000; }
 }
 
-// Dropdown búsqueda producto
+// Dropdown búsqueda producto — flujo normal (no overlay)
 .promo-dropdown {
-  position: absolute;
-  top: 4px;
-  left: 0; right: 0;
-  background: var(--surface-2);
+  margin-top: 4px;
+  background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
-  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,.22);
   overflow: hidden;
+  max-height: 210px;
+  overflow-y: auto;
 }
 .promo-drop-item {
-  padding: 10px 14px;
+  padding: 11px 14px;
   cursor: pointer;
-  font-size: .875rem;
+  font-size: .95rem;
   border-bottom: 1px solid var(--border);
+  color: var(--text);
   &:last-child { border-bottom: none; }
-  &:hover { background: var(--surface-3); }
-  &.muted { color: var(--text-muted); cursor: default; }
+  &:hover { background: rgba(0,0,0,.06); }
+  &.muted { color: var(--muted); cursor: default; }
+}
+
+// Modo oscuro: dropdown más visible
+[data-theme="dark"] {
+  .promo-dropdown {
+    background: #1e2d40;
+    border-color: rgba(255,255,255,.16);
+    box-shadow: 0 8px 30px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .promo-drop-item {
+    border-bottom-color: rgba(255,255,255,.07);
+    &:hover { background: rgba(255,255,255,.07); }
+  }
+  #dlg-promo .field-input {
+    background: #1a2840;
+    border-color: rgba(255,255,255,.14);
+    &:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,255,136,.1);
+    }
+  }
 }
 
 // Producto seleccionado
 .promo-sel-badge {
   margin-top: 6px;
-  padding: 8px 12px;
+  padding: 9px 13px;
   background: rgba(0,196,112,.12);
   border: 1px solid var(--accent);
   border-radius: 8px;
-  font-size: .875rem;
+  font-size: .95rem;
   color: var(--accent);
   font-weight: 600;
 }
@@ -102,4 +123,39 @@
   &--green  { background: rgba(0,196,112,.15); color: var(--accent); }
   &--red    { background: rgba(239,68,68,.15);  color: var(--danger); }
   &--yellow { background: rgba(234,179,8,.15);  color: #ca8a04; }
+}
+
+// ── Modal dlg-promo: estilos propios ──
+#dlg-promo {
+  .field-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .field-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: .15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,216,117,.15);
+    }
+    &:disabled { opacity: .55; cursor: not-allowed; }
+  }
+
+  h2 { font-size: 1.25rem; }
+
+  .field { display: flex; flex-direction: column; }
 }

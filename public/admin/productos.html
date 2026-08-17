@@ -117,6 +117,16 @@
             <option value="out">Sin stock</option>
           </select>
 
+          <input
+            type="number"
+            id="filtro-stock-exacto"
+            class="field-input filtro-select"
+            placeholder="Stock exacto"
+            min="0"
+            step="1"
+            style="width:130px"
+          />
+
           <button
             id="btn-limpiar-filtros"
             class="btn btn-outline btn-sm"
@@ -396,7 +406,24 @@
           <h2>💹 Actualizar precios</h2>
           <button onclick="document.getElementById('dlg-actualizar-precios').close()" class="dlg-close">✕</button>
         </div>
-        <div class="dlg-body" style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Tabs -->
+        <div style="display:flex;border-bottom:1px solid var(--border);padding:0 20px;">
+          <button id="ap-tab-individual" class="ap-tab ap-tab-active" onclick="switchPreciosTab('individual')">🔍 Individual</button>
+          <button id="ap-tab-masivo" class="ap-tab" onclick="switchPreciosTab('masivo')">📊 Masivo</button>
+        </div>
+
+        <!-- Panel individual -->
+        <div id="ap-panel-individual" class="dlg-body" style="display:flex;flex-direction:column;gap:14px;">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Buscar producto por nombre o SKU</label>
+            <input id="ap-buscar-prod" type="text" class="form-control" placeholder="Ej: Coca Cola 500ml o SKU123" autocomplete="off">
+          </div>
+          <div id="ap-resultados-prod" style="max-height:320px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- Panel masivo (contenido original) -->
+        <div id="ap-panel-masivo" class="dlg-body" style="display:none;flex-direction:column;gap:16px;">
 
           <!-- Filtro -->
           <div class="form-group" id="ap-filtro-row">
@@ -455,11 +482,14 @@
           </div>
 
           <div id="ap-status" style="display:none;font-size:13px;padding:8px 12px;border-radius:8px;"></div>
-        </div>
+        </div><!-- fin panel masivo -->
+
         <div class="dlg-foot">
-          <button id="ap-btn-preview" class="btn btn-outline">👁 Vista previa</button>
-          <button id="ap-btn-aplicar" class="btn btn-primary" disabled>✅ Aplicar cambios</button>
-          <button onclick="document.getElementById('dlg-actualizar-precios').close()" class="btn btn-outline">Cancelar</button>
+          <span id="ap-foot-masivo" style="display:flex;gap:8px">
+            <button id="ap-btn-preview" class="btn btn-outline">👁 Vista previa</button>
+            <button id="ap-btn-aplicar" class="btn btn-primary" disabled>✅ Aplicar cambios</button>
+          </span>
+          <button onclick="document.getElementById('dlg-actualizar-precios').close()" class="btn btn-outline">Cerrar</button>
         </div>
       </div>
     </dialog>
@@ -994,6 +1024,126 @@
         }
       });
     })();
+
+    /* ===== TABS: Individual / Masivo ===== */
+    function switchPreciosTab(tab) {
+      const panelInd = document.getElementById('ap-panel-individual');
+      const panelMas = document.getElementById('ap-panel-masivo');
+      const footMas  = document.getElementById('ap-foot-masivo');
+      const tabInd   = document.getElementById('ap-tab-individual');
+      const tabMas   = document.getElementById('ap-tab-masivo');
+      if (tab === 'individual') {
+        panelInd.style.display = 'flex';
+        panelMas.style.display = 'none';
+        footMas.style.display  = 'none';
+        tabInd.classList.add('ap-tab-active');
+        tabMas.classList.remove('ap-tab-active');
+      } else {
+        panelInd.style.display = 'none';
+        panelMas.style.display = 'flex';
+        footMas.style.display  = 'flex';
+        tabInd.classList.remove('ap-tab-active');
+        tabMas.classList.add('ap-tab-active');
+      }
+    }
+
+    /* ===== BUSCAR Y EDITAR PRECIO INDIVIDUAL ===== */
+    (function() {
+      const $input = document.getElementById('ap-buscar-prod');
+      const $res   = document.getElementById('ap-resultados-prod');
+      let _timer   = null;
+
+      $input.addEventListener('input', () => {
+        clearTimeout(_timer);
+        const q = $input.value.trim();
+        if (q.length < 2) { $res.innerHTML = ''; return; }
+        _timer = setTimeout(() => buscarParaActualizar(q), 280);
+      });
+
+      async function buscarParaActualizar(q) {
+        $res.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px">Buscando…</div>';
+        try {
+          const token = localStorage.getItem('token');
+          const r = await fetch(`/api/productos?search=${encodeURIComponent(q)}&limit=20`, {
+            headers: { Authorization: 'Bearer ' + token },
+          });
+          const prods = await r.json();
+          if (!prods.length) {
+            $res.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px">Sin resultados</div>';
+            return;
+          }
+          $res.innerHTML = prods.map(p => `
+            <div class="ap-prod-row" data-id="${p.id}" style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border)">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
+                <div style="font-size:12px;color:var(--muted)">${p.sku || 'Sin SKU'} · Categoría: ${p.categoria || '—'}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+                <div style="font-size:11px;color:var(--muted)">Precio actual</div>
+                <div style="font-weight:700;color:var(--accent)">$${Number(p.precio||0).toLocaleString('es-AR',{minimumFractionDigits:2})}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;min-width:130px">
+                <input type="number" class="form-control ap-nuevo-precio" data-id="${p.id}" placeholder="Nuevo precio" value="${Number(p.precio||0).toFixed(2)}" min="0" step="0.01" style="width:130px;font-size:13px;padding:4px 8px">
+                <input type="number" class="form-control ap-nuevo-costo" data-id="${p.id}" placeholder="Nuevo costo" value="${Number(p.costo||0).toFixed(2)}" min="0" step="0.01" style="width:130px;font-size:13px;padding:4px 8px">
+              </div>
+              <button class="btn btn-primary btn-sm ap-btn-guardar-precio" data-id="${p.id}" style="flex-shrink:0">Guardar</button>
+            </div>`).join('');
+
+          $res.querySelectorAll('.ap-btn-guardar-precio').forEach(btn => {
+            btn.addEventListener('click', () => guardarPrecioIndividual(btn.dataset.id));
+          });
+        } catch {
+          $res.innerHTML = '<div style="padding:12px;color:var(--danger);font-size:13px">Error al buscar</div>';
+        }
+      }
+
+      async function guardarPrecioIndividual(id) {
+        const $precio = $res.querySelector(`.ap-nuevo-precio[data-id="${id}"]`);
+        const $costo  = $res.querySelector(`.ap-nuevo-costo[data-id="${id}"]`);
+        const $btn    = $res.querySelector(`.ap-btn-guardar-precio[data-id="${id}"]`);
+        const precio  = Number($precio.value);
+        const costo   = Number($costo.value);
+        if (isNaN(precio) || precio < 0) { Swal.fire({ icon: 'warning', title: 'Precio inválido', timer: 1400, showConfirmButton: false }); return; }
+        $btn.disabled = true;
+        $btn.textContent = '⏳';
+        try {
+          const token = localStorage.getItem('token');
+          const r = await fetch(`/api/productos/${id}/precio`, {
+            method: 'PATCH',
+            headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ precio, costo }),
+          });
+          const d = await r.json();
+          if (r.ok) {
+            $btn.textContent = '✅';
+            $btn.style.background = 'var(--accent)';
+            setTimeout(() => { $btn.textContent = 'Guardar'; $btn.style.background = ''; $btn.disabled = false; }, 1800);
+            if (typeof cargarProductos === 'function') cargarProductos();
+          } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: d.error || 'No se pudo guardar' });
+            $btn.disabled = false;
+            $btn.textContent = 'Guardar';
+          }
+        } catch {
+          Swal.fire({ icon: 'error', title: 'Error de conexión' });
+          $btn.disabled = false;
+          $btn.textContent = 'Guardar';
+        }
+      }
+
+      // al abrir el dialog, resetear y activar tab individual
+      document.getElementById('btn-actualizar-precios')?.addEventListener('click', () => {
+        switchPreciosTab('individual');
+        $input.value = '';
+        $res.innerHTML = '';
+        setTimeout(() => $input.focus(), 100);
+      }, true); // capture para correr antes del listener existente
+    })();
     </script>
+    <style>
+      .ap-tab { background:none; border:none; padding:10px 18px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; }
+      .ap-tab-active { color:var(--accent); border-bottom-color:var(--accent); }
+      .ap-tab:hover { color:var(--text); }
+    </style>
   </body>
 </html>
