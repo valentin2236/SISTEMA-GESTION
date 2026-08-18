@@ -221,6 +221,10 @@ const server = app.listen(PORT, () => {
   logger.info(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
+// Evita desconexiones abruptas cuando la caja cliente accede por red WiFi
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 70000;
+
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     logger.warn(`Puerto ${PORT} ocupado — liberando proceso anterior...`);

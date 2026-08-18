@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   setMode:       (modo, ip) => ipcRenderer.invoke('set-mode', modo, ip),
   getMode:       () => ipcRenderer.invoke('get-mode'),
+  resetMode:     () => ipcRenderer.invoke('reset-mode'),
 });

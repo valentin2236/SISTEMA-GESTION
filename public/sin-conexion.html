@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Sin conexión — Sistema Gestión S.S.</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:#0d1b2a;color:#e4eeff;
+      font-family:'Segoe UI',system-ui,sans-serif;
+      min-height:100vh;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:32px;user-select:none;-webkit-app-region:drag;
+    }
+    .icon{font-size:52px;margin-bottom:18px;opacity:.85}
+    .titulo{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;text-align:center}
+    .sub{font-size:13px;color:#6b87a8;text-align:center;line-height:1.6;max-width:380px;margin-bottom:8px}
+    .ip-badge{
+      display:inline-block;
+      background:rgba(30,111,255,.12);border:1px solid rgba(30,111,255,.25);
+      border-radius:8px;padding:5px 14px;
+      font-family:Consolas,monospace;font-size:13px;font-weight:700;color:#4d95ff;
+      margin-bottom:28px;
+    }
+    .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;-webkit-app-region:no-drag}
+    .btn{
+      padding:11px 24px;border-radius:10px;border:none;
+      font-size:14px;font-weight:700;cursor:pointer;
+      transition:opacity .15s,transform .1s;
+    }
+    .btn:active{transform:scale(.97)}
+    .btn-retry{background:#1e6fff;color:#fff}
+    .btn-retry:hover{opacity:.88}
+    .btn-reset{background:#1a2d45;color:#8aadce;border:1px solid #243d5a}
+    .btn-reset:hover{border-color:#4d95ff;color:#fff}
+    .hint{font-size:11px;color:#3a5270;margin-top:24px;text-align:center;line-height:1.7}
+  </style>
+</head>
+<body>
+  <div class="icon">🔌</div>
+  <div class="titulo">No se pudo conectar al servidor</div>
+  <p class="sub">La PC caja no puede alcanzar al servidor en:</p>
+  <div class="ip-badge" id="ip-text">—</div>
+  <div class="btns">
+    <button class="btn btn-retry" id="btn-retry">Reintentar</button>
+    <button class="btn btn-reset" id="btn-reset">Cambiar configuración</button>
+  </div>
+  <p class="hint">
+    Verificá que la PC servidor esté encendida y conectada a la misma red.<br>
+    También comprobá que el firewall no bloquee el puerto 3847.
+  </p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const ip = params.get('ip') || '—';
+    document.getElementById('ip-text').textContent = ip + ':3847';
+
+    document.getElementById('btn-retry').addEventListener('click', () => {
+      window.location.href = 'http://' + ip + ':3847/admin/login.html';
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-reset');
+      btn.disabled = true;
+      btn.textContent = 'Reiniciando…';
+      await window.electronAPI?.resetMode();
+    });
+  </script>
+</body>
+</html>

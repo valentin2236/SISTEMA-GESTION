@@ -226,6 +226,11 @@ app.whenReady().then(async () => {
     app.exit(0);
   });
   ipc.handle('get-mode', () => getModoConfig());
+  ipc.handle('reset-mode', () => {
+    try { if (fs.existsSync(MODO_CONFIG_PATH)) fs.unlinkSync(MODO_CONFIG_PATH); } catch {}
+    app.relaunch();
+    app.exit(0);
+  });
 
   ipc.handle('print-ticket', async (_evt, opts) => {
     const { url, deviceName, silent = true, landscape = false, margins = 'none' } = opts || {};
@@ -274,6 +279,14 @@ app.whenReady().then(async () => {
         preload: path.join(__dirname, 'preload.cjs'),
       },
     });
+    let errorShown = false;
+    win.webContents.on('did-fail-load', (_e, code, _desc, url) => {
+      if (errorShown || !url || url.startsWith('file://')) return;
+      errorShown = true;
+      win.loadFile(path.join(__dirname, '..', 'public', 'sin-conexion.html'),
+        { query: { ip: modoConfig.ip } });
+    });
+    win.webContents.on('did-navigate', () => { errorShown = false; });
     win.loadURL(baseUrl + '/admin/login.html');
     [
       ['F1', "document.getElementById('buscar')?.focus();document.getElementById('buscar')?.select();"],
